@@ -8,7 +8,6 @@ This repository owns RoboScope's `roboscope-kit` Python package, official evalua
 
 - `packages/roboscope-kit/` owns the public Policy contract and platform runtime.
 - `benchmarks/libero_official/` owns the validated official base image.
-- `official_images/` owns model-specific official images.
 - `benchmarks/starvla_platform_runtime/` owns the image-local Control Runtime installer and the thin launchers for shared Benchmark environments.
 - `examples/custom_image_validation/` owns engineering demos used to validate the user-owned custom-image path. Demo models remain separate from the official image catalog and product support matrix.
 

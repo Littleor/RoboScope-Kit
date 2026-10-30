@@ -6,7 +6,6 @@ RoboScope Kit is the source of truth for RoboScope simulation evaluation. It con
 
 - `packages/roboscope-kit/`: public `Policy` API and platform-owned benchmark runtime.
 - `benchmarks/libero_official/`: validated official base-image bundle, installer, verifier, and external `/root/startbenchmark.sh` contract.
-- `official_images/starvla/`: benchmark-independent StarVLA official-image bundle.
 - `benchmarks/starvla_platform_runtime/`: image-local Control Runtime installer plus shared launchers for CALVIN, LIBERO-Plus, RoboCasa, and RoboTwin.
 - `benchmarks/robotwin_official/`: RoboTwin launch and seed-cache tooling.
 - `benchmarks/`: official benchmark launchers, image-owned runtimes, and protocol assets.

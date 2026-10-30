@@ -5,7 +5,7 @@
 > `Policy`、多 Benchmark action contract、镜像保存与平台评测的完整链路。产品文档与
 > 镜像目录负责声明正式支持范围；公开榜单中的 X-VLA 条目属于上游论文与社区成绩记录。
 
-在 X-VLA 基础镜像（需自行准备）上先完整安装目标提交生成的官方 StarVLA bundle，再烘焙
+在 X-VLA 基础镜像（需自行准备）上先安装目标提交生成的官方基础镜像 bundle 中的 Control Runtime，再烘焙
 X-VLA-0.9B（[2toINF/X-VLA](https://github.com/2toINF/X-VLA)，arXiv:2510.10274）
 overlay，用于 4 个评测集的评测验证。完整安装会原子替换镜像内 Control Runtime，确保
 它与线上共享 FS 薄 launcher 同代际；否则评测启动时的 manifest 校验会中止。
@@ -69,14 +69,14 @@ RoboTwin 研究对照数字来自 X-VLA 上游固定提交
 
 ```bash
 # 1) 从 X-VLA 基础镜像创建全新 AutoDL 实例（48 GB 显存）。
-# 2) 从目标 RoboScope Kit 提交构建官方 StarVLA bundle，上传并解压；然后只运行
-#    bundle 内的 Control Runtime 子安装器。X-VLA 基底不包含 StarVLA conda 环境，
+# 2) 从目标 RoboScope Kit 提交构建官方基础镜像 bundle，上传并解压；然后只运行
+#    bundle 内的 Control Runtime 子安装器。X-VLA 基底不包含官方基础镜像的运行环境，
 #    因此不要运行顶层 install.sh。这一步必须完整替换 Control Runtime，禁止手工覆盖 worker.py。
-official_images/starvla/build_official_image_bundle.sh --ref <target-commit>
+benchmarks/libero_official/build_official_image_bundle.sh --ref <target-commit>
 # 实例内：
-bundle_dir=/root/bake/roboscope-official-starvla-image-<commit-short>
+bundle_dir=/root/bake/roboscope-official-base-image-<commit-short>
 "$bundle_dir/install-control-runtime.sh" \
-  --source-root "$bundle_dir/control-runtime" \
+  --source-root "$bundle_dir/evaluation-kit" \
   --artifacts-dir "$bundle_dir/control-runtime-artifacts" \
   --target-root /opt/roboscope/control-runtime \
   --kit-commit <target-commit> \

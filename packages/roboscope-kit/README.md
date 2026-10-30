@@ -132,8 +132,7 @@ RoboTwin also accepts a positive per-Policy observation stride. Its safe default
 is 1, and every new inference chunk refreshes the current simulator observation.
 The evaluator renders one observation per refresh. Randomized lighting, the viewer,
 video logging and point-cloud observations keep the per-step cadence regardless of
-the declared stride. The StarVLA official image declares its action horizon as its
-observation stride.
+the declared stride.
 
 Evaluator concurrency and replica count are platform-owned autotune parameters rather
 than user-declared capabilities. SDK-native scored evaluations measure real Policy-backed episodes
@@ -307,9 +306,8 @@ LIBERO and CALVIN convert their native observations to the canonical SDK feature
 7-dimensional actions back to their simulators. CALVIN's task-D-to-task-D path implements the official
 1,000 long-horizon sequences with static/gripper images, proprioception and language. The suite list and
 runtime paths for every chain remain owned by its installed Benchmark image manifest.
-- Evaluation has two product paths. Custom-image users provide their own SDK `Policy` and saved image.
-  StarVLA users may instead upload a standard run snapshot and directly select the official StarVLA image.
-  Both paths use platform Benchmark environments and evaluators from `/autodl-fs`.
+- Custom-image users provide their own SDK `Policy` and saved image. Evaluation uses platform Benchmark
+  environments and evaluators from `/autodl-fs`.
 
 The complete LIBERO entrypoint and scoring contract is documented in
 `LIBERO_EVALUATION_PROTOCOL.md` in the RoboScope Kit repository.
@@ -350,108 +348,9 @@ The runtime requires the pinned LeRobot 0.6.0 installation used by the validated
 native Pi0.5 RTC deployment. The robot-side HIL contract belongs to that
 service; this package exposes model components rather than a socket server.
 
-## Direct evaluation with the official StarVLA image
+## Policy process contract
 
 Custom images contain the user's SDK `Policy`, dependencies and `/workspace/roboscope-policy.json`.
-The separate official StarVLA image path uses a RoboScope-published image with a pinned StarVLA runtime
-and a preconfigured evaluation entrypoint:
-
-```text
-/opt/roboscope/starvla/starvla_official_policy.py
-```
-
-The platform stages the user-selected StarVLA run directory. The run keeps StarVLA's native layout:
-
-```text
-<run>/
-├── config.yaml
-├── dataset_statistics.json
-├── checkpoints/
-│   └── <selected full checkpoint>
-└── <local resources referenced by config.yaml>
-```
-
-The staged evaluation snapshot contains one selected full checkpoint. `SessionContext.checkpoint_path`
-may point to that checkpoint file or to the run directory. The official loader deterministically locates
-the checkpoint and adjacent config/statistics, builds the framework from `config.yaml`, performs strict
-state-dict loading, and initializes training-time normalization.
-
-The official Policy follows the pinned StarVLA reference client for the active Benchmark. RoboTwin,
-RoboCasa, LIBERO+, and MetaWorld use OpenCV `INTER_AREA`; LIBERO uses PIL bilinear resize; CALVIN uses the
-upstream aspect-preserving resize-and-pad and uint8 conversion. All produce the pinned clients' `224x224`
-StarVLA model input without changing the Benchmark's canonical Observation. MetaWorld applies its
-configured rotation and center-crop geometry in the evaluator before the Policy sees the frame, so the
-image's declared `benchmark_config.metaworld` pipeline (corner2, 480 render, 180-degree rotation, 2/3
-center crop, 224x224 output) reproduces the pinned StarVLA MetaWorld client pixel-for-pixel. The Policy
-does not derive this client-side preprocessing from, or rewrite, the uploaded StarVLA configuration.
-Tokenization, inference kwargs and dtype are read from the StarVLA configuration or
-its framework defaults. Benchmark environments, datasets, evaluator workers and native action application
-are provided by `/autodl-fs`. Both custom images and the official StarVLA image support an independent real
-`K=1/g=1` quick test and full formal evaluation.
-
-`config.yaml` must carry an `inference` section. It names the Observation features the Policy consumes and
-declares the per-dimension action transforms:
-
-```yaml
-inference:
-  dtype: bfloat16                    # required: bfloat16, float16 or float32
-  unnorm_key: franka                 # optional: training normalization statistics key
-  inputs:                            # required
-    images:                          # required, non-empty; order is the camera order
-      - images.primary
-      - images.wrist
-    language: language.instruction   # required
-    state: state.proprioception      # optional, declare only if the model consumes it
-  kwargs:                            # optional, forwarded to the StarVLA framework
-    do_sample: false
-    use_ddim: true
-    num_ddim_steps: 10
-  action_transforms:                 # optional, applied in order to the model output
-    - index: 6
-      operation: threshold
-      threshold: 0.5
-      above: -1.0
-      below: 1.0
-```
-
-`inputs` values are Benchmark Observation feature names; LIBERO exposes `images.primary`, `images.wrist`,
-`state.proprioception` and `language.instruction`. A missing `inputs` or malformed `action_transforms`
-entry fails Policy startup. A syntactically valid but semantically wrong camera order or action transform
-cannot be detected automatically, so both must match the training-time definitions.
-
-`action_transforms` supports `threshold` (`index`, `threshold`, `above`, `below`) and `affine`
-(`index`, `scale`, `offset`). The example above reproduces the LIBERO gripper binarization: dimension 6
-becomes `-1.0` when the raw value exceeds `0.5`, and `1.0` otherwise.
-
-The image ships an exporter that produces a portable run snapshot:
-
-```bash
-/root/miniconda3/envs/starVLA/bin/python \
-  /opt/roboscope/starvla/export_starvla_eval_run.py \
-  --run-dir <training run> \
-  --checkpoint <training run>/checkpoints/<selected checkpoint> \
-  --output <export directory> \
-  --resource-root <root of the local construction resources>
-```
-
-The exporter copies every local resource referenced by the `framework` and `inference` sections into the
-export directory, rewrites those configuration values to relative paths, and runs a strict-load preflight.
-A hand-assembled snapshot that keeps training-host absolute paths (for example `framework.qwenvl.base_vlm`)
-cannot be resolved inside the evaluation instance.
-
-The official image Policy process contract is:
-
-```json
-{
-  "schema_version": 2,
-  "command": [
-    "/root/miniconda3/envs/starVLA/bin/python",
-    "/opt/roboscope/starvla/starvla_official_policy.py"
-  ],
-  "cwd": "/root/starVLA"
-}
-```
-
 The LIBERO platform entrypoint loads the Policy process contract from the fixed image path
 `/workspace/roboscope-policy.json`:
 

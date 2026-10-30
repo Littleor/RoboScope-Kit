@@ -35,8 +35,7 @@ libero_10
 libero_90
 ```
 
-The command serves two image paths. A custom image starts the user's SDK `Policy`; direct evaluation with
-the official StarVLA image starts its preconfigured evaluation Policy. Runtime selectors, simulator commands, evaluator
+The command starts the user's SDK `Policy` from the custom image. Runtime selectors, simulator commands, evaluator
 commands, sockets, ports, K, and g are platform internals and are not part of the user contract.
 
 ### Checkpoint source
@@ -47,22 +46,6 @@ For an SDK-native user Policy:
   to `Policy.load()` as `context.checkpoint_path`;
 - an absolute local file or directory is passed to `Policy.load()` unchanged;
 - relative local paths and missing paths are rejected.
-
-For direct evaluation with the official StarVLA image, staging prepares one complete StarVLA run snapshot:
-
-```text
-<run>/
-├── config.yaml
-├── dataset_statistics.json
-├── checkpoints/
-│   └── <selected full checkpoint>
-└── <local resources referenced by config.yaml>
-```
-
-The snapshot contains one selected full checkpoint. `SessionContext.checkpoint_path` may point to that
-file or to the run directory. The official loader deterministically locates the checkpoint and adjacent
-config/statistics, builds the configured framework, and performs strict state-dict loading. Model
-construction and inference behavior come from `config.yaml` and the pinned StarVLA runtime.
 
 ## 2. User Policy process contract
 
@@ -204,7 +187,7 @@ The platform owns scheduling. Users do not set these values in inference code.
 - An uncommitted work item is requeued when a worker fails.
 - Final accounting requires exactly one terminal record for every manifest episode.
 
-All Policies, including the official StarVLA Policy, use platform-owned end-to-end K/g probing for
+All Policies use platform-owned end-to-end K/g probing for
 scored evaluations. Candidates run real LIBERO episodes with isolated Policy replicas and paired K/g
 growth. The platform selects the last candidate that improves episode throughput without approaching CPU
 throttling, GPU utilization, or GPU-memory limits. Quick test remains fixed at `K=1/g=1`.
@@ -290,8 +273,7 @@ accounting.
 
 Quick test fixes task id `0`, `K=1`, `g=1`, one episode, and disables video. It verifies checkpoint access,
 Policy startup/loading, SDK communication, and a real LIBERO rollout. Policies require only the checkpoint
-OSS environment. The staged StarVLA run snapshot carries the local construction files referenced by its
-native config; the official image supplies the reusable StarVLA runtime and SDK Policy.
+OSS environment.
 
 ### Scored evaluation
 
@@ -301,7 +283,7 @@ and aggregation must all match this protocol.
 
 ## 10. Current support boundary
 
-This document describes the completed SDK-native LIBERO protocol, including the official StarVLA Policy.
+This document describes the completed SDK-native LIBERO protocol.
 CALVIN has its own protocol document. LIBERO+, RoboTwin, RoboCasa, and CALVIN use the same platform-owned
 Policy boundary, but their execution chains are not interchangeable: LIBERO+ reuses the LIBERO worker,
 while RoboTwin, RoboCasa, and CALVIN have benchmark-specific workers. Each chain also requires its own

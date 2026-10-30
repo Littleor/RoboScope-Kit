@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0b2 (Unreleased)
+
+- Remove the official StarVLA image source (`official_images/starvla/`) and its documentation. Custom
+  images are the only documented evaluation path. The X-VLA custom-image demo now installs its Control
+  Runtime from the official base-image bundle (`benchmarks/libero_official/build_official_image_bundle.sh`).
+
 ## 0.8.0b1 (Beta, published 2026-10-30)
 
 - Rename the SDK to RoboScope Kit. Install it with `pip install roboscope-kit` (previously
