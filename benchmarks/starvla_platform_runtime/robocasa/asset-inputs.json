@@ -1,0 +1,47 @@
+{
+  "groot_revision": "1b018839a6da865dffecd3185fe054211bc71270",
+  "archives": {
+    "textures": {
+      "url": "https://utexas.box.com/shared/static/otdsyfjontk17jdp24bkhy2hgalofbh4.zip",
+      "bytes": 538397915,
+      "sha256": "d36bf23cec4ce33c83eb59dfd34faeb13d8f45f9844866a654569659fc9be23d"
+    },
+    "fixtures": {
+      "url": "https://utexas.box.com/shared/static/pobhbsjyacahg2mx8x4rm5fkz3wlmyzp.zip",
+      "bytes": 472441720,
+      "sha256": "27905b494e7bf12826a8d67c167c73d95eade467841f5d2ddbdd87efc15b4c5a"
+    },
+    "objaverse": {
+      "url": "https://utexas.box.com/shared/static/ejt1kc2v5vhae1rl4k5697i4xvpbjcox.zip",
+      "bytes": 2115607481,
+      "sha256": "519f989588c7e67f818ee823e1abeb7e08a34d9ec4977395a712dc8ce80c284c"
+    },
+    "generative_textures": {
+      "url": "https://utexas.box.com/shared/static/gf9nkadvfrowkb9lmkcx58jwt4d6c1g3.zip",
+      "bytes": 593204309,
+      "sha256": "a90d8ce74511120b19c859b326e3263e86be0a32eab10d6877e8a002d1b98c3d"
+    },
+    "lightwheel": {
+      "url": "https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets/resolve/1b018839a6da865dffecd3185fe054211bc71270/lightwheel.zip",
+      "bytes": 213480699,
+      "sha256": "8e42a0c835a205d7a0e7c33b5c33ab160b220fa9343b50c16526b7c712a2b6e2"
+    },
+    "sketchfab": {
+      "url": "https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets/resolve/1b018839a6da865dffecd3185fe054211bc71270/sketchfab.zip",
+      "bytes": 56844370,
+      "sha256": "12af71e68a5c748f8531ce20c9db0ae9ed71ab1d46265388e05155a5b5352b5d"
+    }
+  },
+  "licenses": {
+    "LICENSE": {
+      "url": "https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets/resolve/1b018839a6da865dffecd3185fe054211bc71270/LICENSE",
+      "bytes": 1664,
+      "sha256": "4e5337ae1e7abf87298123dc8f5c03266f9f3cf1bbc333f90e077973f369d495"
+    },
+    "SKETCHFAB_ASSETS_ATTRIBUTIONS.md": {
+      "url": "https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets/resolve/1b018839a6da865dffecd3185fe054211bc71270/SKETCHFAB_ASSETS_ATTRIBUTIONS.md",
+      "bytes": 18675,
+      "sha256": "ee6df3ca1dd3efd96baf6ef20e4c1c62ca21470a22599c8f9f7bc89322a318c5"
+    }
+  }
+}
