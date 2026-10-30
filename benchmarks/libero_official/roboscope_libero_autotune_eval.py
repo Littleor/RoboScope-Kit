@@ -20,11 +20,11 @@ from typing import Any
 import numpy as np
 
 KIT_ROOT = Path(os.environ.get("ROBOSCOPE_KIT_ROOT", "/root/roboscope-kit"))
-SDK_SOURCE_ROOT = KIT_ROOT / "packages" / "roboscope-inference-sdk" / "src"
+SDK_SOURCE_ROOT = KIT_ROOT / "packages" / "roboscope-kit" / "src"
 sys.path.insert(0, str(KIT_ROOT))
 sys.path.insert(0, str(SDK_SOURCE_ROOT))
 
-from roboscope_inference_sdk import (
+from roboscope_kit import (
     ActionChunk,
     BenchmarkName,
     EpisodeContext,
@@ -37,7 +37,7 @@ from roboscope_inference_sdk import (
     get_benchmark_spec,
     run,
 )
-from roboscope_inference_sdk.runtime.benchmark import (
+from roboscope_kit.runtime.benchmark import (
     EvaluationRecord,
     LegacyProgressAdapter,
     ParallelBenchmarkRuntime,
@@ -51,13 +51,13 @@ from roboscope_inference_sdk.runtime.benchmark import (
     atomic_json,
     autotune_phase,
 )
-from roboscope_inference_sdk.runtime.benchmark.policy_process import (
+from roboscope_kit.runtime.benchmark.policy_process import (
     PolicyProcessAdapter,
 )
-from roboscope_inference_sdk.runtime.benchmark.resources import (
+from roboscope_kit.runtime.benchmark.resources import (
     cpu_quota,
 )
-from roboscope_inference_sdk.runtime.benchmarks.libero import (
+from roboscope_kit.runtime.benchmarks.libero import (
     LiberoBenchmarkAdapter,
     LiberoRuntimeConfig,
 )

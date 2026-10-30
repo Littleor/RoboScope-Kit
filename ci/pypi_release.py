@@ -16,12 +16,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def read_version() -> str:
-    with (ROOT / "packages/roboscope-inference-sdk/pyproject.toml").open("rb") as handle:
+    with (ROOT / "packages/roboscope-kit/pyproject.toml").open("rb") as handle:
         return tomllib.load(handle)["project"]["version"]
 
 
 def metadata(version: str) -> bytes:
-    url = f"https://pypi.org/pypi/roboscope-inference-sdk/{version}/json"
+    url = f"https://pypi.org/pypi/roboscope-kit/{version}/json"
     with urllib.request.urlopen(url, timeout=30) as response:
         return response.read()
 

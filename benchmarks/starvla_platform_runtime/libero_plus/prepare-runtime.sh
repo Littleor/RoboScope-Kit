@@ -12,7 +12,7 @@ if [[ ! -x "${CONTROL_PYTHON}" ]]; then
   exit 11
 fi
 CONTROL_RUNTIME_ROOT="$(cd -- "$(dirname -- "${CONTROL_PYTHON}")/../.." && pwd -P)"
-EXPECTED_SDK_IMPORT_ROOT="${CONTROL_RUNTIME_ROOT}/packages/roboscope-inference-sdk/src"
+EXPECTED_SDK_IMPORT_ROOT="${CONTROL_RUNTIME_ROOT}/packages/roboscope-kit/src"
 if [[ ! -f "${MANIFEST}" ]]; then
   echo "LIBERO+ benchmark manifest is missing: ${MANIFEST}" >&2
   exit 12
@@ -68,7 +68,7 @@ SDK_IMPORT_ROOT="$(
 import sys
 from pathlib import Path
 
-from roboscope_inference_sdk.runtime.benchmarks.libero.adapter import (
+from roboscope_kit.runtime.benchmarks.libero.adapter import (
     SDK_IMPORT_ROOT,
     write_libero_config,
 )
@@ -91,7 +91,7 @@ env \
 import sys
 from pathlib import Path
 
-from roboscope_inference_sdk.runtime.benchmarks.libero.adapter import validate_libero_runtime
+from roboscope_kit.runtime.benchmarks.libero.adapter import validate_libero_runtime
 
 validate_libero_runtime(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]))
 PY

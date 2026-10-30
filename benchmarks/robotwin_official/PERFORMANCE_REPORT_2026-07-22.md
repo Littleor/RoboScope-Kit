@@ -95,7 +95,7 @@ scale linearly because expert `play_once` and physics simulation are CPU-heavy.
 The end-to-end check used the public unified entrypoint:
 
 ```bash
-python -m roboscope_inference_sdk.runtime.benchmark \
+python -m roboscope_kit.runtime.benchmark \
   --benchmark robotwin \
   --suite demo_clean \
   --checkpoint-source <checkpoint> \

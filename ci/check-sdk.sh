@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 KIT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-SDK_DIR="${KIT_ROOT}/packages/roboscope-inference-sdk"
+SDK_DIR="${KIT_ROOT}/packages/roboscope-kit"
 SDK_DIST_DIR="${SDK_DIST_DIR:-${KIT_ROOT}/sdk-dist}"
 
 # Exercise normal PEP 517 builds and wheel installation on every interpreter.
@@ -16,7 +16,7 @@ import importlib
 import pkgutil
 from importlib.metadata import version
 
-import roboscope_inference_sdk as sdk
+import roboscope_kit as sdk
 
 modules = [
     module.name for module in pkgutil.walk_packages(sdk.__path__, sdk.__name__ + ".")
@@ -25,10 +25,10 @@ modules = [
 for name in modules:
     importlib.import_module(name)
 print("SDK {}: imported {} installed modules from {}".format(
-    version("roboscope-inference-sdk"), len(modules), sdk.__file__
+    version("roboscope-kit"), len(modules), sdk.__file__
 ))
 PY
-python -m compileall -q "$(python -c 'import roboscope_inference_sdk as s; print(s.__path__[0])')"
+python -m compileall -q "$(python -c 'import roboscope_kit as s; print(s.__path__[0])')"
 
 # Only the repository's benchmark assets are added; SDK imports use the wheel.
 cd "${SDK_DIR}"

@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "roboscope-kit"
+version = "0.8.0b1"
+description = "RoboScope Kit: Policy inference integration for RoboScope simulation benchmarks"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+keywords = ["robotics", "simulation", "evaluation", "inference"]
+authors = [
+    { name = "RoboScope Team" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.urls]
+Homepage = "https://github.com/MINT-SJTU/RoboScope-Kit"
+Documentation = "https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/README.md"
+Repository = "https://github.com/MINT-SJTU/RoboScope-Kit"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/roboscope_kit"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/pyproject.toml",
+    "/uv.lock",
+    "/README.md",
+    "/AUTHORS.md",
+    "/CHANGELOG.md",
+    "/LICENSE",
+]
+
+[tool.roboscope.python-support]
+# Review at each CPython release/EOL: https://devguide.python.org/versions/
+maintained = ["3.11", "3.12", "3.13", "3.14", "3.15"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

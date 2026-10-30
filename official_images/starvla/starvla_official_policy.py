@@ -12,7 +12,7 @@ from typing import Any
 
 import cv2 as cv
 import numpy as np
-from roboscope_inference_sdk.policy import (
+from roboscope_kit.policy import (
     ActionChunk,
     EpisodeContext,
     Observation,
@@ -20,7 +20,7 @@ from roboscope_inference_sdk.policy import (
     PolicyCapabilities,
     SessionContext,
 )
-from roboscope_inference_sdk.server import run
+from roboscope_kit.server import run
 from PIL import Image
 from starvla_base_assets import ensure_starvla_base_model
 from starvla_full_checkpoint import (

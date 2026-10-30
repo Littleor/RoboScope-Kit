@@ -14,8 +14,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 KIT_ROOT = Path(__file__).resolve().parents[2]
-SDK_SOURCE = KIT_ROOT / "packages/roboscope-inference-sdk/src"
-ROBOTWIN_SOURCE = SDK_SOURCE / "roboscope_inference_sdk/runtime/benchmarks/robotwin"
+SDK_SOURCE = KIT_ROOT / "packages/roboscope-kit/src"
+ROBOTWIN_SOURCE = SDK_SOURCE / "roboscope_kit/runtime/benchmarks/robotwin"
 
 
 def load_robotwin_tasks() -> tuple[str, ...]:

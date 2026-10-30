@@ -25,7 +25,7 @@ from typing import Any
 
 import numpy as np
 
-from roboscope_inference_sdk.policy import (
+from roboscope_kit.policy import (
     ActionChunk,
     EpisodeContext,
     Observation,
@@ -524,7 +524,7 @@ def _flip_back(image: np.ndarray) -> np.ndarray:
 
 
 def main() -> None:
-    from roboscope_inference_sdk.server import run  # noqa: PLC0415
+    from roboscope_kit.server import run  # noqa: PLC0415
 
     run(XvlaDemoPolicy())
 

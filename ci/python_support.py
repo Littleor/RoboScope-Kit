@@ -19,7 +19,7 @@ def version_key(version: str) -> tuple[int, ...]:
 
 def read_policy():
     project = tomllib.loads(
-        (ROOT / "packages/roboscope-inference-sdk/pyproject.toml").read_text(encoding="utf-8")
+        (ROOT / "packages/roboscope-kit/pyproject.toml").read_text(encoding="utf-8")
     )
     return project, project["tool"]["roboscope"]["python-support"]
 

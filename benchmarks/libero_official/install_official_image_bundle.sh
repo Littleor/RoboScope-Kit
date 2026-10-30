@@ -109,9 +109,9 @@ install -d \
   "${TARGET_METADATA_ROOT}"
 
 rm -rf -- \
-  "${TARGET_KIT_ROOT}/packages/roboscope-inference-sdk" \
+  "${TARGET_KIT_ROOT}/packages/roboscope-kit" \
   "${TARGET_KIT_ROOT}/benchmarks/libero_official/starvla_runtime"
-cp -a "${SCRIPT_DIR}/evaluation-kit/packages/roboscope-inference-sdk" "${TARGET_KIT_ROOT}/packages/"
+cp -a "${SCRIPT_DIR}/evaluation-kit/packages/roboscope-kit" "${TARGET_KIT_ROOT}/packages/"
 cp -a \
   "${SCRIPT_DIR}/evaluation-kit/benchmarks/libero_official/starvla_runtime" \
   "${TARGET_KIT_ROOT}/benchmarks/libero_official/"

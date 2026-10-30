@@ -63,7 +63,7 @@ Benchmark simulator、数据集和薄 launcher 位于 `/root/autodl-fs/benchmark
 官方镜像负责：
 
 - 固定版本的 StarVLA 源码和 Python 环境。
-- RoboScope Inference SDK。
+- RoboScope Kit（`roboscope-kit`）。
 - `/workspace/roboscope-policy.json`。
 - StarVLA run snapshot 结构验证。
 - StarVLA config 驱动的 framework、processor 和推理初始化。
@@ -321,7 +321,7 @@ StarVLA 镜像安装和烘焙前会删除基础镜像遗留的
 - 安装后 runtime checksum。
 - Policy-core SDK 版本。
 - 镜像内 Control Python、完整控制 SDK、RoboScope Kit commit 和 SDK 版本。
-- 安装后的 SDK 不包含具体 Benchmark 注册表或 `roboscope_inference_sdk.runtime`。
+- 安装后的 SDK 不包含具体 Benchmark 注册表或 `roboscope_kit.runtime`。
 - 通用 StarVLA Policy import。
 - `/workspace/roboscope-policy.json` 与 manifest 一致。
 - pinned StarVLA commit。

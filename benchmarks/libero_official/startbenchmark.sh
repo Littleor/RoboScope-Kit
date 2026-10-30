@@ -37,7 +37,7 @@ if [[ "${1:-}" == "--self-test" ]]; then
   if [[ -z "${SELF_TEST_PYTHON}" && "${SCRIPT_DIR}" == "/root" ]]; then
     SELF_TEST_PYTHON="${LIBERO_PYTHON}"
   elif [[ -z "${SELF_TEST_PYTHON}" ]]; then
-    SELF_TEST_PYTHON="${SOURCE_KIT_ROOT}/packages/roboscope-inference-sdk/.venv/bin/python"
+    SELF_TEST_PYTHON="${SOURCE_KIT_ROOT}/packages/roboscope-kit/.venv/bin/python"
   fi
   SELF_TEST_RUNNER="${ROBOSCOPE_LIBERO_RUNNER:-${SCRIPT_DIR}/roboscope_libero_runner.py}"
   SELF_TEST_KIT_ROOT="${ROBOSCOPE_KIT_ROOT:-}"
@@ -101,7 +101,7 @@ if [[ -z "${ROBOSCOPE_KIT_ROOT:-}" ]]; then
   fi
 fi
 export ROBOSCOPE_KIT_ROOT
-export PYTHONPATH="${ROBOSCOPE_KIT_ROOT}/packages/roboscope-inference-sdk/src:${ROBOSCOPE_KIT_ROOT}:${PYTHONPATH:-}"
+export PYTHONPATH="${ROBOSCOPE_KIT_ROOT}/packages/roboscope-kit/src:${ROBOSCOPE_KIT_ROOT}:${PYTHONPATH:-}"
 
 SUITE="${1:-}"
 USER_CHECKPOINT_SOURCE="${2:-}"
@@ -124,7 +124,7 @@ if [[ ! -x "${LIBERO_PYTHON}" ]]; then
 fi
 
 if [[ "${BENCHMARK_RUNTIME}" == "policy" ]]; then
-  BENCHMARK_RUNTIME_DIR="${ROBOSCOPE_KIT_ROOT}/packages/roboscope-inference-sdk/src/roboscope_inference_sdk/runtime/benchmark"
+  BENCHMARK_RUNTIME_DIR="${ROBOSCOPE_KIT_ROOT}/packages/roboscope-kit/src/roboscope_kit/runtime/benchmark"
 else
   BENCHMARK_RUNTIME_DIR="${ROBOSCOPE_KIT_ROOT}/benchmarks/libero_official/starvla_runtime"
 fi

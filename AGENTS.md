@@ -2,11 +2,11 @@
 
 ## Scope
 
-This repository owns RoboScope's inference SDK, official evaluation images, benchmark adapters, evaluation launchers, and benchmark-runtime documentation. Do not put robot control, training, dataset collection, or generic LeRobot engine code here.
+This repository owns RoboScope's `roboscope-kit` Python package, official evaluation images, benchmark adapters, evaluation launchers, and benchmark-runtime documentation. Do not put robot control, training, dataset collection, or generic LeRobot engine code here.
 
 ## Source of truth
 
-- `packages/roboscope-inference-sdk/` owns the public Policy contract and platform runtime.
+- `packages/roboscope-kit/` owns the public Policy contract and platform runtime.
 - `benchmarks/libero_official/` owns the validated official base image.
 - `official_images/` owns model-specific official images.
 - `benchmarks/starvla_platform_runtime/` owns the image-local Control Runtime installer and the thin launchers for shared Benchmark environments.
@@ -85,15 +85,15 @@ against the official release-cycle API.
 GitHub Actions is the sole PyPI publisher, gated by its complete compatibility
 matrix.
 
-Every RoboScope Kit code change must bump the inference SDK version in both
-`packages/roboscope-inference-sdk/pyproject.toml` and its `uv.lock`, then bake
+Every RoboScope Kit code change must bump the `roboscope-kit` version in both
+`packages/roboscope-kit/pyproject.toml` and its `uv.lock`, then bake
 the affected official image with the documented image-build scripts. A
 code-only commit without a matching version and image bake is incomplete.
 
 Run the existing SDK and moved evaluation tests after changes:
 
 ```bash
-cd packages/roboscope-inference-sdk
+cd packages/roboscope-kit
 python -m pip install . pytest ruff matplotlib
 PYTHONPATH=src:../.. python -m pytest tests ../../tests/async_inference -q
 python -m ruff check src tests ../../benchmarks/robotwin_official

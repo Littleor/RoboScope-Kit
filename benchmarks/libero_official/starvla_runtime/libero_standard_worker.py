@@ -20,7 +20,7 @@ import numpy as np
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from roboscope_inference_sdk.runtime.benchmark import (
+from roboscope_kit.runtime.benchmark import (
     EvaluationRecord,
     WorkerLoop,
     WorkItem,

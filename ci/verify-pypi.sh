@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 KIT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-export SDK_VERSION="$(python -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["project"]["version"])' "${KIT_ROOT}/packages/roboscope-inference-sdk/pyproject.toml")"
+export SDK_VERSION="$(python -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["project"]["version"])' "${KIT_ROOT}/packages/roboscope-kit/pyproject.toml")"
 VERIFY_ROOT="$(mktemp -d)"
 trap 'rm -rf -- "${VERIFY_ROOT}"' EXIT
 unset PYTHONPATH
@@ -13,7 +13,7 @@ for attempt in $(seq 1 18); do
     --index-url https://pypi.org/simple/ \
     --no-deps --only-binary=:all: \
     --dest "${VERIFY_ROOT}/download" \
-    "roboscope-inference-sdk==${SDK_VERSION}"; then
+    "roboscope-kit==${SDK_VERSION}"; then
     break
   fi
   if [[ "${attempt}" -eq 18 ]]; then
@@ -33,9 +33,9 @@ cd "${VERIFY_ROOT}"
 import os
 from importlib.metadata import version
 
-from roboscope_inference_sdk import BenchmarkName, benchmark_names, get_benchmark_spec
+from roboscope_kit import BenchmarkName, benchmark_names, get_benchmark_spec
 
-assert version("roboscope-inference-sdk") == os.environ["SDK_VERSION"]
+assert version("roboscope-kit") == os.environ["SDK_VERSION"]
 assert BenchmarkName.ROBOTWIN.value in benchmark_names()
 assert get_benchmark_spec(BenchmarkName.LIBERO, "libero_10").suite == "libero_10"
 print(f"Published SDK {os.environ['SDK_VERSION']}: clean-environment install and public API check pass")

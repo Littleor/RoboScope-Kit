@@ -81,7 +81,7 @@ if [[ "${VERIFY_ONLY}" != "1" && -z "${ARTIFACTS_DIR}" ]]; then
 fi
 
 CONTROL_PYTHON="${TARGET_ROOT}/control-python/bin/python"
-CONTROL_SOURCE_ROOT="${TARGET_ROOT}/packages/roboscope-inference-sdk/src"
+CONTROL_SOURCE_ROOT="${TARGET_ROOT}/packages/roboscope-kit/src"
 CONTROL_LAUNCHER="${TARGET_ROOT}/benchmarks/robotwin_official/roboscope_robotwin_launcher.py"
 CONTROL_SEED_SCANNER="${TARGET_ROOT}/benchmarks/robotwin_official/roboscope_robotwin_seed_scan.py"
 CONTROL_PAIR_VERIFIER="${TARGET_ROOT}/benchmarks/robotwin_official/verify_seed_cache_pair.py"
@@ -95,7 +95,7 @@ verify_control_runtime() {
     "${TARGET_ROOT}/SDK_VERSION" \
     "${TARGET_ROOT}/PYTHON_VERSION" \
     "${CONTROL_PYTHON}" \
-    "${CONTROL_SOURCE_ROOT}/roboscope_inference_sdk/runtime/benchmark/__main__.py" \
+    "${CONTROL_SOURCE_ROOT}/roboscope_kit/runtime/benchmark/__main__.py" \
     "${CONTROL_LAUNCHER}" \
     "${CONTROL_SEED_SCANNER}" \
     "${CONTROL_PAIR_VERIFIER}" \
@@ -124,19 +124,19 @@ import json
 import sys
 import sysconfig
 
-import roboscope_inference_sdk.runtime.benchmark
-from roboscope_inference_sdk.runtime.benchmarks.calvin.adapter import SDK_IMPORT_ROOT as calvin_root
-from roboscope_inference_sdk.runtime.benchmarks.libero.adapter import SDK_IMPORT_ROOT as libero_root
-from roboscope_inference_sdk.runtime.benchmarks.libero_plus.adapter import SDK_IMPORT_ROOT as libero_plus_root
-from roboscope_inference_sdk.runtime.benchmarks.metaworld.adapter import SDK_IMPORT_ROOT as metaworld_root
-from roboscope_inference_sdk.runtime.benchmarks.robocasa.adapter import SDK_IMPORT_ROOT as robocasa_root
+import roboscope_kit.runtime.benchmark
+from roboscope_kit.runtime.benchmarks.calvin.adapter import SDK_IMPORT_ROOT as calvin_root
+from roboscope_kit.runtime.benchmarks.libero.adapter import SDK_IMPORT_ROOT as libero_root
+from roboscope_kit.runtime.benchmarks.libero_plus.adapter import SDK_IMPORT_ROOT as libero_plus_root
+from roboscope_kit.runtime.benchmarks.metaworld.adapter import SDK_IMPORT_ROOT as metaworld_root
+from roboscope_kit.runtime.benchmarks.robocasa.adapter import SDK_IMPORT_ROOT as robocasa_root
 import numpy
 
 source_root = Path(sys.argv[1]).resolve()
 target_root = Path(sys.argv[2]).resolve()
 expected_python = tuple(int(part) for part in sys.argv[3].split("."))
 site_packages = Path(sysconfig.get_path("purelib")).resolve()
-module_path = Path(roboscope_inference_sdk.runtime.benchmark.__file__).resolve()
+module_path = Path(roboscope_kit.runtime.benchmark.__file__).resolve()
 executable = Path(sys.executable).resolve()
 assert sys.version_info[:3] == expected_python
 assert executable.is_relative_to(target_root)
@@ -167,7 +167,7 @@ if [[ -z "${SOURCE_ROOT}" || ! -d "${SOURCE_ROOT}" ]]; then
   echo "Control Runtime source root is missing: ${SOURCE_ROOT}" >&2
   exit 3
 fi
-SOURCE_SDK="${SOURCE_ROOT}/packages/roboscope-inference-sdk"
+SOURCE_SDK="${SOURCE_ROOT}/packages/roboscope-kit"
 SOURCE_LAUNCHER="${SOURCE_ROOT}/benchmarks/robotwin_official/roboscope_robotwin_launcher.py"
 # Per-benchmark benchmark-image.json manifests, installed into the Control
 # Runtime as the immutable repo-committed reference (single source of truth)
@@ -183,7 +183,7 @@ BENCHMARK_MANIFESTS=(
 for path in \
   "${SOURCE_SDK}/pyproject.toml" \
   "${SOURCE_SDK}/uv.lock" \
-  "${SOURCE_SDK}/src/roboscope_inference_sdk/runtime/benchmark/__main__.py" \
+  "${SOURCE_SDK}/src/roboscope_kit/runtime/benchmark/__main__.py" \
   "${SOURCE_LAUNCHER}"; do
   if [[ ! -e "${path}" ]]; then
     echo "Control Runtime source is incomplete: ${path}" >&2

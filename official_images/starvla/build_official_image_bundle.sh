@@ -74,7 +74,7 @@ fi
 BUNDLE_NAME="roboscope-official-starvla-image-${SOURCE_SHORT}"
 
 SOURCE_PATHS=(
-  "packages/roboscope-inference-sdk"
+  "packages/roboscope-kit"
   "official_images/starvla/startbenchmark.sh"
   "official_images/starvla/resetenv.sh"
   "official_images/starvla/roboscope-policy.json"
@@ -116,8 +116,8 @@ mkdir -p \
 git -C "${KIT_ROOT}" archive --format=tar "${SOURCE_COMMIT}" "${SOURCE_PATHS[@]}" \
   | tar -xf - -C "${STAGING_DIR}/evaluation-kit"
 
-SDK_PROJECT="${STAGING_DIR}/evaluation-kit/packages/roboscope-inference-sdk"
-SDK_PACKAGE="${SDK_PROJECT}/src/roboscope_inference_sdk"
+SDK_PROJECT="${STAGING_DIR}/evaluation-kit/packages/roboscope-kit"
+SDK_PACKAGE="${SDK_PROJECT}/src/roboscope_kit"
 cp -a "${SDK_PROJECT}" "${STAGING_DIR}/control-runtime/packages/"
 install -m 0755 \
   "${STAGING_DIR}/evaluation-kit/benchmarks/robotwin_official/roboscope_robotwin_launcher.py" \
@@ -171,8 +171,8 @@ rm -rf -- \
 cat > "${SDK_PACKAGE}/__init__.py" <<'PY'
 """Benchmark-neutral RoboScope Policy process SDK."""
 
-from roboscope_inference_sdk.contracts import ActionSpec, BenchmarkSpec, FeatureKind, FeatureSpec
-from roboscope_inference_sdk.policy import (
+from roboscope_kit.contracts import ActionSpec, BenchmarkSpec, FeatureKind, FeatureSpec
+from roboscope_kit.policy import (
     ActionChunk,
     EpisodeContext,
     Observation,
@@ -180,7 +180,7 @@ from roboscope_inference_sdk.policy import (
     PolicyCapabilities,
     SessionContext,
 )
-from roboscope_inference_sdk.server import PolicyServer, PolicyState, run
+from roboscope_kit.server import PolicyServer, PolicyState, run
 
 __all__ = [
     "ActionChunk",
@@ -238,7 +238,7 @@ WHEEL_SHA256="$(sha256_file "${WHEEL_PATH}")"
 ARTIFACTS_DIR="${STAGING_DIR}/control-runtime-artifacts"
 "${STAGING_DIR}/evaluation-kit/benchmarks/starvla_platform_runtime/fetch-image-control-runtime-artifacts.sh" \
   --output-dir "${ARTIFACTS_DIR}" \
-  --uv-lock "${STAGING_DIR}/control-runtime/packages/roboscope-inference-sdk/uv.lock"
+  --uv-lock "${STAGING_DIR}/control-runtime/packages/roboscope-kit/uv.lock"
 
 OFFICIAL_SOURCE="${STAGING_DIR}/evaluation-kit/official_images/starvla"
 install -m 0755 "${OFFICIAL_SOURCE}/install_official_image_bundle.sh" "${STAGING_DIR}/install.sh"
@@ -263,12 +263,12 @@ for target_name in startbenchmark.sh resetenv.sh; do
     "${target_name}" >> "${RUNTIME_CHECKSUMS}"
 done
 
-CONTROL_SDK="${STAGING_DIR}/control-runtime/packages/roboscope-inference-sdk"
+CONTROL_SDK="${STAGING_DIR}/control-runtime/packages/roboscope-kit"
 while IFS= read -r source_file; do
   relative="${source_file#${CONTROL_SDK}/}"
   printf '%s  %s\n' \
     "$(sha256_file "${source_file}")" \
-    "../opt/roboscope/control-runtime/packages/roboscope-inference-sdk/${relative}" \
+    "../opt/roboscope/control-runtime/packages/roboscope-kit/${relative}" \
     >> "${RUNTIME_CHECKSUMS}"
 done < <(find "${CONTROL_SDK}" -type f | LC_ALL=C sort)
 CONTROL_LAUNCHER="${STAGING_DIR}/control-runtime/benchmarks/robotwin_official/roboscope_robotwin_launcher.py"
@@ -340,7 +340,7 @@ manifest = {
     "evaluation_kit_commit": os.environ["KIT_COMMIT"],
     "evaluation_kit_commit_time": os.environ["KIT_COMMIT_TIME"],
     "sdk": {
-        "distribution": "roboscope-inference-sdk",
+        "distribution": "roboscope-kit",
         "version": os.environ["SDK_VERSION"],
         "wheel": os.environ["WHEEL_NAME"],
         "sha256": os.environ["WHEEL_SHA256"],
@@ -421,5 +421,5 @@ printf '%s  %s\n' "${BUNDLE_SHA256}" "$(basename -- "${BUNDLE_PATH}")" > "${BUND
 
 echo "Built ${BUNDLE_PATH}"
 echo "RoboScope Kit commit: ${SOURCE_COMMIT}"
-echo "SDK: roboscope-inference-sdk ${SDK_VERSION}"
+echo "SDK: roboscope-kit ${SDK_VERSION}"
 echo "Bundle SHA-256: ${BUNDLE_SHA256}"

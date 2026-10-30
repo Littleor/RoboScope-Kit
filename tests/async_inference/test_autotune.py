@@ -1,7 +1,7 @@
 # Copyright 2026 RoboScope Team
 # SPDX-License-Identifier: Apache-2.0
 
-from roboscope_inference_sdk.runtime.autotune import (
+from roboscope_kit.runtime.autotune import (
     BoundHint,
     ClientMetrics,
     GTrial,

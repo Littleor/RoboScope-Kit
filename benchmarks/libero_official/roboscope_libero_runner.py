@@ -21,7 +21,7 @@ except ImportError:  # pragma: no cover
     yaml = None
 
 if TYPE_CHECKING:
-    from roboscope_inference_sdk.runtime.benchmark import BenchmarkTimingRecorder
+    from roboscope_kit.runtime.benchmark import BenchmarkTimingRecorder
 
 ROOT = Path("/root")
 STARVLA_DIR = ROOT / "starVLA"
@@ -476,7 +476,7 @@ def load_user_policy_config() -> object | None:
     if os.environ.get("ROBOSCOPE_BENCHMARK_RUNTIME", "starvla").strip() != "policy":
         return None
     try:
-        from roboscope_inference_sdk import PolicyConfigError, load_policy_runtime_config
+        from roboscope_kit import PolicyConfigError, load_policy_runtime_config
     except ImportError as exc:
         raise BenchmarkError("missing_policy_config_runtime", str(exc)) from exc
     try:
@@ -565,7 +565,7 @@ def start(args: argparse.Namespace) -> int:
     if os.environ.get("ROBOSCOPE_BENCHMARK_SELF_TEST") == "1":
         return self_test()
 
-    from roboscope_inference_sdk.runtime.benchmark import BenchmarkTimingRecorder
+    from roboscope_kit.runtime.benchmark import BenchmarkTimingRecorder
 
     ensure_dirs()
     TIMING_METRICS_FILE.unlink(missing_ok=True)

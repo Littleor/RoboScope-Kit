@@ -11,7 +11,7 @@ from benchmarks.libero_official.starvla_runtime.libero_controller import (
     percentile,
 )
 
-from roboscope_inference_sdk.runtime.benchmark.resources import (
+from roboscope_kit.runtime.benchmark.resources import (
     CpuStat,
     cpu_window,
     gpu_window,

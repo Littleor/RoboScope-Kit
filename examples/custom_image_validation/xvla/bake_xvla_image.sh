@@ -141,18 +141,18 @@ for ck in calvin libero robotwin; do
 done
 
 echo "== [6/8] SDK install + faithful-recipe runtime settings =="
-# the control runtime python needs roboscope_inference_sdk for the policy import
-pip install -q /opt/roboscope/control-runtime/packages/roboscope-inference-sdk
+# the control runtime python needs roboscope_kit for the policy import
+pip install -q /opt/roboscope/control-runtime/packages/roboscope-kit
 python3 - <<'PY'
 import re
 from pathlib import Path
 
-sdk = Path("/opt/roboscope/control-runtime/packages/roboscope-inference-sdk")
+sdk = Path("/opt/roboscope/control-runtime/packages/roboscope-kit")
 for root in (sdk / "src", sdk / "build" / "lib"):
     if not root.exists():
         continue
     # LIBERO: absolute EE control (X-VLA recipe) after settle, recipe horizons.
-    wp = root / "roboscope_inference_sdk/runtime/benchmarks/libero/worker.py"
+    wp = root / "roboscope_kit/runtime/benchmarks/libero/worker.py"
     if wp.exists():
         src = wp.read_text()
         src = re.sub(

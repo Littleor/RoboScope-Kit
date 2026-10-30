@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def source_paths(root: Path) -> list[Path]:
-    sdk_source = root / "packages/roboscope-inference-sdk/src"
+    sdk_source = root / "packages/roboscope-kit/src"
     robotwin_sources = root / "benchmarks/robotwin_official"
     paths = list(sdk_source.rglob("*.py"))
     paths.extend(robotwin_sources.glob("*.py"))

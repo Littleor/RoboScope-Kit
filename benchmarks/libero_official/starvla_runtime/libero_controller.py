@@ -21,7 +21,7 @@ from typing import Any
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from roboscope_inference_sdk.runtime.autotune import (
+from roboscope_kit.runtime.autotune import (
     ClientMetrics,
     GTrial,
     KTrial,
@@ -33,7 +33,7 @@ from roboscope_inference_sdk.runtime.autotune import (
     select_g,
     select_k,
 )
-from roboscope_inference_sdk.runtime.benchmark.resources import (
+from roboscope_kit.runtime.benchmark.resources import (
     GpuSampler,
     cpu_quota,
     cpu_window,

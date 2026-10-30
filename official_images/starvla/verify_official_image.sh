@@ -139,24 +139,24 @@ import importlib.metadata
 import importlib.util
 import sys
 
-import roboscope_inference_sdk
-from roboscope_inference_sdk.policy import SessionContext
+import roboscope_kit
+from roboscope_kit.policy import SessionContext
 
 expected = sys.argv[1]
-actual = importlib.metadata.version("roboscope-inference-sdk")
+actual = importlib.metadata.version("roboscope-kit")
 if actual != expected:
     raise SystemExit(f"SDK version mismatch: expected {expected}, got {actual}")
 for module_name in (
-    "roboscope_inference_sdk.runtime",
-    "roboscope_inference_sdk.benchmark_specs",
-    "roboscope_inference_sdk.client",
-    "roboscope_inference_sdk.policy_config",
+    "roboscope_kit.runtime",
+    "roboscope_kit.benchmark_specs",
+    "roboscope_kit.client",
+    "roboscope_kit.policy_config",
 ):
     if importlib.util.find_spec(module_name) is not None:
         raise SystemExit(f"Policy-core SDK unexpectedly contains {module_name}")
 if hasattr(SessionContext, "create"):
     raise SystemExit("Policy-core SDK unexpectedly exposes registry-dependent SessionContext.create")
-print(f"{sys.executable}: roboscope-inference-sdk {actual} (policy core)")
+print(f"{sys.executable}: roboscope-kit {actual} (policy core)")
 PY
 }
 

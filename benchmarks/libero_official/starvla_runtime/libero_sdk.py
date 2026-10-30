@@ -15,8 +15,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from roboscope_inference_sdk.policy import PolicyExecutionContract
-from roboscope_inference_sdk.runtime.benchmark import (
+from roboscope_kit.policy import PolicyExecutionContract
+from roboscope_kit.runtime.benchmark import (
     ProcessSpec,
     ReplicaContext,
     WorkerContext,

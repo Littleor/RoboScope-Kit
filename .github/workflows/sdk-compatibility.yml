@@ -24,9 +24,9 @@ jobs:
       - id: matrix
         run: echo "value=$(python ci/python_support.py matrix)" >> "$GITHUB_OUTPUT"
       - name: Check SDK syntax and standard-library baseline
-        run: vermin --target=3.11- --violations --no-tips packages/roboscope-inference-sdk/src
+        run: vermin --target=3.11- --violations --no-tips packages/roboscope-kit/src
       - name: Lint
-        working-directory: packages/roboscope-inference-sdk
+        working-directory: packages/roboscope-kit
         run: |
           python -m ruff check src tests ../../benchmarks/robotwin_official
           python -m ruff check --target-version py311 ../../ci
@@ -70,7 +70,8 @@ jobs:
 
   publish-pypi:
     name: Publish SDK to PyPI
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Publish from main only: every push, plus manual runs to retry a failed release.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: [compatibility-gate]
     runs-on: ubuntu-24.04
     concurrency:

@@ -102,7 +102,7 @@ fi
 SDK_VERSION="$(
   awk -F '=' \
     '/^version[[:space:]]*=/{gsub(/[[:space:]\"]/, "", $2); print $2; exit}' \
-    "${SOURCE_KIT_ROOT}/packages/roboscope-inference-sdk/pyproject.toml"
+    "${SOURCE_KIT_ROOT}/packages/roboscope-kit/pyproject.toml"
 )"
 if [[ -z "${SDK_VERSION}" ]]; then
   echo "Unable to read SDK version" >&2
@@ -114,7 +114,7 @@ CONTROL_SOURCE_SHA256="$(
 CONTROL_RUNTIME_PARENT="/root/benchmark-runtime/.roboscope-control-runtime"
 CONTROL_RUNTIME_ROOT="${CONTROL_RUNTIME_PARENT}/${KIT_COMMIT}/control-runtime"
 CONTROL_PYTHON="${CONTROL_RUNTIME_ROOT}/control-python/bin/python"
-CONTROL_SOURCE_ROOT="${CONTROL_RUNTIME_ROOT}/packages/roboscope-inference-sdk/src"
+CONTROL_SOURCE_ROOT="${CONTROL_RUNTIME_ROOT}/packages/roboscope-kit/src"
 IMAGE_CONTROL_RUNTIME_ROOT="/opt/roboscope/control-runtime"
 IMAGE_CONTROL_PYTHON="${IMAGE_CONTROL_RUNTIME_ROOT}/control-python/bin/python"
 
@@ -122,7 +122,7 @@ verify_control_runtime() {
   [[ "$(<"${CONTROL_RUNTIME_ROOT}/KIT_COMMIT")" == "${KIT_COMMIT}" ]] || return 1
   [[ "$(<"${CONTROL_RUNTIME_ROOT}/SDK_VERSION")" == "${SDK_VERSION}" ]] || return 1
   [[ -x "${CONTROL_PYTHON}" ]] || return 1
-  [[ -f "${CONTROL_SOURCE_ROOT}/roboscope_inference_sdk/runtime/benchmark/__main__.py" ]] || return 1
+  [[ -f "${CONTROL_SOURCE_ROOT}/roboscope_kit/runtime/benchmark/__main__.py" ]] || return 1
   [[ -f "${CONTROL_RUNTIME_ROOT}/benchmarks/robotwin_official/roboscope_robotwin_launcher.py" ]] || return 1
   [[ "$(python3 "${SCRIPT_DIR}/control-source-sha256.py" "${CONTROL_RUNTIME_ROOT}")" == "${CONTROL_SOURCE_SHA256}" ]] || return 1
   env -u PYTHONPATH "${CONTROL_PYTHON}" -I - "${CONTROL_SOURCE_ROOT}" <<'PY'
@@ -130,16 +130,16 @@ from pathlib import Path
 import sys
 import sysconfig
 
-import roboscope_inference_sdk.runtime.benchmark
-from roboscope_inference_sdk.runtime.benchmarks.calvin.adapter import SDK_IMPORT_ROOT as calvin_root
-from roboscope_inference_sdk.runtime.benchmarks.libero.adapter import SDK_IMPORT_ROOT as libero_root
-from roboscope_inference_sdk.runtime.benchmarks.libero_plus.adapter import SDK_IMPORT_ROOT as libero_plus_root
-from roboscope_inference_sdk.runtime.benchmarks.metaworld.adapter import SDK_IMPORT_ROOT as metaworld_root
-from roboscope_inference_sdk.runtime.benchmarks.robocasa.adapter import SDK_IMPORT_ROOT as robocasa_root
+import roboscope_kit.runtime.benchmark
+from roboscope_kit.runtime.benchmarks.calvin.adapter import SDK_IMPORT_ROOT as calvin_root
+from roboscope_kit.runtime.benchmarks.libero.adapter import SDK_IMPORT_ROOT as libero_root
+from roboscope_kit.runtime.benchmarks.libero_plus.adapter import SDK_IMPORT_ROOT as libero_plus_root
+from roboscope_kit.runtime.benchmarks.metaworld.adapter import SDK_IMPORT_ROOT as metaworld_root
+from roboscope_kit.runtime.benchmarks.robocasa.adapter import SDK_IMPORT_ROOT as robocasa_root
 
 source_root = Path(sys.argv[1]).resolve()
 site_packages = Path(sysconfig.get_path("purelib")).resolve()
-module_path = Path(roboscope_inference_sdk.runtime.benchmark.__file__).resolve()
+module_path = Path(roboscope_kit.runtime.benchmark.__file__).resolve()
 assert module_path.is_relative_to(source_root)
 assert not source_root.is_relative_to(site_packages)
 assert {calvin_root, libero_root, libero_plus_root, metaworld_root, robocasa_root} == {source_root}

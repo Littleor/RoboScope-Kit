@@ -72,7 +72,7 @@ for path in \
   "${TARGET_ROOT}/roboscope_libero_runner.py" \
   "${TARGET_ROOT}/roboscope_libero_autotune_eval.py" \
   "${TARGET_ROOT}/roboscope_assets/base_assets.json" \
-  "${TARGET_KIT_ROOT}/packages/roboscope-inference-sdk" \
+  "${TARGET_KIT_ROOT}/packages/roboscope-kit" \
   "${TARGET_KIT_ROOT}/benchmarks/libero_official/starvla_runtime"; do
   if [[ ! -e "${path}" ]]; then
     echo "Missing official image path: ${path}" >&2
@@ -130,23 +130,23 @@ verify_sdk() {
 import importlib.metadata
 import sys
 
-import roboscope_inference_sdk
+import roboscope_kit
 
 expected = sys.argv[1]
-actual = importlib.metadata.version("roboscope-inference-sdk")
+actual = importlib.metadata.version("roboscope-kit")
 if actual != expected:
     raise SystemExit(f"SDK version mismatch: expected {expected}, got {actual}")
-print(f"{sys.executable}: roboscope-inference-sdk {actual}")
+print(f"{sys.executable}: roboscope-kit {actual}")
 PY
 }
 
 verify_sdk "${DEFAULT_PYTHON}"
 verify_sdk "${LIBERO_PYTHON}"
 
-PYTHONPATH="${TARGET_ROOT}:${TARGET_KIT_ROOT}/packages/roboscope-inference-sdk/src:${TARGET_KIT_ROOT}" \
+PYTHONPATH="${TARGET_ROOT}:${TARGET_KIT_ROOT}/packages/roboscope-kit/src:${TARGET_KIT_ROOT}" \
   "${LIBERO_PYTHON}" - <<'PY'
 from roboscope_libero_autotune_eval import build_autotune_args
-from roboscope_inference_sdk.runtime.benchmarks.libero import adapter, worker
+from roboscope_kit.runtime.benchmarks.libero import adapter, worker
 from benchmarks.libero_official.starvla_runtime import libero_server
 
 assert build_autotune_args

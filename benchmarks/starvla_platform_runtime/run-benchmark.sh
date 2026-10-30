@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 BENCHMARK_NAME="$(<"${SCRIPT_DIR}/benchmark-name.txt")"
 IMAGE_CONTROL_RUNTIME_ROOT="/opt/roboscope/control-runtime"
 IMAGE_CONTROL_PYTHON="${IMAGE_CONTROL_RUNTIME_ROOT}/control-python/bin/python"
-IMAGE_CONTROL_SDK_ENTRY="${IMAGE_CONTROL_RUNTIME_ROOT}/packages/roboscope-inference-sdk/src/roboscope_inference_sdk/runtime/benchmark/__main__.py"
+IMAGE_CONTROL_SDK_ENTRY="${IMAGE_CONTROL_RUNTIME_ROOT}/packages/roboscope-kit/src/roboscope_kit/runtime/benchmark/__main__.py"
 LOCAL_ROOT="/root/benchmark-runtime/${BENCHMARK_NAME}"
 IMAGE_MANIFEST="${LOCAL_ROOT}/benchmark-image.json"
 
@@ -165,7 +165,7 @@ export NO_ALBUMENTATIONS_UPDATE=1
 COMMAND=(
   "${CONTROL_PYTHON}"
   -I
-  -m roboscope_inference_sdk.runtime.benchmark
+  -m roboscope_kit.runtime.benchmark
   --benchmark "${BENCHMARK_NAME}"
   --suite "${SUITE}"
   --checkpoint-source "${CHECKPOINT_SOURCE}"

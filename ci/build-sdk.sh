@@ -18,7 +18,7 @@ PYTHON
 fi
 export SOURCE_DATE_EPOCH
 
-python -m build "${KIT_ROOT}/packages/roboscope-inference-sdk" --outdir "${SDK_DIST_DIR}"
+python -m build "${KIT_ROOT}/packages/roboscope-kit" --outdir "${SDK_DIST_DIR}"
 python -m twine check "${SDK_DIST_DIR}"/*.whl "${SDK_DIST_DIR}"/*.tar.gz
 python - "${SDK_DIST_DIR}" <<'PY'
 import hashlib

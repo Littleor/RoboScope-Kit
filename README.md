@@ -1,10 +1,10 @@
 # RoboScope Kit
 
-RoboScope Kit is the source of truth for RoboScope simulation evaluation. It contains the public inference SDK, official evaluation-image build inputs, platform benchmark runtimes, and their validation assets.
+RoboScope Kit is the source of truth for RoboScope simulation evaluation. It contains the public `roboscope-kit` Python package (Policy inference API), official evaluation-image build inputs, platform benchmark runtimes, and their validation assets.
 
 ## Repository layout
 
-- `packages/roboscope-inference-sdk/`: public `Policy` API and platform-owned benchmark runtime.
+- `packages/roboscope-kit/`: public `Policy` API and platform-owned benchmark runtime.
 - `benchmarks/libero_official/`: validated official base-image bundle, installer, verifier, and external `/root/startbenchmark.sh` contract.
 - `official_images/starvla/`: benchmark-independent StarVLA official-image bundle.
 - `benchmarks/starvla_platform_runtime/`: image-local Control Runtime installer plus shared launchers for CALVIN, LIBERO-Plus, RoboCasa, and RoboTwin.
@@ -14,15 +14,15 @@ RoboScope Kit is the source of truth for RoboScope simulation evaluation. It con
 
 LeRobot's robot, policy-training, dataset, and generic simulator code is not owned here.
 
-## Inference SDK
+## Python package
 
-Install the SDK from source:
+Install `roboscope-kit` from source:
 
 ```bash
-python -m pip install ./packages/roboscope-inference-sdk
+python -m pip install ./packages/roboscope-kit
 ```
 
-Start with the [SDK guide](packages/roboscope-inference-sdk/README.md). The exact LIBERO entrypoint, observation, action, episode, and result contract is defined in [LIBERO Evaluation Protocol](packages/roboscope-inference-sdk/LIBERO_EVALUATION_PROTOCOL.md).
+Start with the [SDK guide](packages/roboscope-kit/README.md). The exact LIBERO entrypoint, observation, action, episode, and result contract is defined in [LIBERO Evaluation Protocol](packages/roboscope-kit/LIBERO_EVALUATION_PROTOCOL.md).
 
 The SDK maintains released CPython versions in the official bugfix/security
 lifecycle, with Python 3.11 as the minimum supported version. Wheels and source
@@ -71,7 +71,7 @@ their own runtime archives; this command does not reconstruct them.
 ## Validation
 
 ```bash
-cd packages/roboscope-inference-sdk
+cd packages/roboscope-kit
 python -m pip install . pytest ruff matplotlib
 PYTHONPATH=src:../.. python -m pytest tests ../../tests/async_inference -q
 python -m ruff check src tests ../../benchmarks/robotwin_official

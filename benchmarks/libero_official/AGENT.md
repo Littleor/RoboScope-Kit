@@ -15,7 +15,7 @@ LIBERO self-test and legacy direct-run path used while baking the base image.
 
 The user-facing invocation, observation/action, episode, result, and error
 contract is defined in
-`packages/roboscope-inference-sdk/LIBERO_EVALUATION_PROTOCOL.md`. Keep this
+`packages/roboscope-kit/LIBERO_EVALUATION_PROTOCOL.md`. Keep this
 handoff and the user manual consistent with that protocol whenever the runner
 or shell entrypoint changes.
 
@@ -39,7 +39,7 @@ Flow:
 
 ## Runtime note
 
-`roboscope_inference_sdk.runtime` owns benchmark orchestration and K/g selection.
+`roboscope_kit.runtime` owns benchmark orchestration and K/g selection.
 SDK 0.7.0b58 and newer require Python 3.11 or newer in every environment
 that imports the SDK. The previously pinned ``libero`` Python 3.10 environment
 is unsupported and must be upgraded and accepted separately before baking
@@ -54,7 +54,7 @@ or Policy interpreters.
 | `/root/resetenv.sh` | Pre-run process/workdir cleanup |
 | `/root/roboscope_libero_runner.py` | OSS download + asset staging + orchestration |
 | `/root/roboscope_libero_autotune_eval.py` | Autotune bridge + legacy log mirroring |
-| `/root/roboscope-kit/packages/roboscope-inference-sdk/` | Public Policy API + platform runtime |
+| `/root/roboscope-kit/packages/roboscope-kit/` | Public Policy API + platform runtime |
 | `/root/roboscope-kit/benchmarks/libero_official/starvla_runtime/` | Official StarVLA LIBERO runtime |
 | `/opt/roboscope/control-runtime/` | Image-local Control Python + complete platform runtime |
 | `/root/roboscope_assets/base_assets.json` | Base-model OSS map |
@@ -65,7 +65,7 @@ or Policy interpreters.
 Source of truth in git:
 
 - `roboscope-kit/benchmarks/libero_official/`
-- `roboscope-kit/packages/roboscope-inference-sdk/`
+- `roboscope-kit/packages/roboscope-kit/`
 
 Do not sync those paths by hand. Build and install one commit-pinned bundle:
 

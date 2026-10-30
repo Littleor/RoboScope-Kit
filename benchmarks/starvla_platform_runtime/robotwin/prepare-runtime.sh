@@ -143,7 +143,7 @@ if [[ "${QUICK_TEST}" != "1" && -n "${GENERATION_ROOT}" ]]; then
   rm -rf -- "${GENERATION_ROOT}"
   mkdir -p "${GENERATION_ROOT}"
   "${CONTROL_PYTHON}" -I \
-    -c 'from roboscope_inference_sdk.runtime.benchmarks.robotwin.seed_protocol import main; raise SystemExit(main())' \
+    -c 'from roboscope_kit.runtime.benchmarks.robotwin.seed_protocol import main; raise SystemExit(main())' \
     --source-cache-dir "${SEED_CACHE_ROOT}" \
     --generation-root "${GENERATION_ROOT}" \
     --suite "${SUITE}" \
@@ -155,7 +155,7 @@ fi
 COMMAND=(
   "${CONTROL_PYTHON}"
   -I
-  -c 'from roboscope_inference_sdk.runtime.benchmarks.robotwin.seed_cache import main; raise SystemExit(main())'
+  -c 'from roboscope_kit.runtime.benchmarks.robotwin.seed_cache import main; raise SystemExit(main())'
   --cache-dir "${CACHE_DIR}"
   --suite "${SUITE}"
   --episodes "${EPISODES}"

@@ -60,7 +60,7 @@ fi
 BUNDLE_NAME="roboscope-official-base-image-${SOURCE_SHORT}"
 
 SOURCE_PATHS=(
-  "packages/roboscope-inference-sdk"
+  "packages/roboscope-kit"
   "benchmarks/libero_official/starvla_runtime"
   "benchmarks/libero_official/startbenchmark.sh"
   "benchmarks/libero_official/resetenv.sh"
@@ -102,7 +102,7 @@ if [[ "$(sha256_file "${CALVIN_EVAL_SEQUENCES}")" != "${CALVIN_EVAL_SEQUENCES_SH
   exit 4
 fi
 
-SDK_PROJECT="${STAGING_DIR}/evaluation-kit/packages/roboscope-inference-sdk"
+SDK_PROJECT="${STAGING_DIR}/evaluation-kit/packages/roboscope-kit"
 SDK_VERSION="$(awk -F '=' '/^version[[:space:]]*=/{gsub(/[[:space:]\"]/, "", $2); print $2; exit}' "${SDK_PROJECT}/pyproject.toml")"
 if [[ -z "${SDK_VERSION}" ]]; then
   echo "Unable to read SDK version from ${SDK_PROJECT}/pyproject.toml" >&2
@@ -113,7 +113,7 @@ SOURCE_DATE_EPOCH="${SOURCE_TIMESTAMP}" uv build --wheel --clear --no-progress -
   --out-dir "${STAGING_DIR}/wheels" "${SDK_PROJECT}"
 rm -rf -- \
   "${SDK_PROJECT}/build" \
-  "${SDK_PROJECT}/src/roboscope_inference_sdk.egg-info"
+  "${SDK_PROJECT}/src/roboscope_kit.egg-info"
 
 WHEEL_COUNT="$(find "${STAGING_DIR}/wheels" -maxdepth 1 -type f -name '*.whl' | wc -l | tr -d ' ')"
 if [[ "${WHEEL_COUNT}" -ne 1 ]]; then
@@ -138,7 +138,7 @@ while IFS= read -r source_file; do
   printf '%s  %s\n' "$(sha256_file "${source_file}")" "roboscope-kit/${relative}" >> "${RUNTIME_CHECKSUMS}"
 done < <(
   find \
-    "${STAGING_DIR}/evaluation-kit/packages/roboscope-inference-sdk" \
+    "${STAGING_DIR}/evaluation-kit/packages/roboscope-kit" \
     "${STAGING_DIR}/evaluation-kit/benchmarks/libero_official/starvla_runtime" \
     -type f | LC_ALL=C sort
 )
@@ -147,7 +147,7 @@ while IFS= read -r source_file; do
   relative="${source_file#${SDK_PROJECT}/}"
   printf '%s  %s\n' \
     "$(sha256_file "${source_file}")" \
-    "../opt/roboscope/control-runtime/packages/roboscope-inference-sdk/${relative}" \
+    "../opt/roboscope/control-runtime/packages/roboscope-kit/${relative}" \
     >> "${RUNTIME_CHECKSUMS}"
 done < <(find "${SDK_PROJECT}" -type f | LC_ALL=C sort)
 CONTROL_LAUNCHER="${STAGING_DIR}/evaluation-kit/benchmarks/robotwin_official/roboscope_robotwin_launcher.py"
@@ -226,7 +226,7 @@ manifest = {
     "evaluation_kit_commit": os.environ["KIT_COMMIT"],
     "evaluation_kit_commit_time": os.environ["KIT_COMMIT_TIME"],
     "sdk": {
-        "distribution": "roboscope-inference-sdk",
+        "distribution": "roboscope-kit",
         "version": os.environ["SDK_VERSION"],
         "wheel": os.environ["WHEEL_NAME"],
         "sha256": os.environ["WHEEL_SHA256"],
@@ -288,5 +288,5 @@ printf '%s  %s\n' "${BUNDLE_SHA256}" "$(basename -- "${BUNDLE_PATH}")" > "${BUND
 
 echo "Built ${BUNDLE_PATH}"
 echo "RoboScope Kit commit: ${SOURCE_COMMIT}"
-echo "SDK: roboscope-inference-sdk ${SDK_VERSION}"
+echo "SDK: roboscope-kit ${SDK_VERSION}"
 echo "Bundle SHA-256: ${BUNDLE_SHA256}"
