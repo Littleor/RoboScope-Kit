@@ -1,17 +1,11 @@
-# Official Base Image — Autotune Evaluation Handoff
+# LIBERO Evaluation — Autotune Handoff
 
 ## Purpose
-
-Custom evaluation images are baked from the AutoDL container that exposes:
-
-```bash
-ssh -p <port> root@connect.westb.seetacloud.com
-```
 
 `/root/startbenchmark.sh` is the sole external entrypoint. It now runs the
 platform-selected Benchmark runtime whenever Cloud provides
 `ROBOSCOPE_PLATFORM_ENTRYPOINT`. Without that variable it retains the hermetic
-LIBERO self-test and legacy direct-run path used while baking the base image.
+LIBERO self-test and legacy direct-run path.
 
 The user-facing invocation, observation/action, episode, result, and error
 contract is defined in
@@ -42,11 +36,11 @@ Flow:
 `roboscope_kit.runtime` owns benchmark orchestration and K/g selection.
 SDK 0.7.0b58 and newer require Python 3.11 or newer in every environment
 that imports the SDK. The previously pinned ``libero`` Python 3.10 environment
-is unsupported and must be upgraded and accepted separately before baking
+is unsupported and must be upgraded and accepted separately before using
 this release. The Control Python 3.11 runtime alone does not upgrade simulator
 or Policy interpreters.
 
-## Image layout (must be baked)
+## Image layout
 
 | Path | Role |
 | --- | --- |
@@ -55,7 +49,7 @@ or Policy interpreters.
 | `/root/roboscope_libero_runner.py` | OSS download + asset staging + orchestration |
 | `/root/roboscope_libero_autotune_eval.py` | Autotune bridge + legacy log mirroring |
 | `/root/roboscope-kit/packages/roboscope-kit/` | Public Policy API + platform runtime |
-| `/root/roboscope-kit/benchmarks/libero_official/starvla_runtime/` | Official StarVLA LIBERO runtime |
+| `/root/roboscope-kit/benchmarks/libero_official/starvla_runtime/` | StarVLA LIBERO runtime |
 | `/opt/roboscope/control-runtime/` | Image-local Control Python + complete platform runtime |
 | `/root/roboscope_assets/base_assets.json` | Base-model OSS map |
 | `/root/starVLA` | Policy server + `ModelClient` |
@@ -67,42 +61,7 @@ Source of truth in git:
 - `roboscope-kit/benchmarks/libero_official/`
 - `roboscope-kit/packages/roboscope-kit/`
 
-Do not sync those paths by hand. Build and install one commit-pinned bundle:
-
-```bash
-# In a clean RoboScope Kit checkout. The default source ref is origin/main.
-benchmarks/libero_official/build_official_image_bundle.sh
-
-# Copy the resulting tarball to a fresh instance created from the current
-# official base image, then run inside that instance as root.
-tar -xzf roboscope-official-base-image-<commit>.tar.gz
-cd roboscope-official-base-image-<commit>
-./install.sh
-```
-
-The build fetches the pinned Control Runtime install artifacts (uv, standalone
-CPython 3.11.13, and the numpy wheel resolved from the SDK `uv.lock`) into the
-bundle. `install.sh` installs the Control Runtime only from those bundle-local
-artifacts, so it works on an AutoDL instance with no PyPI/GitHub access and no
-manually installed `uv`; the fetched artifact manifest is recorded in
-`control-runtime-artifacts/control-runtime-artifacts.json`, covered by the bundle
-`payload.sha256`, and summarized under `manifest.json` → `control_runtime_artifacts`.
-
-The installer replaces the SDK source and complete Benchmark runtime, installs
-the built SDK wheel into both the default and LIBERO Python environments, bakes
-the dedicated Control Python under `/opt/roboscope/control-runtime`, writes
-`/root/.roboscope-official-image/manifest.json`, verifies every runtime file
-against its SHA-256 checksum, and runs the hermetic `--self-test`. It then resets
-the runtime and removes user Policy configuration, workspace files, checkpoints,
-package caches, and shell history before baking.
-
-Personal evaluation images must be rebuilt from this base image to inherit the
-fixed image-local Control Runtime path. Only save the stopped instance as a new
-AutoDL official base image after `install.sh` passes.
-Wait for the new private image status to become `finished`, verify a fresh
-instance created from it, and then change Cloud's `BENCHMARK_BASE_IMAGE_UUID`.
-An RoboScope Kit commit alone never updates the official base image, and an image should
-never be published without its commit/version manifest.
+Do not sync those paths by hand.
 
 ## Product status protocol
 
@@ -227,7 +186,7 @@ Ensure OSS contains the metadata files under:
 before running OFT configs that point at
 `./playground/Pretrained_models/Qwen2.5-VL-3B-Instruct`.
 
-## Smoke checks before baking
+## Smoke checks
 
 ```bash
 # Hermetic SDK/entrypoint check with no OSS, GPU, dataset or checkpoint.
@@ -245,7 +204,7 @@ sys.path.insert(0, "/root")
 sys.path.insert(0, "/root/roboscope-kit")
 from roboscope_libero_autotune_eval import build_autotune_args
 from benchmarks.libero_official.starvla_runtime import libero_server
-print("official StarVLA runtime imports ok")
+print("StarVLA LIBERO runtime imports ok")
 PY
 
 # Entrypoint usage / missing-args log shape

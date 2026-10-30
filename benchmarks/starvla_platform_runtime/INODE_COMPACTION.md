@@ -55,7 +55,7 @@ on the instance system disk.
 ## Controlled rollout
 
 Use a clean checkout of the exact RoboScope Kit commit intended for the
-official images and shared launchers. Keep the AutoDL shared disk mounted at
+shared launchers. Keep the AutoDL shared disk mounted at
 `/root/autodl-fs`.
 
 First collect the read-only preview:
@@ -87,7 +87,7 @@ wrapper and replaces the selected runtime root with its local-runtime symbolic
 link. The original expanded root is retained under that benchmark's
 `.roboscope-compaction/expanded/root` until acceptance. The wrapper keeps the live manifest, SDK
 version, launcher, and benchmark preparation semantics byte-for-byte intact.
-This avoids requiring existing official or custom images to change their baked
+This avoids requiring existing images to change their baked
 manifest reference for the inode compaction rollout.
 
 ```bash

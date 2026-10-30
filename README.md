@@ -6,7 +6,6 @@ Python; RoboScope runs the simulators, schedules the evaluation, and scores the 
 This repository is the single source of truth for RoboScope simulation evaluation. It contains:
 
 - the `roboscope-kit` Python package, with the public `Policy` API and the platform benchmark runtime;
-- the build inputs for the official evaluation base image;
 - the launchers and runtimes for the shared benchmark environments;
 - engineering demos that validate the custom-image path.
 
@@ -31,7 +30,7 @@ is defined in the [LIBERO Evaluation Protocol](packages/roboscope-kit/LIBERO_EVA
 | Path | Contents |
 | --- | --- |
 | `packages/roboscope-kit/` | The `roboscope-kit` package: public `Policy` API, protocol client and server, platform benchmark runtime, and the evaluation protocol documents |
-| `benchmarks/libero_official/` | Official base-image bundle: builder, installer, verifier, and the `/root/startbenchmark.sh` entrypoint |
+| `benchmarks/libero_official/` | LIBERO entrypoint (`/root/startbenchmark.sh`), runner, and self-test |
 | `benchmarks/starvla_platform_runtime/` | Image-local Control Runtime installer, the per-benchmark `benchmark-image.json` manifests, and the thin launchers for CALVIN, LIBERO, LIBERO-Plus, MetaWorld, RoboCasa, and RoboTwin |
 | `benchmarks/robotwin_official/` | RoboTwin launch and seed-cache tooling |
 | `examples/custom_image_validation/` | Engineering demos for the custom-image path; they are not part of the product support matrix |
@@ -80,35 +79,18 @@ Releases are automatic. GitHub Actions (`.github/workflows/sdk-compatibility.yml
 
 A version that is already on PyPI is never uploaded again; CI only re-checks the install. Pull requests run
 the tests but never publish. To retry a failed upload, run the `SDK compatibility` workflow manually on
-`main`. Releasing the package does not bake or publish an AutoDL image.
+`main`.
 
-## Official base image
-
-Build a bundle pinned to one commit from a clean checkout:
-
-```bash
-benchmarks/libero_official/build_official_image_bundle.sh --ref origin/main
-```
-
-The bundle is written to `dist/official-image/`. Copy it into a fresh instance created from the current
-official image and run its `install.sh`. The installer verifies checksums, installs the image-local Control
-Runtime and `roboscope-kit`, runs the self-test, and clears user state before baking.
-
-A baked image must be the exact output of the committed scripts and manifests. Never edit files inside a
-saved image by hand; commit the change here and bake again. Pushing to this repository does not publish an
-AutoDL image or change the Cloud image UUID. The full bake and rollout procedure is in the
-[base image handoff](benchmarks/libero_official/AGENT.md).
-
-### Recovering a lost shared LIBERO runtime
+## Recovering a lost shared LIBERO runtime
 
 The shared disk keeps the LIBERO launch scripts and runtime archive under
 `/root/autodl-fs/benchmarks/libero/`. Each evaluation extracts the archive into
 `/root/benchmark-runtime/libero/`. The benchmark manifest always comes from the image's own Control Runtime,
-so restoring shared files never changes a saved image's `roboscope-kit` version or benchmark configuration,
+so restoring shared files never changes an image's `roboscope-kit` version or benchmark configuration,
 and a local manifest that differs from the image's copy is rejected.
 
-If the whole shared LIBERO directory is lost, create a fresh instance from the validated official base image
-and run the committed installer from a clean checkout:
+If the whole shared LIBERO directory is lost, run the committed installer from a clean checkout on an
+instance that has the source LIBERO environment under `/root`:
 
 ```bash
 benchmarks/starvla_platform_runtime/install-platform-runtimes.sh \
@@ -117,7 +99,7 @@ benchmarks/starvla_platform_runtime/install-platform-runtimes.sh \
 
 It checks the source LIBERO environment, rebuilds the compressed runtime, records its SHA-256 and the
 recovery commit, and publishes the archive and launch scripts together. It refuses to overwrite an existing
-LIBERO directory. Run it under `tmux`, keep the source image ID and the recovery log, and verify a real
+LIBERO directory. Run it under `tmux`, keep the recovery log, and verify a real
 episode before treating the recovery as complete. Other benchmarks need their own runtime archives; this
 command does not rebuild them.
 
