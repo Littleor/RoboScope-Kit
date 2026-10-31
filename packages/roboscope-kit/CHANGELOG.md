@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0b7 (Unreleased)
+
+- Evaluate at a fixed K/g with `--concurrency K --replicas G`, which skips autotune probing and records
+  `mode: fixed` in `result.json`, so one configuration can be measured or reproduced through the public
+  CLI. Both flags are required together and cannot be combined with `--quick-test` or
+  `--autotune-strategy`.
+
 ## 0.8.0b6 (Unreleased)
 
 - Add the opt-in `diagonal` autotune strategy (`autotune_strategy: diagonal`). It ramps workers on one

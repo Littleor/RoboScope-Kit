@@ -89,6 +89,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "manifest's autotune_strategy",
     )
     parser.add_argument(
+        "--concurrency",
+        type=int,
+        metavar="K",
+        help="evaluate with K benchmark Workers instead of autotuning K/g; requires --replicas",
+    )
+    parser.add_argument(
+        "--replicas",
+        type=int,
+        metavar="G",
+        help="evaluate with G Policy replicas instead of autotuning K/g; requires --concurrency",
+    )
+    parser.add_argument(
         "--legacy-contract-root",
         type=Path,
         default=(
@@ -173,6 +185,16 @@ def _run_evaluation(
         raise ValueError("--episodes must be positive")
     if args.quick_test and args.shard_index is not None:
         raise ValueError("--quick-test cannot be combined with sharding")
+    fixed = args.concurrency is not None or args.replicas is not None
+    if fixed:
+        if args.concurrency is None or args.replicas is None:
+            raise ValueError("--concurrency and --replicas must be given together")
+        if args.concurrency < 1 or args.replicas < 1:
+            raise ValueError("--concurrency and --replicas must be positive")
+        if args.quick_test:
+            raise ValueError("--quick-test runs at K=1/g=1 and cannot be combined with --concurrency")
+        if args.autotune_strategy is not None:
+            raise ValueError("--autotune-strategy selects a search and cannot be combined with a fixed K/g")
     if args.shard_count is not None and args.shard_index is None:
         raise ValueError("--shard-count requires --shard-index")
     if args.shard_index is not None and args.shard_index < 0:
@@ -221,8 +243,11 @@ def _run_evaluation(
             # selected for the configuration that is evaluated.
             cuda_mps = CudaMpsSession(gpu_devices=gpu_devices, log_dir=args.output_dir / "cuda-mps")
             cuda_mps.start()
-        if args.quick_test:
-            selected = {"k": 1, "g": 1, "mode": "quick-test"}
+        if args.quick_test or fixed:
+            if args.quick_test:
+                selected = {"k": 1, "g": 1, "mode": "quick-test"}
+            else:
+                selected = {"k": args.concurrency, "g": args.replicas, "mode": "fixed"}
             with autotune_phase(phase_timing_callback):
                 pass
             output = run_candidate(
@@ -232,8 +257,8 @@ def _run_evaluation(
                 policy=policy,
                 benchmark_spec=benchmark_spec,
                 gpu_devices=gpu_devices,
-                concurrency=1,
-                replicas=1,
+                concurrency=int(selected["k"]),
+                replicas=int(selected["g"]),
                 output_dir=args.output_dir,
                 probe=False,
                 phase_timing_callback=phase_timing_callback,

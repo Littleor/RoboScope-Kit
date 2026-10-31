@@ -105,6 +105,20 @@ extrapolated from the measured replica footprint and the marginal memory per Wor
 Worker's first item, and stops measuring when the first Worker runs out of work. Probes it measures but
 does not keep are marked `rejected` in `selection.json`.
 
+To measure or reproduce one configuration, pass `--concurrency K --replicas G`. The evaluation then runs at
+that `K` and `g` without probing, and `result.json` records `"autotune": {"k": K, "g": G, "mode": "fixed"}`:
+
+```bash
+python -m roboscope_kit.runtime.benchmark \
+    --benchmark libero --suite libero_10 --checkpoint-source /models/my-checkpoint \
+    --image-manifest /path/to/benchmark-image.json \
+    --output-dir /runs/libero_10-k12-g3 \
+    --concurrency 12 --replicas 3
+```
+
+Both flags are required together, and neither can be combined with `--quick-test` or
+`--autotune-strategy`.
+
 ### Progress and errors
 
 RoboTwin and RoboCasa report each finished episode as it completes, so progress moves while a long Work

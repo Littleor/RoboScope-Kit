@@ -196,7 +196,9 @@ The platform owns scheduling. Users do not set these values in inference code.
 All Policies use platform-owned end-to-end K/g probing for
 scored evaluations. Candidates run real LIBERO episodes with isolated Policy replicas and paired K/g
 growth. The platform selects the last candidate that improves episode throughput without approaching CPU
-throttling, GPU utilization, or GPU-memory limits. Quick test remains fixed at `K=1/g=1`.
+throttling, GPU utilization, or GPU-memory limits. Quick test remains fixed at `K=1/g=1`. An operator can skip
+probing with `--concurrency K --replicas G`; the evaluation then runs at that fixed pair, and `result.json`
+records `mode: fixed`.
 
 Each probe runs the same representative task set, `probe_task_count` tasks (default 10, capped at the suite
 size), with `probe_episodes_per_task` episodes per task (default 1). With `probe_items_per_worker` above 0,
