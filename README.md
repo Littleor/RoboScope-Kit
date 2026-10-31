@@ -33,6 +33,7 @@ is defined in the [LIBERO Evaluation Protocol](packages/roboscope-kit/LIBERO_EVA
 | `benchmarks/libero_official/` | LIBERO entrypoint (`/root/startbenchmark.sh`), runner, and self-test |
 | `benchmarks/starvla_platform_runtime/` | Image-local Control Runtime installer, the per-benchmark `benchmark-image.json` manifests, and the thin launchers for CALVIN, LIBERO, LIBERO-Plus, MetaWorld, RoboCasa, and RoboTwin |
 | `benchmarks/robotwin_official/` | RoboTwin launch and seed-cache tooling |
+| `examples/starvla/` | The StarVLA `Policy` behind the StarVLA results in the RoboScope Kit technical report |
 | `examples/custom_image_validation/` | Engineering demos for the custom-image path; they are not part of the product support matrix |
 | `tests/async_inference/` | Autotune and LIBERO controller regressions |
 | `ci/` | Build, compatibility, and PyPI release scripts used by GitHub Actions |

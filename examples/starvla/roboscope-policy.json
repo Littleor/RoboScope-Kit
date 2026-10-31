@@ -1,0 +1,25 @@
+{
+  "schema_version": 2,
+  "command": [
+    "/root/miniconda3/envs/starVLA/bin/python",
+    "/opt/roboscope/starvla/starvla_policy.py"
+  ],
+  "cwd": "/root/starVLA",
+  "benchmark_config": {
+    "metaworld": {
+      "cameras": [
+        {
+          "feature": "images.primary",
+          "camera_name": "corner2",
+          "render_width": 480,
+          "render_height": 480,
+          "camera_position": null,
+          "rotation_deg": 180,
+          "center_crop_ratio": 0.6666666666666667,
+          "output_width": 224,
+          "output_height": 224
+        }
+      ]
+    }
+  }
+}
