@@ -1,7 +1,7 @@
 # Copyright 2026 RoboScope Team
 # SPDX-License-Identifier: Apache-2.0
 
-"""Platform adapter contracts for integrating inference and evaluation code."""
+"""Adapter contracts for integrating inference and evaluation code."""
 
 from __future__ import annotations
 

@@ -13,14 +13,13 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-DEFAULT_CHECKPOINT_DIR = Path("/root/benchmark/checkpoint")
 PROGRESS_PATTERN = re.compile(r"(\d+(?:\.\d+)?)%")
 CheckpointProgressCallback = Callable[[int], None]
 
 
 def materialize_checkpoint(
     source: str,
-    target: Path = DEFAULT_CHECKPOINT_DIR,
+    target: Path | None,
     progress_callback: CheckpointProgressCallback | None = None,
 ) -> Path:
     if source.startswith("/"):
@@ -31,6 +30,8 @@ def materialize_checkpoint(
         return path
     if not source.startswith("oss://"):
         raise ValueError("checkpoint source must be an absolute path or oss:// prefix")
+    if target is None:
+        raise ValueError("an oss:// checkpoint source needs a download directory")
     binary = shutil.which(os.environ.get("OSSUTIL_BIN", "ossutil")) or shutil.which("ossutil64")
     if binary is None:
         raise RuntimeError("ossutil or ossutil64 is required to download an OSS checkpoint")

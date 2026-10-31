@@ -1,12 +1,12 @@
 # RoboScope Kit
 
-RoboScope Kit connects your model to RoboScope's simulation benchmarks. You write one `Policy` class in
-Python; RoboScope runs the simulators, schedules the evaluation, and scores the results.
+RoboScope Kit evaluates your model on standard robot simulation benchmarks. You write one `Policy` class in
+Python; the benchmark runtime drives the simulators, schedules the evaluation, and scores the results.
 
-This repository is the single source of truth for RoboScope simulation evaluation. It contains:
+This repository contains:
 
-- the `roboscope-kit` Python package, with the public `Policy` API and the platform benchmark runtime;
-- the launchers and runtimes for the shared benchmark environments;
+- the `roboscope-kit` Python package, with the public `Policy` API and the benchmark runtime;
+- one directory per benchmark, with its manifest and the script that builds its simulator environment;
 - example Policies for StarVLA and X-VLA.
 
 Robot control, policy training, dataset collection, and generic LeRobot simulator code do not belong here.
@@ -22,20 +22,19 @@ import roboscope_kit
 ```
 
 Python 3.11 or newer is required. Start with the [package guide](packages/roboscope-kit/README.md), which
-shows a complete `Policy`. The exact LIBERO contract (entrypoint, observations, actions, episodes, results)
-is defined in the [LIBERO Evaluation Protocol](packages/roboscope-kit/LIBERO_EVALUATION_PROTOCOL.md).
+shows a complete `Policy` and the command that evaluates it. The exact LIBERO contract (invocation,
+observations, actions, episodes, results) is defined in the
+[LIBERO Evaluation Protocol](packages/roboscope-kit/LIBERO_EVALUATION_PROTOCOL.md).
 
 ## Repository layout
 
 | Path | Contents |
 | --- | --- |
-| `packages/roboscope-kit/` | The `roboscope-kit` package: public `Policy` API, protocol client and server, platform benchmark runtime, and the evaluation protocol documents |
-| `benchmarks/libero_official/` | LIBERO entrypoint (`/root/startbenchmark.sh`), runner, and self-test |
-| `benchmarks/starvla_platform_runtime/` | Image-local Control Runtime installer, the per-benchmark `benchmark-image.json` manifests, and the thin launchers for CALVIN, LIBERO, LIBERO-Plus, MetaWorld, RoboCasa, and RoboTwin |
-| `benchmarks/robotwin_official/` | RoboTwin launch and seed-cache tooling |
+| `packages/roboscope-kit/` | The `roboscope-kit` package: public `Policy` API, protocol client and server, benchmark runtime, and the evaluation protocol documents |
+| `benchmarks/<benchmark>/` | For CALVIN, LIBERO, LIBERO-Plus, MetaWorld, RoboCasa, and RoboTwin: the `benchmark-manifest.json` and `build-runtime.sh`, which builds the pinned simulator environment; RoboTwin also has its launcher and seed-cache tooling |
 | `examples/starvla/` | The StarVLA `Policy` and one demo per benchmark, including the configurations behind the RoboScope Kit technical report |
 | `examples/xvla/` | An X-VLA `Policy` example: a stateful Policy serving several benchmarks |
-| `tests/async_inference/` | Autotune and LIBERO controller regressions |
+| `tests/async_inference/` | Autotune regressions |
 | `ci/` | Build, compatibility, and PyPI release scripts used by GitHub Actions |
 
 ## Development
@@ -46,10 +45,15 @@ Install from source and run the checks:
 cd packages/roboscope-kit
 python -m pip install . pytest ruff matplotlib
 PYTHONPATH=src:../.. python -m pytest tests ../../tests/async_inference -q
-python -m ruff check src tests ../../benchmarks/robotwin_official
+python -m ruff check src tests ../../benchmarks/robotwin
+```
 
-cd ../..
-benchmarks/libero_official/startbenchmark.sh --self-test
+To build a benchmark's simulator environment and check it against the kit:
+
+```bash
+benchmarks/libero/build-runtime.sh /sim/libero
+python -m roboscope_kit.runtime.benchmark --benchmark libero --self-test \
+    --benchmark-manifest /sim/libero/benchmark-manifest.json --output-dir /tmp/libero-self-test
 ```
 
 To reproduce the CI compatibility check on the built wheel and sdist, run these with the interpreter you
@@ -65,8 +69,7 @@ Supported Python versions follow the official CPython release lifecycle, with Py
 The list lives in `packages/roboscope-kit/pyproject.toml` under `tool.roboscope.python-support`; CI reads it
 to build its test matrix and fails when it drifts from the official lifecycle.
 
-Real image installation, simulator episodes, and model loading need the documented target environment and
-credentials.
+Simulator builds, real episodes, and model loading need Linux x86_64, a GPU, and network access.
 
 ## Releases
 
@@ -81,28 +84,6 @@ Releases are automatic. GitHub Actions (`.github/workflows/sdk-compatibility.yml
 A version that is already on PyPI is never uploaded again; CI only re-checks the install. Pull requests run
 the tests but never publish. To retry a failed upload, run the `SDK compatibility` workflow manually on
 `main`.
-
-## Recovering a lost shared LIBERO runtime
-
-The shared disk keeps the LIBERO launch scripts and runtime archive under
-`/root/autodl-fs/benchmarks/libero/`. Each evaluation extracts the archive into
-`/root/benchmark-runtime/libero/`. The benchmark manifest always comes from the image's own Control Runtime,
-so restoring shared files never changes an image's `roboscope-kit` version or benchmark configuration,
-and a local manifest that differs from the image's copy is rejected.
-
-If the whole shared LIBERO directory is lost, run the committed installer from a clean checkout on an
-instance that has the source LIBERO environment under `/root`:
-
-```bash
-benchmarks/starvla_platform_runtime/install-platform-runtimes.sh \
-  --recover-libero /root /root/autodl-fs/benchmarks "$(git rev-parse HEAD)"
-```
-
-It checks the source LIBERO environment, rebuilds the compressed runtime, records its SHA-256 and the
-recovery commit, and publishes the archive and launch scripts together. It refuses to overwrite an existing
-LIBERO directory. Run it under `tmux`, keep the recovery log, and verify a real
-episode before treating the recovery as complete. Other benchmarks need their own runtime archives; this
-command does not rebuild them.
 
 ## License
 

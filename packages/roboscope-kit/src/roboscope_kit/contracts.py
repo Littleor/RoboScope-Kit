@@ -10,7 +10,7 @@ from enum import Enum
 from typing import Any
 
 
-class FeatureKind(str, Enum):  # noqa: UP042 -- benchmark images include Python 3.10
+class FeatureKind(str, Enum):  # noqa: UP042 -- benchmark environments include Python 3.10
     IMAGE = "image"
     STATE = "state"
     LANGUAGE = "language"

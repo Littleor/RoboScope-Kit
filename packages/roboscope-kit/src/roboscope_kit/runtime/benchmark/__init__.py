@@ -1,7 +1,7 @@
 # Copyright 2026 RoboScope Team
 # SPDX-License-Identifier: Apache-2.0
 
-"""Platform runtime for autotuned, parallel benchmark execution."""
+"""Benchmark runtime for autotuned, parallel benchmark execution."""
 
 from .adapters import (
     BenchmarkAdapter,
@@ -12,8 +12,7 @@ from .adapters import (
 )
 from .autotune import autotune_phase
 from .factories import BenchmarkFactory, BenchmarkRunRequest
-from .image_manifest import BenchmarkImageManifest, load_benchmark_image_manifest
-from .legacy import LegacyContract, LegacyProgressAdapter
+from .manifest import BenchmarkManifest, load_benchmark_manifest
 from .orchestrator import ParallelBenchmarkRuntime, RuntimeConfig, aggregate_standard_results
 from .policy_process import PolicyProcessAdapter
 from .processes import InferencePool
@@ -26,7 +25,7 @@ from .worker import WorkerLoop
 __all__ = [
     "BenchmarkAdapter",
     "BenchmarkFactory",
-    "BenchmarkImageManifest",
+    "BenchmarkManifest",
     "BenchmarkRunRequest",
     "BenchmarkTimingRecorder",
     "ClaimedWork",
@@ -35,8 +34,6 @@ __all__ = [
     "InferenceAdapter",
     "GpuSampler",
     "InferencePool",
-    "LegacyContract",
-    "LegacyProgressAdapter",
     "ParallelBenchmarkRuntime",
     "PhaseTimingCallback",
     "PolicyProcessAdapter",
@@ -56,5 +53,5 @@ __all__ = [
     "gpu_window",
     "read_cpu_stat",
     "atomic_json",
-    "load_benchmark_image_manifest",
+    "load_benchmark_manifest",
 ]

@@ -22,16 +22,50 @@ StarVLA publishes LIBERO-trained checkpoints for LIBERO-Plus and evaluates them 
 demo does the same. StarVLA publishes no CALVIN or MetaWorld checkpoint, so those demos use community
 StarVLA checkpoints.
 
-To prepare a demo, check out [StarVLA](https://github.com/starVLA/starVLA) at the listed revision under
-`/root/starVLA`, then build the run snapshot:
+## Run a demo
 
-```bash
-/root/miniconda3/envs/starVLA/bin/python /opt/roboscope/starvla/prepare_snapshot.py libero /root/roboscope-checkpoint
-```
+The example directory, the StarVLA checkout, and every environment can live wherever you choose; the paths
+below are placeholders.
 
-`prepare_snapshot.py` downloads the checkpoint at the pinned revision and merges the demo's `config` section
-into `config.yaml`. Evaluate with the Policy process contract [`roboscope-policy.json`](roboscope-policy.json),
-or [`libero/roboscope-policy.json`](libero/roboscope-policy.json) for the LIBERO demo.
+1. Check out [StarVLA](https://github.com/starVLA/starVLA) at the demo's revision, for example in
+   `/path/to/starVLA`, and create a Python environment for it (called `starVLA` below) with StarVLA's
+   requirements, `roboscope-kit`, and `huggingface_hub`.
+2. Build the benchmark's simulator environment with
+   [`benchmarks/<benchmark>/build-runtime.sh <install-dir>`](https://github.com/MINT-SJTU/RoboScope-Kit/tree/main/benchmarks);
+   it copies the benchmark manifest to `<install-dir>/benchmark-manifest.json`.
+3. Build the run snapshot. `prepare_snapshot.py` downloads the checkpoint at the pinned revision and merges
+   the demo's `config` section into `config.yaml`:
+
+   ```bash
+   /path/to/envs/starVLA/bin/python /path/to/RoboScope-Kit/examples/starvla/prepare_snapshot.py \
+     libero /models/starvla-libero
+   ```
+
+4. Edit the Policy process contract: [`libero/roboscope-policy.json`](libero/roboscope-policy.json) for the
+   LIBERO demo, [`roboscope-policy.json`](roboscope-policy.json) for every other demo. Replace the
+   `/path/to/...` placeholders: `command[0]` is the absolute path of the `starVLA` environment's Python,
+   `command[1]` the absolute path of the Policy file in this directory, and `cwd` the StarVLA checkout. The
+   runtime checks that `command[0]` is an executable file and `cwd` an existing directory before every run.
+5. Evaluate with the benchmark CLI, from any Python environment that has `roboscope-kit` installed. The run
+   snapshot is the checkpoint source:
+
+   ```bash
+   python -m roboscope_kit.runtime.benchmark \
+       --benchmark libero --suite libero_10 --checkpoint-source /models/starvla-libero \
+       --benchmark-manifest /path/to/libero-install/benchmark-manifest.json \
+       --policy-config /path/to/RoboScope-Kit/examples/starvla/libero/roboscope-policy.json \
+       --output-dir /runs/starvla/libero_10
+   ```
+
+   Add `--quick-test` for a short smoke run, or `--concurrency K --replicas G` to evaluate at a fixed K/g
+   instead of letting Autotune choose. Results, progress, and logs are written under `--output-dir`.
+
+The Policy files import each other, so keep them together in this directory. They import StarVLA from the
+Policy's working directory (the contract's `cwd`); set `STARVLA_ROOT` to use another checkout. When a run
+snapshot lacks the Qwen base-model metadata its `config.yaml` names, `starvla_base_assets.py` downloads it with
+`ossutil` from `BENCHMARK_BASE_OSS_URI` (with `BENCHMARK_BASE_ENDPOINT`, `BENCHMARK_BASE_ACCESS_KEY_ID`, and
+`BENCHMARK_BASE_ACCESS_KEY_SECRET`) into `ROBOSCOPE_STARVLA_BASE_CACHE`, by default
+`~/.cache/roboscope-kit/starvla-base-models`.
 
 ## Files
 
@@ -43,10 +77,9 @@ or [`libero/roboscope-policy.json`](libero/roboscope-policy.json) for the LIBERO
 | `starvla_base_assets.py` | Fetches the Qwen base-model metadata the framework needs to build |
 | `prepare_snapshot.py` | Builds a demo's run snapshot from its `demo.yaml` |
 | `export_starvla_eval_run.py` | Exports your own training run as a self-contained snapshot with relative resource paths |
-| `roboscope-policy.json` | Policy process contract, installed at `/workspace/roboscope-policy.json` |
+| `roboscope-policy.json` | Policy process contract, passed to the runtime with `--policy-config` |
+| `libero/roboscope-policy.json` | Policy process contract of the LIBERO demo |
 
-The contracts expect these files under `/opt/roboscope/starvla/`, the StarVLA source under
-`/root/starVLA`, and a `starVLA` conda environment that has `roboscope-kit` and `huggingface_hub` installed.
 
 ## Behavior
 
@@ -105,7 +138,8 @@ A training run usually references resources by absolute paths on the training ho
 evaluation:
 
 ```bash
-/root/miniconda3/envs/starVLA/bin/python /opt/roboscope/starvla/export_starvla_eval_run.py \
+STARVLA_ROOT=/path/to/starVLA /path/to/envs/starVLA/bin/python \
+  /path/to/RoboScope-Kit/examples/starvla/export_starvla_eval_run.py \
   --run-dir <training run> \
   --checkpoint <training run>/checkpoints/<selected checkpoint> \
   --output <export directory> \

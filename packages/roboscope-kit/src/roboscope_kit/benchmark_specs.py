@@ -11,7 +11,7 @@ from enum import Enum
 from roboscope_kit.contracts import ActionSpec, BenchmarkSpec, FeatureKind, FeatureSpec
 
 
-class BenchmarkName(str, Enum):  # noqa: UP042 -- benchmark images include Python 3.10
+class BenchmarkName(str, Enum):  # noqa: UP042 -- benchmark environments include Python 3.10
     LIBERO = "libero"
     LIBERO_PLUS = "libero_plus"
     ROBOCASA = "robocasa"
@@ -21,7 +21,7 @@ class BenchmarkName(str, Enum):  # noqa: UP042 -- benchmark images include Pytho
 
 
 class BenchmarkDefinition(ABC):
-    """Internal provider for one platform-owned benchmark specification."""
+    """Internal provider for one benchmark specification."""
 
     name: BenchmarkName
     protocol_version: str

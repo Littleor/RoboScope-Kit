@@ -1,0 +1,25 @@
+{
+  "schema_version": 3,
+  "supported_benchmarks": ["calvin"],
+  "protocol_versions": {"calvin": "calvin-v1"},
+  "supported_suites": {"calvin": ["task_D_D", "task_ABC_D", "task_ABCD_D"]},
+  "runtime": {
+    "python": "env/bin/python",
+    "benchmark_root": "calvin",
+    "dataset_paths": {
+      "task_D_D": "dataset/minimal_task_D_D",
+      "task_ABC_D": "dataset/minimal_task_D_D",
+      "task_ABCD_D": "dataset/minimal_task_D_D"
+    },
+    "config_path": "calvin/calvin_models/conf",
+    "eval_sequences_path": "eval_sequences.json"
+  },
+  "defaults": {
+    "episodes": 1000,
+    "chunk_size": 1,
+    "render_backend": "egl",
+    "client_cpu_threads": 1,
+    "ready_timeout_s": 300
+  },
+  "benchmark_protocols": {}
+}

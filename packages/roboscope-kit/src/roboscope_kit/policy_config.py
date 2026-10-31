@@ -1,7 +1,7 @@
 # Copyright 2026 RoboScope Team
 # SPDX-License-Identifier: Apache-2.0
 
-"""Load the immutable user Policy process contract from an evaluation image."""
+"""Load the user Policy process contract."""
 
 from __future__ import annotations
 
@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 POLICY_CONFIG_SCHEMA_VERSION = 2
-POLICY_CONFIG_PATH = Path("/workspace/roboscope-policy.json")
 MAX_POLICY_ARGUMENTS = 32
 MAX_POLICY_ARGUMENT_LENGTH = 1024
 MAX_POLICY_CWD_LENGTH = 1024
@@ -45,8 +44,8 @@ class PolicyRuntimeConfig:
         }
 
 
-def load_policy_runtime_config() -> PolicyRuntimeConfig:
-    config_path = POLICY_CONFIG_PATH
+def load_policy_runtime_config(path: str | Path) -> PolicyRuntimeConfig:
+    config_path = Path(path)
     if not config_path.is_file():
         raise PolicyConfigError("missing_policy_config", f"Policy config not found: {config_path}")
     raw = config_path.read_bytes()

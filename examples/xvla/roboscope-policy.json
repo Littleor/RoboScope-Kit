@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
   "command": [
-    "/root/miniconda3/envs/xvla/bin/python",
-    "/opt/roboscope/xvla/xvla_demo_policy.py"
+    "/path/to/envs/xvla/bin/python",
+    "/path/to/RoboScope-Kit/examples/xvla/xvla_demo_policy.py"
   ],
-  "cwd": "/opt/roboscope/xvla/X-VLA"
+  "cwd": "/path/to/RoboScope-Kit/examples/xvla/X-VLA"
 }

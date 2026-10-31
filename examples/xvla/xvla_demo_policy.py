@@ -1,9 +1,11 @@
 """X-VLA Policy example for RoboScope Kit.
 
 Runs the released X-VLA-0.9B checkpoints (https://github.com/2toINF/X-VLA)
-inside the RoboScope Kit Policy process.  The weights and code live under
-``/opt/roboscope/xvla``; the platform-side model artifact is therefore a
-placeholder and its content is ignored.
+inside the RoboScope Kit Policy process.  The X-VLA source and weights live
+under ``XVLA_ROOT`` (default: this example directory), as ``X-VLA/`` and
+``checkpoints/<benchmark>/``; ``SessionContext.checkpoint_path`` is ignored.
+RoboTwin also needs ``ROBOTWIN_RUNTIME_ROOT``, the RoboTwin checkout of the
+RoboTwin benchmark environment.
 
 Benchmark-to-checkpoint mapping and the observation/action adapters follow the
 X-VLA evaluation clients verbatim:
@@ -34,11 +36,9 @@ from roboscope_kit.policy import (
     SessionContext,
 )
 
-XVLA_ROOT = Path(os.environ.get("XVLA_ROOT", "/opt/roboscope/xvla"))
+XVLA_ROOT = Path(os.environ.get("XVLA_ROOT", Path(__file__).resolve().parent))
 XVLA_REPO = XVLA_ROOT / "X-VLA"
-ROBOTWIN_RUNTIME = Path(
-    os.environ.get("ROBOTWIN_RUNTIME_ROOT", "/root/autodl-fs/benchmarks/robotwin/runtime/root/RoboTwin")
-)
+ROBOTWIN_RUNTIME = Path(os.environ.get("ROBOTWIN_RUNTIME_ROOT", ""))
 
 CHECKPOINTS = {
     "calvin": XVLA_ROOT / "checkpoints" / "calvin",
@@ -80,7 +80,7 @@ def _libero_site_rotmat(quat_xyzw: np.ndarray) -> np.ndarray:
     """The LIBERO ``robot0_eef_quat`` observation is the EE *body* quat in xyzw,
     but the X-VLA client feeds the controller's *site* orientation (site_xmat).
     The site is rotated 90deg about z relative to the body (verified constant
-    across states on the platform runtime), so R_site = R_body @ R_offset."""
+    across states in the LIBERO runtime), so R_site = R_body @ R_offset."""
     from scipy.spatial.transform import Rotation
 
     body = Rotation.from_quat(quat_xyzw).as_matrix()
@@ -262,6 +262,10 @@ class XvlaDemoPolicy(Policy):
     def _init_robotwin(self, suite: str) -> None:
         import yaml  # noqa: PLC0415
 
+        if not os.environ.get("ROBOTWIN_RUNTIME_ROOT"):
+            raise RuntimeError(
+                "ROBOTWIN_RUNTIME_ROOT must name the RoboTwin checkout of the RoboTwin benchmark environment"
+            )
         task_config_path = self._robotwin_task_config(suite)
         task_config = yaml.safe_load(task_config_path.read_text(encoding="utf-8"))
         embodiment_names = task_config["embodiment"]
@@ -310,7 +314,7 @@ class XvlaDemoPolicy(Policy):
     # ---------------------------------------------------------------- reset
     def reset(self, context: EpisodeContext) -> None:
         # X-VLA clients re-sync proprio from the current observation at episode
-        # start; the platform reset() carries no observation, so the next act()
+        # start; the kit's reset() carries no observation, so the next act()
         # re-initialises from the live state.
         self._proprio.pop(context.episode_id, None)
 
@@ -381,7 +385,7 @@ class XvlaDemoPolicy(Policy):
             proprio=proprio,
         )
         raw = raw[:CALVIN_CHUNK_ROWS]
-        # The platform calvin spec is 7-dim; the recipe's absolute tuple is
+        # The RoboScope Kit calvin spec is 7-dim; the recipe's absolute tuple is
         # (pos, quat_xyzw, grip).  Encode quat as its xyz part (the worker
         # reconstructs w from the unit quaternion) to stay within the spec.
         actions = np.empty((raw.shape[0], 7), dtype=np.float32)
@@ -518,7 +522,7 @@ def _string(features: dict[str, Any], name: str) -> str:
 
 
 def _flip_back(image: np.ndarray) -> np.ndarray:
-    # The platform LIBERO worker already flips both cameras; X-VLA only expects
+    # The RoboScope Kit LIBERO worker already flips both cameras; X-VLA only expects
     # the agent view flipped, so undo the wrist flip.
     return np.ascontiguousarray(image[::-1, ::-1])
 

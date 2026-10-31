@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from roboscope_kit.runtime.benchmark import ProcessSpec, WorkerContext, WorkItem, WorkResult
+from roboscope_kit.runtime.benchmark.kit_path import kit_import_root
 
-SDK_IMPORT_ROOT = Path(__file__).resolve().parents[4]
 ROBOCASA_TABLETOP_SUITE = "tabletop"
 ROBOCASA_TABLETOP_TASKS = (
     ("PnPBottleToCabinetClose", "gr1_unified/PnPBottleToCabinetClose_GR1ArmsAndWaistFourierHands_Env"),
@@ -175,7 +175,7 @@ class RoboCasaBenchmarkAdapter:
                 "PYTHONPATH": ":".join(
                     (
                         str(self.config.benchmark_root),
-                        str(SDK_IMPORT_ROOT),
+                        str(kit_import_root()),
                         os.environ.get("PYTHONPATH", ""),
                     )
                 ),

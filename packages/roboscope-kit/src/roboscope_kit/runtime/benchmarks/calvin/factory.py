@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from roboscope_kit.runtime.benchmark.factories import BenchmarkRunRequest
-from roboscope_kit.runtime.benchmark.image_manifest import BenchmarkImageManifest
+from roboscope_kit.runtime.benchmark.manifest import BenchmarkManifest
 
 from .adapter import CALVIN_OFFICIAL_SUITES, CalvinBenchmarkAdapter, CalvinRuntimeConfig
 
@@ -24,37 +24,37 @@ class CalvinBenchmarkFactory:
     def create(
         self,
         request: BenchmarkRunRequest,
-        image: BenchmarkImageManifest,
+        manifest: BenchmarkManifest,
     ) -> CalvinBenchmarkAdapter:
-        return self._create(request, image, self._episodes(request, image))
+        return self._create(request, manifest, self._episodes(request, manifest))
 
     def create_probe(
         self,
         request: BenchmarkRunRequest,
-        image: BenchmarkImageManifest,
+        manifest: BenchmarkManifest,
         concurrency: int,
     ) -> CalvinBenchmarkAdapter:
         del concurrency
-        sequences = int(image.defaults.get("probe_sequence_count", 10))
-        return self._create(request, image, sequences)
+        sequences = int(manifest.defaults.get("probe_sequence_count", 10))
+        return self._create(request, manifest, sequences)
 
-    def self_test(self, image: BenchmarkImageManifest, output_dir: Path) -> dict[str, Any]:
-        runtime = self._runtime(image, next(iter(CALVIN_OFFICIAL_SUITES)))
-        dataset_paths = self._dataset_paths(image)
+    def self_test(self, manifest: BenchmarkManifest, output_dir: Path) -> dict[str, Any]:
+        runtime = self._runtime(manifest, next(iter(CALVIN_OFFICIAL_SUITES)))
+        dataset_paths = self._dataset_paths(manifest)
         missing = [str(path) for path in (*runtime.values(), *dataset_paths.values()) if not path.exists()]
         if missing:
-            raise RuntimeError(f"CALVIN image paths are missing: {', '.join(missing)}")
+            raise RuntimeError(f"CALVIN runtime paths are missing: {', '.join(missing)}")
         output_dir.mkdir(parents=True, exist_ok=True)
         return {"benchmark": "calvin", "paths": [str(path) for path in runtime.values()]}
 
     def _create(
         self,
         request: BenchmarkRunRequest,
-        image: BenchmarkImageManifest,
+        manifest: BenchmarkManifest,
         episodes: int,
     ) -> CalvinBenchmarkAdapter:
         self.validate_suite(request.suite)
-        runtime = self._runtime(image, request.suite)
+        runtime = self._runtime(manifest, request.suite)
         return CalvinBenchmarkAdapter(
             CalvinRuntimeConfig(
                 python=runtime["python"],
@@ -64,16 +64,16 @@ class CalvinBenchmarkFactory:
                 eval_sequences_path=runtime["eval_sequences_path"],
                 suite=request.suite,
                 num_sequences=episodes,
-                chunk_size=int(image.defaults.get("chunk_size", 1)),
-                cpu_threads=int(image.defaults.get("client_cpu_threads", 1)),
-                render_backend=str(image.defaults.get("render_backend", "egl")),
+                chunk_size=int(manifest.defaults.get("chunk_size", 1)),
+                cpu_threads=int(manifest.defaults.get("client_cpu_threads", 1)),
+                render_backend=str(manifest.defaults.get("render_backend", "egl")),
             )
         )
 
     @staticmethod
-    def _runtime(image: BenchmarkImageManifest, suite: str) -> dict[str, Path]:
+    def _runtime(manifest: BenchmarkManifest, suite: str) -> dict[str, Path]:
         runtime = {
-            name: _required_path(image.runtime, name)
+            name: manifest.runtime_path(name)
             for name in (
                 "python",
                 "benchmark_root",
@@ -82,33 +82,29 @@ class CalvinBenchmarkFactory:
             )
         }
         runtime["asset_root"] = runtime["benchmark_root"] / "calvin_env" / "data"
-        runtime["dataset_path"] = CalvinBenchmarkFactory._dataset_paths(image)[suite]
+        runtime["dataset_path"] = CalvinBenchmarkFactory._dataset_paths(manifest)[suite]
         return runtime
 
     @staticmethod
-    def _dataset_paths(image: BenchmarkImageManifest) -> dict[str, Path]:
-        raw = image.runtime.get("dataset_paths")
+    def _dataset_paths(manifest: BenchmarkManifest) -> dict[str, Path]:
+        raw = manifest.runtime.get("dataset_paths")
         if not isinstance(raw, dict):
             raise ValueError("CALVIN runtime dataset_paths must be an object")
         if set(raw) != set(CALVIN_OFFICIAL_SUITES):
             raise ValueError("CALVIN runtime dataset_paths must define every supported suite")
-        return {suite: _required_path(raw, suite) for suite in CALVIN_OFFICIAL_SUITES}
+        return {
+            suite: manifest.resolve(raw[suite], f"dataset_paths.{suite}") for suite in CALVIN_OFFICIAL_SUITES
+        }
 
     @staticmethod
-    def _episodes(request: BenchmarkRunRequest, image: BenchmarkImageManifest) -> int:
+    def _episodes(request: BenchmarkRunRequest, manifest: BenchmarkManifest) -> int:
         if request.quick_test:
             return 1
-        value = request.episodes or int(image.defaults.get("episodes", 1000))
+        value = request.episodes or int(manifest.defaults.get("episodes", 1000))
         if value < 1:
             raise ValueError("CALVIN sequence count must be positive")
         return value
 
-
-def _required_path(runtime: dict[str, Any], name: str) -> Path:
-    value = Path(str(runtime.get(name) or ""))
-    if not value.is_absolute():
-        raise ValueError(f"CALVIN runtime {name} must be an absolute path")
-    return value
 
 
 __all__ = ["CalvinBenchmarkFactory"]

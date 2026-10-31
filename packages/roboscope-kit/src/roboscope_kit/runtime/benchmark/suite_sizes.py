@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """How many records one formal run of a suite produces, for callers that must decide how to
-split it before any instance exists (the platform sizes a sharded run from this).
+split it before any instance exists, for example to size a sharded run.
 
 A record is one episode (CALVIN: one sequence). The size is ``tasks * episodes_per_task`` and
-``episodes_per_task`` is the image manifest's ``defaults.episodes``; the manifests are not part of
+``episodes_per_task`` is the benchmark manifest's ``defaults.episodes``; the manifests are not part of
 the installed package, so it is stated here and ``test_benchmark_suite_sizes`` fails when it
 drifts from them. Suites whose size is not a fixed number (LIBERO+ samples its tasks per run) are
 deliberately absent: they are never sharded.

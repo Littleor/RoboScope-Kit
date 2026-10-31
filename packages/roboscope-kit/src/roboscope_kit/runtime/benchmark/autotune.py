@@ -254,7 +254,7 @@ def resolve_bounds(gpu_count: int, manifest_defaults: dict[str, Any]) -> Autotun
 
 
 def resolve_limits(manifest_defaults: dict[str, Any]) -> AutotuneLimits:
-    """Resolve immutable benchmark-image limits for the autotune controller."""
+    """Resolve the benchmark manifest's autotune limits for the controller."""
 
     return AutotuneLimits(
         candidate_timeout_s=float(

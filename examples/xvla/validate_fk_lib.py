@@ -12,9 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-ROBOTWIN_RUNTIME = Path(
-    os.environ.get("ROBOTWIN_RUNTIME_ROOT", "/root/autodl-fs/benchmarks/robotwin/runtime/root/RoboTwin")
-)
+ROBOTWIN_RUNTIME = Path(os.environ["ROBOTWIN_RUNTIME_ROOT"])
 
 
 class _ArmFk:

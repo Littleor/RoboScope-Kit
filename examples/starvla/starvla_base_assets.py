@@ -32,7 +32,7 @@ MODEL_WEIGHT_PATTERNS = (
     "*.pth",
     "*.ckpt",
 )
-DEFAULT_CACHE_ROOT = Path("/root/benchmark/basemodel")
+DEFAULT_CACHE_ROOT = Path.home() / ".cache" / "roboscope-kit" / "starvla-base-models"
 
 
 def ensure_starvla_base_model(run_dir: str | Path) -> Path:
@@ -95,8 +95,8 @@ def _base_model_ready(path: Path) -> bool:
 def _oss_region(endpoint: str) -> str:
     """Resolve the OSS signing region for ossutil sign-v4 requests.
 
-    Benchmark instances are provisioned without ``OSS_REGION``, so derive it
-    from the endpoint host (``oss-<region>.aliyuncs.com``) when it is unset.
+    When ``OSS_REGION`` is unset, derive it from the endpoint host
+    (``oss-<region>.aliyuncs.com``).
     """
     explicit = os.environ.get("OSS_REGION", "").strip()
     if explicit:

@@ -131,10 +131,10 @@ class _EvalSession:
     def _spawn(self) -> subprocess.Popen:
         env = {
             **os.environ,
-            # The RoboTwin runtime lives on the shared AutoDL FS whose inode quota
-            # can be exhausted; writing __pycache__ there then fails and makes
-            # imports (e.g. planner.CuroboPlanner) intermittently crash. Evaluate
-            # without bytecode caching so imports never need to write pyc files.
+            # The RoboTwin runtime may live on read-only or inode-limited storage,
+            # where writing __pycache__ fails and makes imports (e.g.
+            # planner.CuroboPlanner) intermittently crash. Evaluate without
+            # bytecode caching so imports never need to write pyc files.
             "PYTHONDONTWRITEBYTECODE": "1",
             "CUDA_VISIBLE_DEVICES": str(self.args.gpu_id),
             "ROBOSCOPE_INFERENCE_SOCKET": str(self.args.policy_socket),
@@ -346,10 +346,10 @@ def _run_task_single_process(args: argparse.Namespace, item: WorkItem) -> WorkRe
     task_env, argv_tail = _task_spec(args, item, deploy_policy)
     env = {
         **os.environ,
-        # The RoboTwin runtime lives on the shared AutoDL FS whose inode quota
-        # can be exhausted; writing __pycache__ there then fails and makes
-        # imports (e.g. planner.CuroboPlanner) intermittently crash. Evaluate
-        # without bytecode caching so imports never need to write pyc files.
+        # The RoboTwin runtime may live on read-only or inode-limited storage,
+        # where writing __pycache__ fails and makes imports (e.g.
+        # planner.CuroboPlanner) intermittently crash. Evaluate without
+        # bytecode caching so imports never need to write pyc files.
         "PYTHONDONTWRITEBYTECODE": "1",
         "CUDA_VISIBLE_DEVICES": str(args.gpu_id),
         "ROBOSCOPE_INFERENCE_SOCKET": str(args.policy_socket),

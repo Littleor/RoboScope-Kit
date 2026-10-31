@@ -1,7 +1,7 @@
 # Copyright 2026 RoboScope Team
 # SPDX-License-Identifier: Apache-2.0
 
-"""Factory contracts for constructing platform-owned benchmark adapters."""
+"""Factory contracts for constructing benchmark adapters."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from typing import Protocol
 from roboscope_kit.benchmark_specs import BenchmarkName
 
 from .adapters import BenchmarkAdapter
-from .image_manifest import BenchmarkImageManifest
+from .manifest import BenchmarkManifest
 
 
 @dataclass(frozen=True)
@@ -32,17 +32,17 @@ class BenchmarkFactory(Protocol):
     def create(
         self,
         request: BenchmarkRunRequest,
-        image: BenchmarkImageManifest,
+        manifest: BenchmarkManifest,
     ) -> BenchmarkAdapter: ...
 
     def create_probe(
         self,
         request: BenchmarkRunRequest,
-        image: BenchmarkImageManifest,
+        manifest: BenchmarkManifest,
         concurrency: int,
     ) -> BenchmarkAdapter: ...
 
-    def self_test(self, image: BenchmarkImageManifest, output_dir: Path) -> dict: ...
+    def self_test(self, manifest: BenchmarkManifest, output_dir: Path) -> dict: ...
 
 
 def representative_indices(total: int, count: int) -> tuple[int, ...]:

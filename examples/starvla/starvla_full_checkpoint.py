@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from collections.abc import Iterator, Mapping
@@ -16,7 +17,8 @@ import yaml
 from accelerate import init_empty_weights
 from transformers import AutoConfig, PreTrainedModel
 
-STARVLA_ROOT = Path("/root/starVLA")
+# The StarVLA checkout: STARVLA_ROOT, or the working directory (the Policy contract `cwd`).
+STARVLA_ROOT = Path(os.environ.get("STARVLA_ROOT", os.getcwd())).resolve()
 sys.path.insert(0, str(STARVLA_ROOT))
 
 CHECKPOINT_SUFFIXES = frozenset({".pt", ".safetensors"})

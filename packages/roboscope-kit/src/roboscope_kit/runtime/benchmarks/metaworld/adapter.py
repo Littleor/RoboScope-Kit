@@ -18,6 +18,7 @@ from roboscope_kit.runtime.benchmark import (
     WorkItem,
     WorkResult,
 )
+from roboscope_kit.runtime.benchmark.kit_path import kit_import_root
 
 from .config import resolve_evaluation_config
 from .instructions import (
@@ -29,7 +30,6 @@ from .instructions import (
     MT50_TASKS,
 )
 
-SDK_IMPORT_ROOT = Path(__file__).resolve().parents[4]
 MT50_TASK_COUNT = 50
 MT50_GOALS_PER_TASK = 50
 MT50_TOTAL_EPISODES = MT50_TASK_COUNT * MT50_GOALS_PER_TASK
@@ -167,7 +167,7 @@ class MetaworldRuntimeConfig:
         if self.episode_horizon != EPISODE_HORIZON:
             raise ValueError(f"MetaWorld episode horizon is frozen at {EPISODE_HORIZON}")
         if self.seed != SEED:
-            raise ValueError(f"MetaWorld platform seed is frozen at {SEED}")
+            raise ValueError(f"MetaWorld seed is frozen at {SEED}")
         if self.cpu_threads < 1:
             raise ValueError("MetaWorld cpu_threads must be positive")
         if self.render_backend != "egl":
@@ -222,7 +222,7 @@ class MetaworldBenchmarkAdapter:
             env={
                 "PYTHONPATH": ":".join(
                     (
-                        str(SDK_IMPORT_ROOT),
+                        str(kit_import_root()),
                         os.environ.get("PYTHONPATH", ""),
                     )
                 ),

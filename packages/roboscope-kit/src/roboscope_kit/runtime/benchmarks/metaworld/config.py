@@ -5,7 +5,7 @@
 
 The resolved object has the same shape as ``benchmark_config.metaworld`` in the
 Policy JSON: ``{"cameras": [...]}`` with every per-camera field explicit. The
-platform default is one ``images.primary`` corner2 camera, rendered and emitted
+default is one ``images.primary`` corner2 camera, rendered and emitted
 at 480x480 with a 180-degree rotation and no crop. Resolution is idempotent, so
 a file holding an already-resolved object parses to the same value.
 """
@@ -35,7 +35,7 @@ def default_evaluation_config() -> dict[str, Any]:
 
 
 def load_evaluation_config(path: Path | None) -> dict[str, Any]:
-    """Read an evaluation_config JSON file and resolve it; ``None`` means platform default."""
+    """Read an evaluation_config JSON file and resolve it; ``None`` means the default."""
 
     if path is None:
         return default_evaluation_config()
@@ -47,9 +47,9 @@ def load_evaluation_config(path: Path | None) -> dict[str, Any]:
 
 
 def resolve_evaluation_config(raw: Any) -> dict[str, Any]:
-    """Fill platform defaults and validate one ``benchmark_config.metaworld`` object.
+    """Fill defaults and validate one ``benchmark_config.metaworld`` object.
 
-    ``None`` selects the platform default. An explicit object must contain a
+    ``None`` selects the default. An explicit object must contain a
     non-empty ``cameras`` list; ``{}`` and unknown fields are rejected.
     """
 

@@ -23,12 +23,11 @@ from roboscope_kit.runtime.benchmark import (
     WorkItem,
     WorkResult,
 )
+from roboscope_kit.runtime.benchmark.kit_path import kit_import_root
 from roboscope_kit.runtime.benchmarks.libero.adapter import (
     stratified_task_ids,
     write_libero_config,
 )
-
-SDK_IMPORT_ROOT = Path(__file__).resolve().parents[4]
 
 
 @dataclass(frozen=True)
@@ -119,7 +118,7 @@ class LiberoPlusBenchmarkAdapter:
             command += ("--video-dir", str(context.output_dir / "video"))
         threads = str(self.config.cpu_threads)
         env = {
-            "PYTHONPATH": (f"{self.config.libero_home}:{SDK_IMPORT_ROOT}:{os.environ.get('PYTHONPATH', '')}"),
+            "PYTHONPATH": f"{self.config.libero_home}:{kit_import_root()}:{os.environ.get('PYTHONPATH', '')}",
             "LIBERO_HOME": str(self.config.libero_home),
             "LIBERO_CONFIG_PATH": str(runtime_config_path.parent),
             "MUJOCO_GL": self.config.render_backend,
@@ -128,7 +127,7 @@ class LiberoPlusBenchmarkAdapter:
             "MKL_NUM_THREADS": threads,
             "OPENBLAS_NUM_THREADS": threads,
             "NUMEXPR_NUM_THREADS": threads,
-            # Shared AutoDL FS inode quota can be exhausted; never write pyc.
+            # Runtimes may live on read-only or inode-limited storage; never write pyc.
             "PYTHONDONTWRITEBYTECODE": "1",
         }
         if self.config.render_backend == "egl":

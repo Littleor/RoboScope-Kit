@@ -4,9 +4,9 @@
 
 ## 实验定位
 
-本报告验证的是：**将任意模型推理代码接入 RoboScope Kit 后，平台能否保持官方评测语义，并通过平台侧调度和运行时优化提高吞吐量。**
+本报告验证的是：**将任意模型推理代码接入 RoboScope Kit 后，能否保持官方评测语义，并通过 benchmark runtime 的调度和运行时优化提高吞吐量。**
 
-实验中选择 StarVLA 作为一份具体的推理代码样例，但报告对象是 SDK 接入、调参和 benchmark runtime，不把 StarVLA 作为标题或结论主体。SDK 用户只实现 `Policy.load()` / `Policy.act()`；平台负责进程生命周期、持久化任务队列、资源采样、K/g 自动选择、失败恢复和结果完整性校验。
+实验中选择 StarVLA 作为一份具体的推理代码样例，但报告对象是 SDK 接入、调参和 benchmark runtime，不把 StarVLA 作为标题或结论主体。SDK 用户只实现 `Policy.load()` / `Policy.act()`；RoboScope Kit 的 benchmark runtime 负责进程生命周期、持久化任务队列、资源采样、K/g 自动选择、失败恢复和结果完整性校验。
 
 LIBERO 与 RoboTwin 的 simulator、协议、模型 checkpoint 和实验 manifest 不同，以下指标完全分开汇报，不做跨 benchmark 吞吐量比较。
 
@@ -146,7 +146,7 @@ LIBERO 与 RoboTwin 的 simulator、协议、模型 checkpoint 和实验 manifes
 | GPU 拓扑 | 4 张卡全部位于 NUMA node 1，CPU 亲和 `32-63,96-127` |
 | GPU 互联 | 仅 PCIe，无 NVLink；GPU 1 与 GPU 2 共享同一 PCIe host bridge |
 | cgroup | cgroup v2；评测 shell 观测到 CPU 亲和 `0-127` |
-| 评测 Python | `/root/miniconda3/envs/robotwin` 中的 Python 3.10.20 |
+| 评测 Python | RoboTwin conda 环境 `robotwin` 中的 Python 3.10.20 |
 
 GPU 上报显存高于零售 24 GiB RTX 4090，因此容量决策必须使用实测的 49,140 MiB，不能从产品型号推断显存。四张卡都在 NUMA node 1 意味着 CPU 绑定是一个实验变量：把 worker 绑到 node 0 可能增加 PCIe 流量开销，把所有 worker 集中到 node 1 又可能造成 CPU 争抢；两种策略都不能未经受控 A/B 就假定更快。
 
@@ -196,6 +196,6 @@ worker memory 增长不是 Python/CUDA 泄漏：30-episode 同任务压力运行
 
 - `roboscope-kit/packages/roboscope-kit/README.md`
 - Git 历史中的 LIBERO 500-episode 与 RoboTwin paired-report 结构化实验记录
-- 2026-07-22 AutoDL 4×RTX 4090 官方原生 LIBERO K=1/g=1 全量运行日志与资源采样
-- 2026-07-22 AutoDL 4×RTX 4090 StarVLA 官方 RoboTwin 多 GPU launcher 500-episode 运行日志、视频逐帧校验与资源采样
+- 2026-07-22 4×RTX 4090 主机上的官方原生 LIBERO K=1/g=1 全量运行日志与资源采样
+- 2026-07-22 4×RTX 4090 主机上的 StarVLA 官方 RoboTwin 多 GPU launcher 500-episode 运行日志、视频逐帧校验与资源采样
 - 本报告的 RoboTwin 基准机规格、保真度验证与冠军运行资源剖面来自已归档的 RoboTwin vectorized runtime 实验记录，现已并入本报告正文

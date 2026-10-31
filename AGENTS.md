@@ -3,7 +3,7 @@
 ## Scope
 
 This repository owns the `roboscope-kit` Python package (import name `roboscope_kit`), the benchmark
-adapters and launchers, the shared benchmark runtimes, and their documentation. Do not put robot control,
+adapters, the benchmark manifests and simulator build scripts, and their documentation. Do not put robot control,
 training, dataset collection, or generic LeRobot engine code here.
 
 A change is complete when it is committed, carries the required version bump, and is merged.
@@ -12,34 +12,30 @@ A change is complete when it is committed, carries the required version bump, an
 
 | Path | Owns |
 | --- | --- |
-| `packages/roboscope-kit/` | The public `Policy` API, protocol client and server, platform benchmark runtime, and the evaluation protocol documents |
-| `benchmarks/libero_official/` | The LIBERO entrypoint (`startbenchmark.sh`), runner, and hermetic self-test |
-| `benchmarks/starvla_platform_runtime/` | The Control Runtime installer, the per-benchmark `benchmark-image.json` manifests, and the thin launchers for shared benchmark environments |
-| `benchmarks/robotwin_official/` | RoboTwin launch and seed-cache tooling |
+| `packages/roboscope-kit/` | The public `Policy` API, protocol client and server, benchmark runtime, and the evaluation protocol documents |
+| `benchmarks/<benchmark>/` | The benchmark's `benchmark-manifest.json`, the `build-runtime.sh` that builds its pinned simulator environment, and its pin files; RoboTwin also has its launcher and seed-cache tooling |
 | `examples/starvla/` | The StarVLA `Policy` and one demo per benchmark, including the configurations behind the RoboScope Kit technical report |
 | `examples/xvla/` | The X-VLA `Policy` example: a stateful Policy serving several benchmarks |
-| `tests/async_inference/` | Autotune and LIBERO controller regressions |
+| `tests/async_inference/` | Autotune regressions |
 | `ci/` and `.github/workflows/` | Build, compatibility, and PyPI release automation |
 
 When a path moves, update the source and every caller directly. Do not add compatibility wrappers or
 aliases for old paths or names.
 
-## Shared runtime changes
+## Simulator environments
 
-Every runtime on the shared disk, including those under `/root/autodl-fs/benchmarks`, is changed only by
-committed runtime patch code. Put the change in the existing patch code that owns that runtime, commit it,
-and apply it by running it. A runtime change is complete only when a clean shared-disk runtime plus the
-committed patch code reproduces the result.
+`benchmarks/<benchmark>/build-runtime.sh <install-dir>` is the only way a simulator environment is built or
+changed. Put every source pin, package pin, checksum, and source patch in that script or its pin files, so a
+clean build from the committed script reproduces the environment. Do not patch an installed environment by
+hand.
 
 ## Benchmark manifests
 
-The `benchmark-image.json` files under `benchmarks/starvla_platform_runtime/*/` are the single source of
-truth for what runs in each benchmark. The Control Runtime installer copies them to
-`/opt/roboscope/control-runtime/benchmark-manifests/<name>/benchmark-image.json` and checksums them into
-`runtime.sha256`. At evaluation start, `run-benchmark.sh` writes that manifest to
-`/root/benchmark-runtime/<name>/benchmark-image.json` and aborts if an existing local manifest differs.
-Shared-disk installations never choose the manifest or the `roboscope-kit` version. Change a manifest only
-by committing it here.
+`benchmarks/<benchmark>/benchmark-manifest.json` defines what runs in each benchmark: its suites, protocol,
+runtime paths, and evaluation defaults. Runtime paths are relative to the manifest's directory; the build
+script copies the manifest into `<install-dir>`, where those paths resolve. Keep the manifest and its build
+script consistent, and never change frozen protocol values (such as the RoboTwin seed protocol and
+generation digests) without regenerating what depends on them.
 
 ## Versioning and releases
 
@@ -55,7 +51,7 @@ to PyPI by hand.
 
 ## Documentation
 
-Keep the package README, the protocol documents, and the handoff documents consistent whenever
+Keep the package README, the protocol documents, and the example READMEs consistent whenever
 user-facing evaluation behavior changes. The package README is also the PyPI project page, so link to
 other repository files with absolute GitHub URLs.
 
@@ -98,13 +94,9 @@ Run after every change:
 cd packages/roboscope-kit
 python -m pip install . pytest ruff matplotlib
 PYTHONPATH=src:../.. python -m pytest tests ../../tests/async_inference -q
-python -m ruff check src tests ../../benchmarks/robotwin_official
+python -m ruff check src tests ../../benchmarks/robotwin
 ```
 
-For LIBERO changes, also run the hermetic self-test:
-
-```bash
-benchmarks/libero_official/startbenchmark.sh --self-test
-```
-
-Real simulator episodes and model loading need the documented target environment.
+For a build script change, run `bash -n` and `shellcheck` on it. Real builds, simulator episodes, and model
+loading need Linux x86_64, a GPU, and network access; after a build, check it with the kit's
+`--self-test --benchmark-manifest <install-dir>/benchmark-manifest.json`.

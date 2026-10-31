@@ -1,13 +1,13 @@
 # MetaWorld MT50 Evaluation Protocol
 
-This document defines the SDK-native RoboScope MetaWorld evaluation contract. The platform owns benchmark
-enumeration, simulator processes, concurrency, recovery, and result aggregation. User inference code owns
-only the public `Policy` lifecycle and model-specific preprocessing and postprocessing.
+This document defines the SDK-native RoboScope MetaWorld evaluation contract. The kit's benchmark
+runtime owns benchmark enumeration, simulator processes, concurrency, recovery, and result aggregation.
+User inference code owns only the public `Policy` lifecycle and model-specific preprocessing and
+postprocessing.
 
-SDK 0.7.0b58 and newer require Python 3.11 or newer in every process that
-imports the SDK, including Policy and simulator workers. Python 3.8–3.10
-runtimes are unsupported; existing images require separate upgrade and
-acceptance before adopting this release. See the [SDK Python policy](README.md#python-compatibility).
+`roboscope-kit` requires Python 3.11 or newer in every process that imports it, including the Policy and
+the simulator workers. Python 3.8–3.10 are unsupported. See the
+[Python support policy](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/README.md#python-support).
 
 ## 1. Benchmark scope
 
@@ -24,11 +24,37 @@ typos preserved, for example `disassemble-v3` = `Pick a nut out of the a peg.` a
 evaluator worker asserts that the instruction keys equal `metaworld.env_dict.ALL_V3_ENVIRONMENTS` at
 startup.
 
+### Environment and invocation
+
+The MetaWorld simulator is not a dependency of `roboscope-kit`. Build it with
+[`benchmarks/metaworld/build-runtime.sh`](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/metaworld/build-runtime.sh) `<install-dir>`
+(Linux x86_64, uv 0.11.14, network access). The script installs a uv-managed CPython 3.12 under
+`<install-dir>/python` and a venv under `<install-dir>/env` with exactly
+[`runtime-requirements.txt`](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/metaworld/runtime-requirements.txt) (`metaworld==3.1.1`,
+`mujoco==3.3.0`, `gymnasium==1.1.1`, `numpy==2.1.3`), verifies the frozen MT50 train-task digest of
+section 5, records `pip-freeze.txt`, and copies
+[`benchmark-manifest.json`](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/metaworld/benchmark-manifest.json) into `<install-dir>`. The
+manifest's `runtime.python` is `env/bin/python`, relative to the manifest file. Workers import the kit from
+its source tree through `PYTHONPATH`, so `roboscope-kit` is not installed into this environment.
+
+Run an evaluation with the kit installed in any supported Python:
+
+```bash
+python -m roboscope_kit.runtime.benchmark \
+    --benchmark metaworld --suite mt50 --checkpoint-source /models/my-checkpoint \
+    --benchmark-manifest <install-dir>/benchmark-manifest.json \
+    --policy-config /path/to/roboscope-policy.json \
+    --output-dir /runs/metaworld-mt50
+```
+
+`--self-test` with the same manifest checks that the environment imports `metaworld.evaluation`. Results,
+progress, and logs are written under `--output-dir`.
+
 ## 2. User policy lifecycle
 
 The user entrypoint installs `roboscope-kit`, implements `Policy`, and ends with
-`run(UserPolicy())`. RoboScope starts one process per selected replica and injects a Unix socket through
-`ROBOSCOPE_INFERENCE_SOCKET`. The platform then calls:
+`run(UserPolicy())`. The runtime starts one process per Policy replica with the command from
+`--policy-config` and injects a Unix socket through `ROBOSCOPE_INFERENCE_SOCKET`. The runtime then calls:
 
 1. `Policy.load(SessionContext)` once per replica with the resolved MetaWorld `BenchmarkSpec`;
 2. `Policy.reset(EpisodeContext)` before every evaluated episode;
@@ -55,14 +81,15 @@ Every `Observation` contains:
 `episode_id` identifies the task and episode; `step` starts at zero for each episode and increases once per
 environment `step()`, not once per policy request. Multi-camera images are rendered from the same
 environment state within one observation; the worker never steps or resets the simulator between cameras,
-and never duplicates one camera image to fake another view. The platform does not resize, normalize, or
+and never duplicates one camera image to fake another view. The runtime does not resize, normalize, or
 transpose images for a model beyond the declared configuration; any further model-specific preprocessing
 belongs inside the user policy.
 
 ### Camera configuration
 
-The evaluation configuration has one JSON shape, shared by the Policy file declaration, the Cloud request,
-and the runtime file the platform writes for the workers:
+The evaluation configuration has one JSON shape, shared by the Policy contract's
+`benchmark_config.metaworld` declaration, the `--evaluation-config` file, and the resolved
+`<output-dir>/evaluation-config.json` the runtime writes for the workers:
 
 ```json
 {"cameras": [{"feature": "images.primary", "camera_name": "corner2", "render_width": 480,
@@ -75,13 +102,13 @@ Rules:
 - 1 to 4 cameras. `feature` is required and must be `images.primary`, `images.secondary`,
   `images.tertiary`, `images.quaternary` in order and unique. `camera_name` is required and must be
   unique. An empty `cameras` list and `{}` are errors, and unknown fields are rejected.
-- The platform default is the single camera above: `images.primary`, `corner2`, rendered and emitted at
+- The default is the single camera above: `images.primary`, `corner2`, rendered and emitted at
   480x480, `camera_position = null`, `rotation_deg = 180`, `center_crop_ratio = 1.0`.
 - `render_width`/`render_height`/`output_width`/`output_height` are integers in `[64, 1024]`.
   `rotation_deg` is counter-clockwise and one of `0`, `90`, `180`, `270`. `center_crop_ratio` is a finite
   number in `(0, 1]`. `camera_position` is `null` or a finite `[x, y, z]` in meters in the camera body's
   local frame.
-- Per camera the platform renders, rotates counter-clockwise, center-crops (crop size is the rotated size
+- Per camera the worker renders, rotates counter-clockwise, center-crops (crop size is the rotated size
   times the ratio, floored; the top-left corner is half of the remaining size, floored; a zero-sized crop
   is rejected), resizes with the pinned Pillow bilinear filter when the size differs, and emits a
   contiguous RGB/HWC `uint8` array. The applied image shape is the configured `output_height x
@@ -113,15 +140,15 @@ discarded when the episode succeeds or reaches 500 steps.
 
 ## 5. Goals, seeding, and the official rollout
 
-The platform generates the complete `MT50(seed=42).train_tasks` artifact once per worker process, groups it
+Each worker process generates the complete `MT50(seed=42).train_tasks` artifact once, groups it
 by `env_name`, and requires exactly 50 tasks x 50 goals. It records the canonical SHA-256 over
 `env_name | NUL | task.data | NUL` in `MT50.train_tasks` order and asserts it against the frozen
-`FROZEN_MT50_TASKS_SHA256`; a mismatch aborts the worker. The platform never builds 50 independent
+`FROZEN_MT50_TASKS_SHA256`; a mismatch aborts the worker. The worker never builds 50 independent
 `MT1(slug, seed=42)` environments, because `_make_tasks` consumes the generator across the whole task set
 and an independent `MT1` slice is not the MT50 goal set.
 
 The Farama evaluation function does not select goals, and the default environment factory samples tasks
-with replacement. To hit every training goal exactly once, the platform builds its environment through the
+with replacement. To hit every training goal exactly once, the worker builds its environment through the
 pinned `metaworld._init_each_env(..., task_select="pseudorandom", use_one_hot=False,
 max_episode_steps=500, render_mode="rgb_array", ...)` and enables
 `toggle_sample_tasks_on_reset(True)`. The `PseudoRandomTaskSelectWrapper` advances to the next goal on
@@ -131,7 +158,7 @@ reset or sample, because the task wrapper chooses the task before the inner `res
 identity is the frozen-artifact index, not the shuffled position; each finished episode records its stable
 `goal_id` and the SHA-256 of its frozen `Task`.
 
-`seed = 42` is a platform reproduction parameter, not an upstream or paper standard. The platform does not
+`seed = 42` is a RoboScope reproduction parameter, not an upstream or paper standard. RoboScope does not
 claim that an arbitrary model's training set is identical to this artifact without per-protocol training
 artifact evidence.
 
@@ -175,7 +202,7 @@ Within each difficulty bucket the task success rates are weighted equally; the f
 weighted equally, so each bucket carries 25% of the main score. The four buckets are not weighted by task
 count. For example, all-easy success with everything else failing scores 25% while the diagnostic
 all-task mean is 56%. The upstream cross-task `mean_success_rate` (the Farama all-task average) is not the
-platform main score and is never used for ranking, qualification, or the displayed main score.
+RoboScope main score and is never used for ranking, qualification, or the displayed main score.
 
 Quick Test and single-task smoke runs do not produce a formal macro score. A formal score requires all 50
 tasks and all four difficulty buckets; missing, duplicate, or failed workers must not be published as a
@@ -183,8 +210,7 @@ score and must not shrink the denominator.
 
 ## 8. Configuration declaration and precedence
 
-The evaluation image stores the user Policy process contract at the fixed path
-`/workspace/roboscope-policy.json` with `schema_version: 2`:
+The runtime reads the user Policy process contract from `--policy-config`; it has `schema_version: 2`:
 
 ```json
 {
@@ -195,22 +221,22 @@ The evaluation image stores the user Policy process contract at the fixed path
 }
 ```
 
-`benchmark_config` is optional and is returned by image readiness/preflight without importing the Policy
-or loading a model. The final evaluation configuration is resolved once, with this priority:
+`benchmark_config` is optional and is read from the contract file without importing the Policy or loading
+a model. The final evaluation configuration is resolved once, with this priority:
 
-1. the explicit `evaluation_config` supplied for the current run;
-2. the image's `benchmark_config.metaworld` declaration;
-3. the platform default camera.
+1. the `--evaluation-config <file>` supplied for the current run;
+2. the Policy contract's `benchmark_config.metaworld` declaration;
+3. the default camera.
 
 The camera list is replaced as a whole; it is never merged by index. Every configured camera then has its
-missing fields filled from the platform default and is validated. A request that omits the configuration
+missing fields filled from the default camera and is validated. A request that omits the configuration
 (or passes `null`) means "no explicit override"; a provided object must contain a non-empty `cameras` list.
-The resolved configuration is written to a task-specific JSON file and passed to the runtime as
-`--evaluation-config <path>`; every worker and the Policy `load` session consume that same resolved object,
-and the effective configuration is recorded in the result metadata.
+The runtime writes the resolved configuration to `<output-dir>/evaluation-config.json` and passes that file
+to every worker; every worker and the Policy `load` session consume that same resolved object, and the
+effective configuration is recorded as `evaluation_config` in the result metadata.
 
-The runtime never re-resolves from the image file after the platform has passed a configuration. The format
-version `2` is distinct from the benchmark protocol version `metaworld-v1`.
+Workers never re-resolve the configuration from the Policy contract. The contract's `schema_version` `2` is
+distinct from the benchmark protocol version `metaworld-v1`.
 
 ## 9. Validation sequence
 
@@ -218,7 +244,8 @@ Before reporting a MetaWorld score or throughput result:
 
 1. Run startup assertions: 50 slugs, `SawyerXYZEnv.max_path_length == 500`, 39-dimensional observation
    without one-hot, and `Box(4, float32)` action space in `[-1, 1]`.
-2. Run the `reach-v3` x 1 training-goal Quick Test through the real policy and image on the target.
+2. Run the `reach-v3` x 1 training-goal Quick Test (`--quick-test`) through the real Policy and the
+   environment built by `build-runtime.sh` on the target host.
 3. Run the `reach-v3` x 50 training-goal smoke, confirm 50 unique `goal_id`s, and confirm the same goal
    order and score when repeating with the same seeds.
 4. Confirm the delivered image shape, dtype, and processing order match the evaluation configuration, and
@@ -235,7 +262,7 @@ with Farama but does not reproduce the official state plus one-hot RL setup. Res
 with StarVLA, LeRobot, or the paper leaderboard without verifying the protocol (version, task set, goals,
 observation, action, horizon, sampling, and aggregation) case by case. LeRobot recommends 10 episodes per
 task with its own randomization and observation preprocessing; that is a community protocol, not this
-platform's per-training-goal evaluation.
+protocol's per-training-goal evaluation.
 
-The platform does not write its main score into the paper leaderboard's `average` column. The paper
-`average` values are external data with per-paper aggregation that the platform does not control.
+The RoboScope main score is not written into the paper leaderboard's `average` column. The paper `average`
+values are external data with per-paper aggregation that RoboScope does not control.

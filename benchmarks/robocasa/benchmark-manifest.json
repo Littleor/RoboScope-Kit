@@ -1,0 +1,19 @@
+{
+  "schema_version": 3,
+  "supported_benchmarks": ["robocasa"],
+  "protocol_versions": {"robocasa": "robocasa-v1"},
+  "supported_suites": {"robocasa": ["tabletop"]},
+  "runtime": {
+    "python": "env/bin/python",
+    "benchmark_root": "starVLA"
+  },
+  "defaults": {
+    "episodes": 50,
+    "action_steps": 12,
+    "max_episode_steps": 720,
+    "render_backend": "egl",
+    "client_cpu_threads": 1,
+    "ready_timeout_s": 300
+  },
+  "benchmark_protocols": {}
+}

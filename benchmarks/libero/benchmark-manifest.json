@@ -1,0 +1,30 @@
+{
+  "schema_version": 3,
+  "supported_benchmarks": ["libero"],
+  "protocol_versions": {"libero": "libero-v1"},
+  "supported_suites": {
+    "libero": [
+      "libero_spatial",
+      "libero_object",
+      "libero_goal",
+      "libero_10",
+      "libero_90"
+    ]
+  },
+  "runtime": {
+    "python": "env/bin/python",
+    "benchmark_root": "LIBERO",
+    "config_path": "config/config.yaml"
+  },
+  "defaults": {
+    "episodes": 50,
+    "chunk_size": 1,
+    "seed": 7,
+    "sample_seed": 7,
+    "settle_steps": 10,
+    "render_backend": "egl",
+    "client_cpu_threads": 1,
+    "ready_timeout_s": 300
+  },
+  "benchmark_protocols": {}
+}

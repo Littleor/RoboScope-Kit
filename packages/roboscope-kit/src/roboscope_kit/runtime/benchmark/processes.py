@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from .cuda_mps import CudaMpsSession
 
 
-class ProcessFailureKind(str, Enum):  # noqa: UP042 -- imported by the Python 3.10 LIBERO image
+class ProcessFailureKind(str, Enum):  # noqa: UP042 -- imported by the Python 3.10 LIBERO environment
     OOM = "oom"
     OTHER = "other"
 

@@ -253,13 +253,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     from roboscope_kit.benchmark_specs import BenchmarkName
-    from roboscope_kit.runtime.benchmark.image_manifest import (
-        load_benchmark_image_manifest,
+    from roboscope_kit.runtime.benchmark.manifest import (
+        load_benchmark_manifest,
     )
 
     args = parse_args(argv)
-    image = load_benchmark_image_manifest(args.benchmark_manifest)
-    protocol = image.benchmark_protocols[BenchmarkName.ROBOTWIN]
+    manifest = load_benchmark_manifest(args.benchmark_manifest)
+    protocol = manifest.benchmark_protocols[BenchmarkName.ROBOTWIN]
     target = create_seed_cache_generation(
         source_cache_dir=args.source_cache_dir,
         generation_root=args.generation_root,

@@ -1,9 +1,9 @@
 # Copyright 2026 RoboScope Team
 # SPDX-License-Identifier: Apache-2.0
 
-"""Platform-owned adaptive benchmark deployment and selection rules.
+"""Adaptive benchmark deployment and selection rules.
 
-User policies do not call this module. RoboScope uses it to select evaluator
+User policies do not call this module. The benchmark runtime uses it to select evaluator
 concurrency ``K`` and inference replica count ``g`` from measured end-to-end
 throughput and resource signals.
 """
@@ -400,7 +400,7 @@ KMeasurement = Callable[[int, int], KTrial]
 
 
 class AutotuneController:
-    """Select platform concurrency and inference replicas from measured trials."""
+    """Select worker concurrency and inference replicas from measured trials."""
 
     def __init__(self, plan: AutotunePlan):
         self.plan = plan

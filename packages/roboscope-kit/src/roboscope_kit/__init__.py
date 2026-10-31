@@ -27,7 +27,6 @@ from roboscope_kit.policy import (
     validate_policy_capabilities,
 )
 from roboscope_kit.policy_config import (
-    POLICY_CONFIG_PATH,
     POLICY_CONFIG_SCHEMA_VERSION,
     PolicyConfigError,
     PolicyRuntimeConfig,
@@ -45,7 +44,6 @@ __all__ = [
     "FeatureSpec",
     "Observation",
     "Policy",
-    "POLICY_CONFIG_PATH",
     "POLICY_CONFIG_SCHEMA_VERSION",
     "PolicyConfigError",
     "PolicyRuntimeConfig",

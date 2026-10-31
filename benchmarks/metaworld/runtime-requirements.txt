@@ -1,0 +1,20 @@
+# Verified MetaWorld MT50 runtime lock (Linux x86_64, CPython 3.12).
+# The MetaWorld adapter import and the frozen MT50(seed=42) train-task digest
+# both depend on these exact versions; build-runtime.sh rejects an environment
+# whose regenerated digest differs from the committed constant.
+absl-py==2.5.0
+cloudpickle==3.1.2
+etils==1.14.0
+farama-notifications==0.0.6
+fsspec==2026.7.0
+glfw==2.10.2
+gymnasium==1.1.1
+imageio==2.37.4
+metaworld==3.1.1
+mujoco==3.3.0
+numpy==2.1.3
+pillow==11.0.0
+pyopengl==3.1.10
+scipy==1.14.1
+typing-extensions==4.16.0
+zipp==4.1.0

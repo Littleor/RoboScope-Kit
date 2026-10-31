@@ -16,20 +16,64 @@ arXiv:2510.10274）的公开 checkpoint，覆盖 calvin、libero、libero_plus�
 
 RoboTwin 研究对照数字来自 X-VLA 上游固定提交
 [`bcc5152`](https://github.com/2toINF/X-VLA/blob/bcc515295e9286394db607e9fe673b41f25df627/evaluation/robotwin-2.0/README.md)
-的 leaderboard settings 结果表。平台结果在 benchmark protocol 与 cache provenance
+的 leaderboard settings 结果表。RoboScope Kit 的结果在 benchmark protocol 与 cache provenance
 一致时具备直接可比性。
 
-## 运行环境
+## 准备
 
-- conda env `xvla`（python 3.10 + torch 2.1.2 cu121 + transformers 4.51.3 + X-VLA
-  requirements + `sapien==3.0.0b1` + `mplib==0.2.1`）
-- `/opt/roboscope/xvla/X-VLA`：上游开源仓库代码
-- `/opt/roboscope/xvla/checkpoints/{calvin,libero,robotwin}`：权重（HF 下载）
-- `/opt/roboscope/xvla/xvla_demo_policy.py`：demo SDK Policy 适配器
-- `/workspace/roboscope-policy.json`：策略入口（schema_version 2）
+示例目录和各个环境可以放在任意位置。Policy 从 `XVLA_ROOT`（默认为本示例目录，即
+`xvla_demo_policy.py` 所在目录）读取上游代码和权重：
 
-权重放在 `/opt/roboscope/xvla/checkpoints/` 下，策略忽略 `SessionContext.checkpoint_path`，
-平台侧 model artifact 用占位文件即可。
+- `$XVLA_ROOT/X-VLA`：上游开源仓库 [2toINF/X-VLA](https://github.com/2toINF/X-VLA) 的 checkout
+- `$XVLA_ROOT/checkpoints/{calvin,libero,robotwin}`：从 Hugging Face 下载的 `X-VLA-Calvin-ABC_D`、
+  `X-VLA-Libero`、`X-VLA-RoboTwin2` 权重
+- 一个 Python 环境（下文称 `xvla`）：python 3.10 + torch 2.1.2 cu121 + transformers 4.51.3 + X-VLA
+  requirements + `sapien==3.0.0b1` + `mplib==0.2.1`，并安装 `roboscope-kit`
+
+Policy 只从 `$XVLA_ROOT/checkpoints/<benchmark>` 加载权重，忽略 `SessionContext.checkpoint_path`；
+评测时把同一目录传给 `--checkpoint-source`，结果记录即对应实际使用的权重。
+
+每个评测集的仿真环境用 `benchmarks/<benchmark>/build-runtime.sh <install-dir>` 构建，安装目录下的
+`benchmark-manifest.json` 传给 `--benchmark-manifest`。RoboTwin 的 Policy 还需读取 RoboTwin 的机器人配置，
+运行前把 `ROBOTWIN_RUNTIME_ROOT` 设为该安装中的 RoboTwin checkout（即其 `benchmark-manifest.json` 中
+`runtime.benchmark_root` 指向的目录）。
+
+## Policy 进程契约
+
+[`roboscope-policy.json`](roboscope-policy.json)（schema_version 2）告诉 runtime 如何启动 Policy。
+使用前把其中的 `/path/to/...` 占位路径改成本机路径：`command[0]` 是 `xvla` 环境 Python 的绝对路径，
+`command[1]` 是 `xvla_demo_policy.py` 的绝对路径，`cwd` 是已存在的绝对目录（这里用 X-VLA checkout）。
+runtime 在每次评测前校验这些路径。
+
+## 运行评测
+
+在安装了 `roboscope-kit` 的 Python 中运行 benchmark CLI，例如 LIBERO-10：
+
+```bash
+export XVLA_ROOT=/path/to/RoboScope-Kit/examples/xvla   # 默认即本目录，可省略
+python -m roboscope_kit.runtime.benchmark \
+    --benchmark libero --suite libero_10 \
+    --checkpoint-source "$XVLA_ROOT/checkpoints/libero" \
+    --benchmark-manifest /path/to/libero-install/benchmark-manifest.json \
+    --policy-config "$XVLA_ROOT/roboscope-policy.json" \
+    --output-dir /runs/xvla/libero_10
+```
+
+RoboTwin 额外设置 `ROBOTWIN_RUNTIME_ROOT`：
+
+```bash
+export ROBOTWIN_RUNTIME_ROOT=/path/to/robotwin-install/RoboTwin
+python -m roboscope_kit.runtime.benchmark \
+    --benchmark robotwin --suite demo_clean \
+    --checkpoint-source "$XVLA_ROOT/checkpoints/robotwin" \
+    --benchmark-manifest /path/to/robotwin-install/benchmark-manifest.json \
+    --policy-config "$XVLA_ROOT/roboscope-policy.json" \
+    --output-dir /runs/xvla/demo_clean
+```
+
+calvin 与 libero_plus 同理（libero_plus 使用 `checkpoints/libero`）。加 `--quick-test` 做有界 smoke；
+`--concurrency K --replicas G` 固定 K/g，否则由 Autotune 选择。结果写入 `--output-dir`（`result.json`、
+`progress.json`、`events.jsonl`、`errors.jsonl`、`autotune/selection.json` 等）。
 
 ## 适配要点（2026-08-15 按社区 Recipe 严格移植，不调参）
 
@@ -40,13 +84,13 @@ RoboTwin 研究对照数字来自 X-VLA 上游固定提交
   worker 补丁（SDK 内）：`use_delta=False`（Recipe 原句）+ MAX_STEPS 对齐
   Recipe 的 800/900 步 horizon。
 - **calvin**：与 calvin_client.py 一致——绝对 `(pos, quat_xyzw, grip)` 元组、
-  取模型 chunk 前 20 行、domain_id=2、gripper 阈值 0.8。平台 calvin 规格 7 维
+  取模型 chunk 前 20 行、domain_id=2、gripper 阈值 0.8。RoboScope Kit 的 calvin 规格为 7 维
   相对动作，本 Policy 通过 `PolicyCapabilities` 声明
   `calvin.absolute-compact-quat-v1`；benchmark adapter 根据协商后的 contract
   选择绝对语义。适配器先把单位 quat 规范到 `w>=0`，再编码 xyz 3 维；worker 保留 xyz
   原值并由单位约束重建非负 w（仅容忍浮点误差导致的轻微越界），env 收到与
   Recipe 等价的绝对动作。
-- **robotwin**：X-VLA 是 EE 策略（16 维 pos+quat+grip），平台 RoboTwin 规格 14 维
+- **robotwin**：X-VLA 是 EE 策略（16 维 pos+quat+grip），RoboScope Kit 的 RoboTwin 规格为 14 维
   qpos。本 Policy 通过 `PolicyCapabilities` 声明 `robotwin.ee-compact-quat-v1`，
   benchmark adapter 根据协商后的 contract 选择 EE 执行路径；适配器把每臂动作编码为
   `[pos3, canonical quat_xyz3, grip]`，launcher 重建完整 16 维动作并调用原生
@@ -59,7 +103,7 @@ RoboTwin 研究对照数字来自 X-VLA 上游固定提交
 ## 实机验证
 
 - `--quick-test` 与其它 preflight 用于有界 smoke；完整 suite 提供研究指标对照证据。
-- full-run gate 运行平台定义的完整 suite。`--episodes 1` 只缩减每个 task 的 episode
+- 完整评测运行 benchmark manifest 定义的完整 suite。`--episodes 1` 只缩减每个 task 的 episode
   数，并不把 suite 变成小样本；例如 LIBERO+ 仍会展开 10030 个 variants。
-- `outer rc=0`、testlog 为 `finish`、errors.jsonl 无 terminal failure
+- 通过标准：CLI 退出码为 0、`--output-dir` 下生成 `result.json`、`errors.jsonl` 无 terminal failure
 - 指标与上游论文/社区 X-VLA 条目按相同 protocol 比对

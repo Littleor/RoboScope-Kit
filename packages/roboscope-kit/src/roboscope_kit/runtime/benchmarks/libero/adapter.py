@@ -22,8 +22,7 @@ from roboscope_kit.runtime.benchmark import (
     WorkItem,
     WorkResult,
 )
-
-SDK_IMPORT_ROOT = Path(__file__).resolve().parents[4]
+from roboscope_kit.runtime.benchmark.kit_path import KIT_PACKAGE, kit_import_root
 
 
 def _libero_paths(libero_home: Path) -> dict[str, Path]:
@@ -48,8 +47,8 @@ def write_libero_config(config_path: Path, libero_home: Path) -> None:
 
 def validate_libero_runtime(config_path: Path, libero_home: Path, sdk_import_root: Path) -> None:
     expected_sdk_root = sdk_import_root.resolve()
-    if expected_sdk_root != SDK_IMPORT_ROOT:
-        raise RuntimeError(f"SDK imported from {SDK_IMPORT_ROOT}, expected {expected_sdk_root}")
+    if kit_import_root().resolve() != expected_sdk_root:
+        raise RuntimeError(f"SDK imported from {kit_import_root()}, expected {expected_sdk_root}")
 
     libero_package = importlib.import_module("libero.libero")
     sdk_worker = importlib.import_module("roboscope_kit.runtime.benchmarks.libero.worker")
@@ -59,8 +58,8 @@ def validate_libero_runtime(config_path: Path, libero_home: Path, sdk_import_roo
     if package_path != expected_package_path:
         raise RuntimeError(f"LIBERO imported from {package_path}, expected {expected_package_path}")
     worker_path = Path(str(sdk_worker.__file__)).resolve()
-    if expected_sdk_root not in worker_path.parents:
-        raise RuntimeError(f"SDK worker imported from {worker_path}, expected {expected_sdk_root}")
+    if KIT_PACKAGE not in worker_path.parents:
+        raise RuntimeError(f"SDK worker imported from {worker_path}, expected {KIT_PACKAGE}")
     expected_config_path = config_path.resolve()
     active_config_path = Path(str(libero_package.config_file)).resolve()
     if active_config_path != expected_config_path:
@@ -208,7 +207,7 @@ class LiberoBenchmarkAdapter:
             command += ("--video-dir", str(context.output_dir / "video"))
         threads = str(self.config.cpu_threads)
         env = {
-            "PYTHONPATH": (f"{self.config.libero_home}:{SDK_IMPORT_ROOT}:{os.environ.get('PYTHONPATH', '')}"),
+            "PYTHONPATH": f"{self.config.libero_home}:{kit_import_root()}:{os.environ.get('PYTHONPATH', '')}",
             "LIBERO_HOME": str(self.config.libero_home),
             "LIBERO_CONFIG_PATH": str(runtime_config_path.parent),
             "MUJOCO_GL": self.config.render_backend,
@@ -217,7 +216,7 @@ class LiberoBenchmarkAdapter:
             "MKL_NUM_THREADS": threads,
             "OPENBLAS_NUM_THREADS": threads,
             "NUMEXPR_NUM_THREADS": threads,
-            # Shared AutoDL FS inode quota can be exhausted; never write pyc.
+            # Runtimes may live on read-only or inode-limited storage; never write pyc.
             "PYTHONDONTWRITEBYTECODE": "1",
         }
         if self.config.render_backend == "egl":
@@ -278,7 +277,6 @@ class LiberoBenchmarkAdapter:
 __all__ = [
     "LiberoBenchmarkAdapter",
     "LiberoRuntimeConfig",
-    "SDK_IMPORT_ROOT",
     "stratified_task_ids",
     "validate_libero_runtime",
     "write_libero_config",

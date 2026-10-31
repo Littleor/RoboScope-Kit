@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
   "command": [
-    "/root/miniconda3/envs/starVLA/bin/python",
-    "/opt/roboscope/starvla/starvla_policy.py"
+    "/path/to/envs/starVLA/bin/python",
+    "/path/to/RoboScope-Kit/examples/starvla/starvla_policy.py"
   ],
-  "cwd": "/root/starVLA",
+  "cwd": "/path/to/starVLA",
   "benchmark_config": {
     "metaworld": {
       "cameras": [

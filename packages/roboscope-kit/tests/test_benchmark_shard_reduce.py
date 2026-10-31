@@ -172,7 +172,7 @@ def _shard_document(workload: Workload, index: int, count: int, *, suite: str = 
     }
 
 
-BUILD = {"sdk_version": "0.7.0b47", "evaluation_kit_commit": "kit-a"}
+BUILD = {"kit_version": "0.8.0b7", "manifest_sha256": "a" * 64}
 
 
 def _whole_run(workload: Workload) -> dict[str, Any]:
@@ -253,23 +253,23 @@ def test_duplicated_shard_is_rejected() -> None:
         merge_shard_results([documents[0], documents[1], documents[1]])
 
 
-def test_shards_of_different_sdk_builds_are_rejected_and_named() -> None:
+def test_shards_of_different_kit_builds_are_rejected_and_named() -> None:
     documents = _libero_documents()
-    documents[1]["shard"]["build"] = {"sdk_version": "0.7.0b47", "evaluation_kit_commit": "kit-b"}
-    with pytest.raises(ValueError, match="different SDK builds") as raised:
+    documents[1]["shard"]["build"] = {"kit_version": "0.8.0b7", "manifest_sha256": "b" * 64}
+    with pytest.raises(ValueError, match="different kit builds") as raised:
         merge_shard_results(documents)
-    assert "shard 0 sdk=0.7.0b47 kit=kit-a" in str(raised.value)
-    assert "shard 1 sdk=0.7.0b47 kit=kit-b" in str(raised.value)
+    assert f"shard 0 kit=0.8.0b7 manifest={'a' * 12}" in str(raised.value)
+    assert f"shard 1 kit=0.8.0b7 manifest={'b' * 12}" in str(raised.value)
 
 
-@pytest.mark.parametrize("build", [None, {"sdk_version": "0.7.0b47", "evaluation_kit_commit": ""}])
+@pytest.mark.parametrize("build", [None, {"kit_version": "0.8.0b7", "manifest_sha256": ""}])
 def test_a_shard_that_does_not_record_its_build_is_rejected(build: dict[str, str] | None) -> None:
     documents = _libero_documents()
     if build is None:
         del documents[2]["shard"]["build"]
     else:
         documents[2]["shard"]["build"] = build
-    with pytest.raises(ValueError, match="shard 2 does not record the SDK build"):
+    with pytest.raises(ValueError, match="shard 2 does not record the kit build"):
         merge_shard_results(documents)
 
 

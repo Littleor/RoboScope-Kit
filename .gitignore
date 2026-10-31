@@ -9,3 +9,7 @@ dist/
 sdk-dist/
 .verify-sdk/
 .verify-download/
+
+# X-VLA example sources and weights placed inside the example directory
+examples/xvla/X-VLA/
+examples/xvla/checkpoints/

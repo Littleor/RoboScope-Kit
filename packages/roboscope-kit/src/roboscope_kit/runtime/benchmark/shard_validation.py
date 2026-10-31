@@ -6,7 +6,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-_BUILD_KEYS = ("sdk_version", "evaluation_kit_commit")
+_BUILD_KEYS = ("kit_version", "manifest_sha256")
 
 
 def require_count(value: Any, name: str, *, minimum: int = 0) -> int:
@@ -55,18 +55,18 @@ def validate_shard_set(shards: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
 
 def _require_one_build(metas: Sequence[Mapping[str, Any]]) -> None:
-    """Shards that ran different SDK or kit builds may partition or score the workload differently."""
+    """Shards that ran a different kit version or manifest may partition or score the workload differently."""
 
     builds = [meta.get("build") for meta in metas]
     for meta, build in zip(metas, builds, strict=True):
         if not isinstance(build, Mapping) or not all(build.get(key) for key in _BUILD_KEYS):
-            raise ValueError(f"shard {meta['index']} does not record the SDK build it ran")
+            raise ValueError(f"shard {meta['index']} does not record the kit build it ran")
     if any(build != builds[0] for build in builds[1:]):
         detail = "; ".join(
-            f"shard {meta['index']} sdk={build['sdk_version']} kit={build['evaluation_kit_commit']}"
+            f"shard {meta['index']} kit={build['kit_version']} manifest={build['manifest_sha256'][:12]}"
             for meta, build in zip(metas, builds, strict=True)
         )
-        raise ValueError(f"shards ran different SDK builds ({detail})")
+        raise ValueError(f"shards ran different kit builds ({detail})")
 
 
 def validate_shard_identity(shards: Sequence[Mapping[str, Any]]) -> dict[str, Any]:

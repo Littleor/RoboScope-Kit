@@ -36,17 +36,15 @@ from .autotune import (
 from .checkpoint import materialize_checkpoint
 from .cuda_mps import CudaMpsSession
 from .factories import BenchmarkFactory, BenchmarkRunRequest
-from .image_manifest import (
-    BENCHMARK_IMAGE_MANIFEST_PATH,
-    BenchmarkImageManifest,
-    load_benchmark_image_manifest,
+from .manifest import (
+    BenchmarkManifest,
+    load_benchmark_manifest,
 )
-from .legacy import LegacyContract, LegacyProgressAdapter
 from .orchestrator import ParallelBenchmarkRuntime, RuntimeConfig, append_event
 from .policy_process import PolicyProcessAdapter
 from .queue import atomic_json
 from .registry import benchmark_factory
-from .sharding import DEFAULT_EPISODES_PER_SHARD, plan_shard
+from .sharding import DEFAULT_EPISODES_PER_SHARD, shard_build
 from .timing import BenchmarkTimingRecorder, PhaseTimingCallback, benchmark_phase
 
 
@@ -81,7 +79,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=DEFAULT_EPISODES_PER_SHARD,
         help="episode budget per shard when --shard-count is omitted",
     )
-    parser.add_argument("--image-manifest", type=Path, default=BENCHMARK_IMAGE_MANIFEST_PATH)
+    parser.add_argument("--benchmark-manifest", type=Path, required=True)
+    parser.add_argument("--policy-config", type=Path, help="Policy process contract (roboscope-policy.json)")
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=Path,
+        help="directory an oss:// --checkpoint-source downloads into; replaced on every run",
+    )
     parser.add_argument("--evaluation-config", type=Path)
     parser.add_argument(
         "--autotune-strategy",
@@ -100,15 +104,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         metavar="G",
         help="evaluate with G Policy replicas instead of autotuning K/g; requires --concurrency",
     )
-    parser.add_argument(
-        "--legacy-contract-root",
-        type=Path,
-        default=(
-            Path(os.environ["ROBOSCOPE_LEGACY_CONTRACT_ROOT"])
-            if os.environ.get("ROBOSCOPE_LEGACY_CONTRACT_ROOT")
-            else None
-        ),
-    )
     return parser.parse_args(argv)
 
 
@@ -117,13 +112,12 @@ def main(argv: list[str] | None = None) -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     errors_path = args.output_dir / "errors.jsonl"
     errors_path.unlink(missing_ok=True)
-    legacy_contract = None
     timing_recorder = None
     try:
         benchmark = BenchmarkName(args.benchmark)
         if args.autotune_strategy not in (None, *autotune_strategies()):
             raise ValueError(f"--autotune-strategy must be one of {autotune_strategies()}")
-        manifest = load_benchmark_image_manifest(args.image_manifest)
+        manifest = load_benchmark_manifest(args.benchmark_manifest)
         if args.autotune_strategy is not None:
             manifest = replace(
                 manifest,
@@ -135,13 +129,6 @@ def main(argv: list[str] | None = None) -> int:
             result = factory.self_test(manifest, args.output_dir)
             atomic_json(args.output_dir / "self-test.json", result)
             return 0
-        legacy_contract = (
-            LegacyContract(args.legacy_contract_root, benchmark.value, args.suite or "none")
-            if args.legacy_contract_root is not None
-            else None
-        )
-        if legacy_contract is not None:
-            legacy_contract.reset()
         timing_recorder = BenchmarkTimingRecorder(args.output_dir / "metrics.json")
         return _run_evaluation(
             args,
@@ -149,7 +136,6 @@ def main(argv: list[str] | None = None) -> int:
             manifest,
             factory,
             timing_recorder.handle_phase,
-            legacy_contract,
         )
     except Exception as exc:
         append_event(
@@ -161,8 +147,6 @@ def main(argv: list[str] | None = None) -> int:
                 "message": str(exc),
             },
         )
-        if legacy_contract is not None:
-            legacy_contract.fail(type(exc).__name__)
         raise
     finally:
         if timing_recorder is not None:
@@ -175,12 +159,13 @@ def _run_evaluation(
     manifest,
     factory: BenchmarkFactory,
     phase_timing_callback: PhaseTimingCallback,
-    legacy_contract: LegacyContract | None,
 ) -> int:
     if not args.suite:
         raise ValueError("--suite is required for benchmark evaluation")
     if not args.checkpoint_source:
         raise ValueError("--checkpoint-source is required for benchmark evaluation")
+    if args.policy_config is None:
+        raise ValueError("--policy-config is required for benchmark evaluation")
     if args.episodes is not None and args.episodes < 1:
         raise ValueError("--episodes must be positive")
     if args.quick_test and args.shard_index is not None:
@@ -205,16 +190,9 @@ def _run_evaluation(
         raise ValueError("--shard-episodes must be positive")
     manifest.validate_request(benchmark, args.suite)
     factory.validate_suite(args.suite)
-    if legacy_contract is not None:
-        legacy_contract.write_log(0, 100, args.suite, 0, 0, 0, "downloading")
     with benchmark_phase(phase_timing_callback, "checkpoint_prepare_s"):
-        checkpoint = materialize_checkpoint(
-            args.checkpoint_source,
-            progress_callback=(
-                legacy_contract.set_checkpoint_progress if legacy_contract is not None else None
-            ),
-        )
-    policy = load_policy_runtime_config()
+        checkpoint = materialize_checkpoint(args.checkpoint_source, args.checkpoint_dir)
+    policy = load_policy_runtime_config(args.policy_config)
     evaluation_config, evaluation_config_path = _resolve_evaluation_config(
         benchmark,
         args.evaluation_config,
@@ -235,7 +213,6 @@ def _run_evaluation(
     if not gpu_devices:
         raise RuntimeError("benchmark runtime requires at least one visible GPU")
     shard_kwargs = _shard_kwargs(args, manifest)
-    legacy_progress = _legacy_progress(legacy_contract, factory, request, manifest, shard_kwargs)
     cuda_mps: CudaMpsSession | None = None
     try:
         if args.cuda_mps:
@@ -262,7 +239,6 @@ def _run_evaluation(
                 output_dir=args.output_dir,
                 probe=False,
                 phase_timing_callback=phase_timing_callback,
-                progress_callback=legacy_progress.update if legacy_progress is not None else None,
                 shard_kwargs=shard_kwargs,
                 cuda_mps=cuda_mps,
             )
@@ -276,22 +252,15 @@ def _run_evaluation(
                 gpu_devices,
                 args.output_dir,
                 phase_timing_callback,
-                progress_callback=legacy_progress.update if legacy_progress is not None else None,
                 shard_kwargs=shard_kwargs,
                 cuda_mps=cuda_mps,
             )
-    except Exception:
-        if legacy_progress is not None:
-            legacy_progress.abort()
-        raise
     finally:
         if cuda_mps is not None:
             cuda_mps.stop()
     output["autotune"] = selected
     output["cuda_mps"] = cuda_mps.metadata() if cuda_mps is not None else {"enabled": False}
     atomic_json(args.output_dir / "result.json", output)
-    if legacy_progress is not None:
-        legacy_progress.finish()
     return 0
 
 
@@ -304,7 +273,7 @@ def _resolve_evaluation_config(
     """Resolve the benchmark evaluation config once and materialize it for workers.
 
     Priority is an explicit ``--evaluation-config`` file, then the Policy file's
-    ``benchmark_config`` declaration, then the platform default. Every worker and
+    ``benchmark_config`` declaration, then the default. Every worker and
     the Policy ``load`` spec therefore consume the same resolved object.
     """
 
@@ -329,38 +298,6 @@ def _build_benchmark_spec(
             raise ValueError("metaworld evaluation config was not resolved")
         return MetaworldBenchmarkDefinition().spec(suite, tuple(evaluation_config["cameras"]))
     return get_benchmark_spec(benchmark, suite)
-
-
-def _legacy_progress(
-    contract: LegacyContract | None,
-    factory: BenchmarkFactory,
-    request: BenchmarkRunRequest,
-    manifest,
-    shard_kwargs: dict[str, Any],
-) -> LegacyProgressAdapter | None:
-    if contract is None and not shard_kwargs:
-        return None
-    benchmark = factory.create(request, manifest)
-    items = list(benchmark.work_items())
-    if shard_kwargs:
-        # A shard only ever produces the records of its own partition, so the
-        # legacy contract counts those. Reporting the full workload here makes
-        # every shard look stalled and then fails the completeness check.
-        items, _ = plan_shard(
-            items,
-            shard_kwargs["shard_index"],
-            shard_kwargs["shard_count"],
-            shard_kwargs["shard_episodes"],
-        )
-    if contract is None:
-        return None
-    total = sum(item.expected_results for item in items)
-    contract.set_total(total)
-    return LegacyProgressAdapter(
-        suite=request.suite,
-        total=total,
-        write_log=contract.write_log,
-    )
 
 
 def _autotuned_run(
@@ -482,18 +419,15 @@ def _measure_shared(
     return output, pool.adapter.vram_bytes_per_replica()
 
 
-def _shard_kwargs(args: argparse.Namespace, manifest: BenchmarkImageManifest) -> dict[str, Any]:
+def _shard_kwargs(args: argparse.Namespace, manifest: BenchmarkManifest) -> dict[str, Any]:
     if args.shard_index is None:
         return {}
     return {
         "shard_index": args.shard_index,
         "shard_count": args.shard_count,
         "shard_episodes": args.shard_episodes,
-        # The image's own identity: the merge refuses shards that ran different builds.
-        "shard_build": {
-            "sdk_version": manifest.sdk_version,
-            "evaluation_kit_commit": manifest.evaluation_kit_commit,
-        },
+        # The merge refuses shards that ran a different kit version or manifest.
+        "shard_build": shard_build(manifest),
     }
 
 

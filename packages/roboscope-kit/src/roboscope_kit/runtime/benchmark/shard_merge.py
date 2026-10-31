@@ -33,17 +33,13 @@ from typing import Any
 from roboscope_kit.benchmark_specs import BenchmarkName
 
 from .factories import BenchmarkRunRequest
-from .image_manifest import (
-    BENCHMARK_IMAGE_MANIFEST_PATH,
-    BenchmarkImageManifest,
-    load_benchmark_image_manifest,
-)
+from .manifest import BenchmarkManifest, load_benchmark_manifest
 from .orchestrator import aggregate_standard_results
 from .queue import WorkQueue, atomic_json
 from .registry import benchmark_factory
 from .schema import WorkItem, WorkResult, validate_terminal_accounting
 from .shard_validation import validate_shard_accounting, validate_shard_identity, validate_shard_set
-from .sharding import plan_shard
+from .sharding import plan_shard, shard_build
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -52,7 +48,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--suite", required=True)
     parser.add_argument("--episodes", type=int)
     parser.add_argument("--evaluation-config", type=Path, help="resolved MetaWorld run configuration")
-    parser.add_argument("--image-manifest", type=Path, default=BENCHMARK_IMAGE_MANIFEST_PATH)
+    parser.add_argument("--benchmark-manifest", type=Path, required=True)
     parser.add_argument(
         "--shard-dir",
         action="append",
@@ -73,7 +69,7 @@ def main(argv: list[str] | None = None) -> int:
             benchmark=BenchmarkName(args.benchmark),
             suite=args.suite,
             episodes=args.episodes,
-            image_manifest_path=args.image_manifest,
+            manifest_path=args.benchmark_manifest,
             shard_dirs=args.shard_dir,
             evaluation_config_path=args.evaluation_config,
         )
@@ -105,11 +101,11 @@ def merge_shards(
     benchmark: BenchmarkName,
     suite: str,
     episodes: int | None,
-    image_manifest_path: Path,
+    manifest_path: Path,
     shard_dirs: list[Path],
     evaluation_config_path: Path | None = None,
 ) -> dict[str, Any]:
-    manifest = load_benchmark_image_manifest(image_manifest_path)
+    manifest = load_benchmark_manifest(manifest_path)
     factory = benchmark_factory(benchmark)
     factory.validate_suite(suite)
     manifest.validate_request(benchmark, suite)
@@ -201,16 +197,15 @@ def _load_shard(shard_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
 def _validate_shard_metadata(
     shards: list[tuple[Path, dict[str, Any], dict[str, Any]]],
     expected_identity: dict[str, Any],
-    image: BenchmarkImageManifest,
+    benchmark_manifest: BenchmarkManifest,
 ) -> None:
     documents = [result for _, _, result in shards]
     meta = validate_shard_set(documents)
     identity = validate_shard_identity(documents)
     if json.dumps(identity, sort_keys=True) != json.dumps(expected_identity, sort_keys=True):
         raise ValueError("shard benchmark identity disagrees with the merge workload")
-    build = {"sdk_version": image.sdk_version, "evaluation_kit_commit": image.evaluation_kit_commit}
-    if meta["build"] != build:
-        raise ValueError("shard SDK build disagrees with the merge image manifest")
+    if meta["build"] != shard_build(benchmark_manifest):
+        raise ValueError("shard kit build disagrees with the merge's kit version and benchmark manifest")
     for shard_dir, manifest, result in shards:
         if manifest.get("benchmark") != result["benchmark"]:
             raise ValueError(f"{shard_dir}: manifest benchmark identity disagrees with result.json")

@@ -36,7 +36,7 @@ from roboscope_kit.protocol import (
 DEFAULT_SOCKET_PATH = "/tmp/roboscope-inference.sock"
 
 
-class PolicyState(str, Enum):  # noqa: UP042 -- benchmark images include Python 3.10
+class PolicyState(str, Enum):  # noqa: UP042 -- benchmark environments include Python 3.10
     CREATED = "created"
     LOADING = "loading"
     READY = "ready"

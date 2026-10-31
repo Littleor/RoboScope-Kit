@@ -12,9 +12,12 @@ coordination, and the merged records are comparable to a single-instance run.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping, Sequence
+from importlib.metadata import version
 from typing import Any
 
+from .manifest import BenchmarkManifest
 from .schema import WorkItem
 
 DEFAULT_EPISODES_PER_SHARD = 500
@@ -50,6 +53,15 @@ def select_shard_items(
     return selected
 
 
+def shard_build(manifest: BenchmarkManifest) -> dict[str, str]:
+    """The kit version and manifest content a shard ran with; every shard of one run must match."""
+
+    return {
+        "kit_version": version("roboscope-kit"),
+        "manifest_sha256": hashlib.sha256(manifest.path.read_bytes()).hexdigest(),
+    }
+
+
 def shard_info(
     shard_index: int,
     shard_count: int,
@@ -60,8 +72,8 @@ def shard_info(
 ) -> dict[str, Any]:
     """Describe one shard run for manifest/result provenance.
 
-    ``build`` is the image's SDK version and evaluation kit commit. Shards of one run must share
-    it, because another build may partition or score the same workload differently.
+    ``build`` is :func:`shard_build`. Shards of one run must share it, because another kit version
+    or manifest may partition or score the same workload differently.
     """
 
     return {
@@ -109,6 +121,7 @@ def plan_shard(
 
 
 __all__ = [
+    "shard_build",
     "DEFAULT_EPISODES_PER_SHARD",
     "plan_shard",
     "resolve_shard_count",

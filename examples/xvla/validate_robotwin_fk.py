@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Validate the X-VLA robotwin FK/proprio construction against the real sim.
 
-Runs inside the platform RoboTwin runtime: loads one episode of a task env,
+Runs in the RoboTwin benchmark environment, with ``ROBOTWIN_RUNTIME_ROOT``
+set to its RoboTwin checkout: loads one episode of a task env,
 reads the sim's joints/endpose, and compares against the SAPIEN-based FK and
 the X-VLA client proprio built by the adapter.  Prints raw numbers so any
 frame/convention mismatch is visible.
@@ -11,7 +12,7 @@ import sys
 
 import numpy as np
 
-os.chdir("/root/autodl-fs/benchmarks/robotwin/runtime/root/RoboTwin")
+os.chdir(os.environ["ROBOTWIN_RUNTIME_ROOT"])
 sys.path.insert(0, os.getcwd())
 sys.path.insert(0, os.path.join(os.getcwd(), "envs"))
 sys.path.insert(0, os.path.join(os.getcwd(), "scripts"))

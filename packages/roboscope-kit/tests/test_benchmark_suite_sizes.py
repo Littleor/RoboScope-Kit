@@ -1,4 +1,4 @@
-"""The suite-size table the platform shards by must agree with what the runtime actually runs."""
+"""The suite-size table used to size sharded runs must agree with what the runtime actually runs."""
 
 from __future__ import annotations
 
@@ -13,17 +13,17 @@ from roboscope_kit.runtime.benchmarks.metaworld.instructions import MT50_TASKS
 from roboscope_kit.runtime.benchmarks.robocasa.adapter import ROBOCASA_TABLETOP_TASKS
 from roboscope_kit.runtime.benchmarks.robotwin.adapter import ROBOTWIN_ALL_TASKS
 
-MANIFESTS = Path(__file__).resolve().parents[3] / "benchmarks" / "starvla_platform_runtime"
+MANIFESTS = Path(__file__).resolve().parents[3] / "benchmarks"
 # No fixed size: LIBERO+ samples its tasks per run.
 UNSIZED_BENCHMARKS = {"libero_plus"}
 
 
 def _manifest(benchmark: str) -> dict:
-    return json.loads((MANIFESTS / benchmark / "benchmark-image.json").read_text(encoding="utf-8"))
+    return json.loads((MANIFESTS / benchmark / "benchmark-manifest.json").read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize("benchmark", sorted({benchmark for benchmark, _ in SUITE_SIZES}))
-def test_episodes_per_task_and_suites_match_the_image_manifest(benchmark: str) -> None:
+def test_episodes_per_task_and_suites_match_the_benchmark_manifest(benchmark: str) -> None:
     manifest = _manifest(benchmark)
     listed = {suite for name, suite in SUITE_SIZES if name == benchmark}
     assert listed == set(manifest["supported_suites"][benchmark])
@@ -31,8 +31,8 @@ def test_episodes_per_task_and_suites_match_the_image_manifest(benchmark: str) -
         assert SUITE_SIZES[(benchmark, suite)].episodes_per_task == manifest["defaults"]["episodes"], suite
 
 
-def test_every_image_manifest_is_sized_or_declared_unsized() -> None:
-    manifests = {path.parent.name for path in MANIFESTS.glob("*/benchmark-image.json")}
+def test_every_benchmark_manifest_is_sized_or_declared_unsized() -> None:
+    manifests = {path.parent.name for path in MANIFESTS.glob("*/benchmark-manifest.json")}
     sized = {benchmark for benchmark, _ in SUITE_SIZES}
     assert manifests == sized | UNSIZED_BENCHMARKS
 

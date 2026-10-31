@@ -14,7 +14,7 @@ import roboscope_kit
 from roboscope_kit.benchmark_specs import BenchmarkName
 from roboscope_kit.policy import PolicyCapabilities
 from roboscope_kit.runtime.benchmark.factories import BenchmarkRunRequest
-from roboscope_kit.runtime.benchmark.image_manifest import BenchmarkImageManifest
+from roboscope_kit.runtime.benchmark.manifest import BenchmarkManifest
 from roboscope_kit.runtime.benchmark.registry import benchmark_factory
 from roboscope_kit.runtime.benchmark.schema import EvaluationRecord, WorkResult
 from roboscope_kit.runtime.benchmarks.calvin import CalvinBenchmarkFactory
@@ -40,7 +40,6 @@ PUBLIC_SDK_API = [
     "FeatureSpec",
     "Observation",
     "Policy",
-    "POLICY_CONFIG_PATH",
     "POLICY_CONFIG_SCHEMA_VERSION",
     "PolicyConfigError",
     "PolicyRuntimeConfig",
@@ -216,12 +215,9 @@ def _manifest(
     defaults: dict,
     benchmarks: tuple[BenchmarkName, ...],
     suites: tuple[str, ...],
-) -> BenchmarkImageManifest:
-    return BenchmarkImageManifest(
-        path=Path("/opt/roboscope/benchmark-image.json"),
-        image_name="TestImage",
-        evaluation_kit_commit="deadbeef",
-        sdk_version="0.2.0",
+) -> BenchmarkManifest:
+    return BenchmarkManifest(
+        path=Path("/sim/benchmark-manifest.json"),
         supported_benchmarks=benchmarks,
         protocol_versions={name: "test-v1" for name in benchmarks},
         supported_suites={name: suites for name in benchmarks},
@@ -230,11 +226,11 @@ def _manifest(
     )
 
 
-def _libero_manifest(**defaults) -> BenchmarkImageManifest:
+def _libero_manifest(**defaults) -> BenchmarkManifest:
     runtime = {
         "python": "/usr/bin/python3",
-        "benchmark_root": "/root/libero",
-        "config_path": "/root/libero/config.yaml",
+        "benchmark_root": "/sim/libero",
+        "config_path": "/sim/libero/config.yaml",
     }
     return _manifest(
         runtime,
@@ -254,8 +250,8 @@ def _request(
     return BenchmarkRunRequest(
         benchmark=benchmark,
         suite=suite,
-        checkpoint_path=Path("/root/checkpoint"),
-        output_dir=Path("/root/testresult"),
+        checkpoint_path=Path("/models/checkpoint"),
+        output_dir=Path("/runs/out"),
         episodes=episodes,
         quick_test=quick_test,
     )
@@ -342,7 +338,7 @@ def test_libero_self_test_reports_missing_paths(tmp_path: Path) -> None:
         benchmark_root=str(tmp_path / "missing-libero"),
         config_path=str(tmp_path / "missing-config.yaml"),
     )
-    with pytest.raises(RuntimeError, match="LIBERO image paths are missing"):
+    with pytest.raises(RuntimeError, match="LIBERO runtime paths are missing"):
         factory.self_test(manifest, tmp_path)
 
 
@@ -403,7 +399,7 @@ def test_libero_worker_process_spec() -> None:
     assert spec.command[1:3] == ("-m", "roboscope_kit.runtime.benchmarks.libero.worker")
     assert spec.env["CUDA_VISIBLE_DEVICES"] == "3"
     assert spec.env["MUJOCO_EGL_DEVICE_ID"] == "3"
-    assert spec.env["LIBERO_HOME"] == "/root/libero"
+    assert spec.env["LIBERO_HOME"] == "/sim/libero"
     assert spec.env["LIBERO_CONFIG_PATH"] == "/tmp/state/libero-config"
 
 
@@ -416,12 +412,12 @@ def test_robotwin_work_items_interleave_episode_windows() -> None:
     tasks = ROBOTWIN_ALL_TASKS[:2]
     adapter = RoboTwinBenchmarkAdapter(
         RoboTwinRuntimeConfig(
-            sdk_python=Path("/opt/roboscope/sdk/bin/python"),
-            benchmark_python=Path("/opt/robotwin/bin/python"),
-            robotwin_root=Path("/opt/robotwin"),
-            checkpoint_path=Path("/root/checkpoint"),
-            deploy_policy_path=Path("/opt/robotwin/deploy_policy.yml"),
-            launcher_path=Path("/opt/robotwin/launcher.py"),
+            sdk_python=Path("/opt/kit/bin/python"),
+            benchmark_python=Path("/sim/robotwin/bin/python"),
+            robotwin_root=Path("/sim/robotwin"),
+            checkpoint_path=Path("/models/checkpoint"),
+            deploy_policy_path=Path("/sim/robotwin/deploy_policy.yml"),
+            launcher_path=Path("/sim/robotwin/launcher.py"),
             suite="demo_randomized",
             tasks=tasks,
             episodes_per_task=25,
@@ -463,12 +459,12 @@ def test_robotwin_worker_routes_negotiated_action_representation(
 
     adapter = RoboTwinBenchmarkAdapter(
         RoboTwinRuntimeConfig(
-            sdk_python=Path("/opt/roboscope/sdk/bin/python"),
-            benchmark_python=Path("/opt/robotwin/bin/python"),
-            robotwin_root=Path("/opt/robotwin"),
-            checkpoint_path=Path("/root/checkpoint"),
-            deploy_policy_path=Path("/opt/robotwin/deploy_policy.yml"),
-            launcher_path=Path("/opt/robotwin/launcher.py"),
+            sdk_python=Path("/opt/kit/bin/python"),
+            benchmark_python=Path("/sim/robotwin/bin/python"),
+            robotwin_root=Path("/sim/robotwin"),
+            checkpoint_path=Path("/models/checkpoint"),
+            deploy_policy_path=Path("/sim/robotwin/deploy_policy.yml"),
+            launcher_path=Path("/sim/robotwin/launcher.py"),
             suite="demo_clean",
             tasks=ROBOTWIN_ALL_TASKS[:1],
             episodes_per_task=1,
@@ -501,7 +497,7 @@ def test_robotwin_refreshes_observations_at_action_chunk_boundaries(
 
     monkeypatch.syspath_prepend(str(Path(__file__).parents[3]))
     monkeypatch.setitem(sys.modules, "yaml", object())
-    from benchmarks.robotwin_official.roboscope_robotwin_launcher import ModelClient
+    from benchmarks.robotwin.roboscope_robotwin_launcher import ModelClient
 
     client = ModelClient.__new__(ModelClient)
     client.raw_actions = object()
@@ -524,7 +520,7 @@ def test_robotwin_policy_cadences_share_one_launcher_implementation(
 
     monkeypatch.syspath_prepend(str(Path(__file__).parents[3]))
     monkeypatch.setitem(sys.modules, "yaml", object())
-    from benchmarks.robotwin_official.roboscope_robotwin_launcher import ModelClient
+    from benchmarks.robotwin.roboscope_robotwin_launcher import ModelClient
 
     clients = []
     for stride in (1, 16):
@@ -708,12 +704,12 @@ def _robotwin_adapter_for_generation(
 ) -> RoboTwinBenchmarkAdapter:
     return RoboTwinBenchmarkAdapter(
         RoboTwinRuntimeConfig(
-            sdk_python=Path("/opt/roboscope/sdk/bin/python"),
-            benchmark_python=Path("/opt/robotwin/bin/python"),
+            sdk_python=Path("/opt/kit/bin/python"),
+            benchmark_python=Path("/sim/robotwin/bin/python"),
             robotwin_root=robotwin_root,
-            checkpoint_path=Path("/root/checkpoint"),
-            deploy_policy_path=Path("/opt/robotwin/deploy_policy.yml"),
-            launcher_path=Path("/opt/robotwin/launcher.py"),
+            checkpoint_path=Path("/models/checkpoint"),
+            deploy_policy_path=Path("/sim/robotwin/deploy_policy.yml"),
+            launcher_path=Path("/sim/robotwin/launcher.py"),
             suite="demo_clean",
             tasks=("adjust_bottle",),
             episodes_per_task=2,
@@ -738,7 +734,7 @@ def test_robotwin_formal_gate_supports_legacy_and_validates_v2_generation(
         source_cache_dir,
         None,
     )
-    legacy_image = _manifest(
+    unprotocoled_manifest = _manifest(
         {},
         {},
         (BenchmarkName.ROBOTWIN,),
@@ -746,7 +742,7 @@ def test_robotwin_formal_gate_supports_legacy_and_validates_v2_generation(
     )
     RoboTwinBenchmarkFactory._validate_formal_generation(
         legacy_adapter,
-        legacy_image,
+        unprotocoled_manifest,
         ("adjust_bottle",),
         2,
     )
@@ -762,11 +758,8 @@ def test_robotwin_formal_gate_supports_legacy_and_validates_v2_generation(
         scanner_path=scanner,
     )
     adapter = _robotwin_adapter_for_generation(robotwin_root, generation, generation.name)
-    image = BenchmarkImageManifest(
-        path=tmp_path / "benchmark-image.json",
-        image_name="ProtocolImage",
-        evaluation_kit_commit="kit-commit",
-        sdk_version="0.7.0b27",
+    protocol_manifest = BenchmarkManifest(
+        path=tmp_path / "benchmark-manifest.json",
         supported_benchmarks=(BenchmarkName.ROBOTWIN,),
         protocol_versions={BenchmarkName.ROBOTWIN: "robotwin2-v1"},
         supported_suites={BenchmarkName.ROBOTWIN: ("demo_clean",)},
@@ -776,7 +769,7 @@ def test_robotwin_formal_gate_supports_legacy_and_validates_v2_generation(
     )
     RoboTwinBenchmarkFactory._validate_formal_generation(
         adapter,
-        image,
+        protocol_manifest,
         ("adjust_bottle",),
         2,
     )
@@ -785,7 +778,7 @@ def test_robotwin_formal_gate_supports_legacy_and_validates_v2_generation(
     with pytest.raises(RuntimeError, match="differs from benchmark manifest"):
         RoboTwinBenchmarkFactory._validate_formal_generation(
             mismatched,
-            image,
+            protocol_manifest,
             ("adjust_bottle",),
             2,
         )
@@ -797,7 +790,7 @@ def test_robotwin_paired_verifier_compares_episode_info(
     import sys
 
     kit_root = Path(__file__).parents[3]
-    monkeypatch.syspath_prepend(str(kit_root / "benchmarks/robotwin_official"))
+    monkeypatch.syspath_prepend(str(kit_root / "benchmarks/robotwin"))
     monkeypatch.setitem(sys.modules, "yaml", object())
     from verify_seed_cache_pair import verify_episode_info_pair
 
@@ -897,7 +890,7 @@ def test_libero_plus_self_test_reports_missing_paths(tmp_path: Path) -> None:
         benchmark_root=str(tmp_path / "missing-libero-plus"),
         config_path=str(tmp_path / "missing-config.yaml"),
     )
-    with pytest.raises(RuntimeError, match="LIBERO\\+ image paths are missing"):
+    with pytest.raises(RuntimeError, match="LIBERO\\+ runtime paths are missing"):
         factory.self_test(manifest, tmp_path)
 
 
@@ -906,17 +899,17 @@ def test_libero_plus_self_test_reports_missing_paths(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _calvin_manifest(sequences_path: Path, **defaults) -> BenchmarkImageManifest:
-    dataset_path = "/root/calvin/dataset"
+def _calvin_manifest(sequences_path: Path, **defaults) -> BenchmarkManifest:
+    dataset_path = "/sim/calvin/dataset"
     runtime = {
         "python": "/usr/bin/python3",
-        "benchmark_root": "/root/calvin",
+        "benchmark_root": "/sim/calvin",
         "dataset_paths": {
             "task_D_D": dataset_path,
             "task_ABC_D": dataset_path,
             "task_ABCD_D": dataset_path,
         },
-        "config_path": "/root/calvin/conf",
+        "config_path": "/sim/calvin/conf",
         "eval_sequences_path": str(sequences_path),
     }
     return _manifest(
@@ -1119,5 +1112,5 @@ def test_calvin_self_test_reports_missing_paths(tmp_path: Path) -> None:
             for suite in manifest.runtime["dataset_paths"]
         },
     )
-    with pytest.raises(RuntimeError, match="CALVIN image paths are missing"):
+    with pytest.raises(RuntimeError, match="CALVIN runtime paths are missing"):
         factory.self_test(manifest, tmp_path / "out")

@@ -195,7 +195,7 @@ def main() -> None:
     if args.poll_interval <= 0:
         raise ValueError("poll-interval must be positive")
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
-    # Shared AutoDL FS inode quota can be exhausted; never write pyc.
+    # Runtimes may live on read-only or inode-limited storage; never write pyc.
     os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
     import hydra

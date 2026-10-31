@@ -19,8 +19,8 @@ from roboscope_kit.runtime.benchmark import (
     WorkItem,
     WorkResult,
 )
+from roboscope_kit.runtime.benchmark.kit_path import kit_import_root
 
-SDK_IMPORT_ROOT = Path(__file__).resolve().parents[4]
 CALVIN_OFFICIAL_SUITES = frozenset({"task_D_D", "task_ABC_D", "task_ABCD_D"})
 OFFICIAL_EVAL_SEQUENCE_COUNT = 1000
 OFFICIAL_EVAL_SEQUENCES_SHA256 = "c3689911565037d399d779c655e9e943cbd5bfbfbf44045e2b3b1daa8b1a2317"
@@ -165,7 +165,7 @@ class CalvinBenchmarkAdapter:
                 (
                     str(self.config.calvin_root / "calvin_models"),
                     str(self.config.calvin_root / "calvin_env"),
-                    str(SDK_IMPORT_ROOT),
+                    str(kit_import_root()),
                     os.environ.get("PYTHONPATH", ""),
                 )
             ),

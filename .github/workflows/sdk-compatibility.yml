@@ -28,7 +28,7 @@ jobs:
       - name: Lint
         working-directory: packages/roboscope-kit
         run: |
-          python -m ruff check src tests ../../benchmarks/robotwin_official
+          python -m ruff check src tests ../../benchmarks/robotwin
           python -m ruff check --target-version py311 ../../ci
       - name: Build release artifacts
         run: bash ci/build-sdk.sh

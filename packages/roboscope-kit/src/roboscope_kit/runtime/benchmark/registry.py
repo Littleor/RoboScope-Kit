@@ -1,7 +1,7 @@
 # Copyright 2026 RoboScope Team
 # SPDX-License-Identifier: Apache-2.0
 
-"""Explicit platform-owned benchmark factory registry."""
+"""Explicit benchmark factory registry."""
 
 from __future__ import annotations
 
