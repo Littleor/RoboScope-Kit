@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.8.0b6 (Unreleased)
+
+- Add the opt-in `diagonal` autotune strategy (`autotune_strategy: diagonal`). It ramps workers on one
+  replica per GPU until doubling K gains less than `autotune_worker_knee_gain` (25%); a step the worker
+  cap shortens must gain the same share of linear scaling. It then adds one replica per GPU at a time with
+  K scaled by the measured workers per replica, keeping a step while it gains at least
+  `autotune_replica_minimum_gain` (3%). The worker cap comes from the marginal CPU cost of one worker,
+  fit from two probes, so policy-server and controller CPU is not charged to workers; before two probes
+  exist it uses the manifest's per-worker CPU estimate. A step whose busiest GPU would run out of memory,
+  extrapolated from the replica footprint and the marginal memory per worker, is skipped. Probes the
+  strategy measures but does not keep are marked `rejected` in `selection.json`, the selection reports
+  the selected probe's bound hint, and replica-phase probes are listed in `g_trials`. `two-phase` stays
+  the default for every benchmark.
+- Choose the autotune strategy per evaluation with `--autotune-strategy`, which overrides the manifest's
+  `autotune_strategy` without changing the manifest file. An unknown name fails before the evaluation
+  starts.
+- Put autotune strategies behind one interface. `register_strategy(name)` adds a K/g search that a
+  manifest selects with `autotune_strategy: <name>`; every strategy measures through the shared
+  controller, which owns probe execution, resource and correctness checks, the time budget and
+  `selection.json`. `selection.json` records the strategy and the throughput estimator in `limits`, and both
+  strategies write the same `bounds`, which now include `max_workers_hard`. `select_k` and the diagonal
+  strategy share one set of CPU, GPU-utilization and throttle limits.
+- Measure probes at steady state. `steady_steps_per_s` (with its `steady_window`) is the throughput of
+  K concurrently busy workers: each worker's first item, which carries environment creation and Policy
+  warm-up, is dropped, and so are the items that finish after the first worker runs out of work. Select
+  it with `autotune_throughput_estimator: steady`; it is the default for the diagonal strategy, and a
+  probe without a steady-state window is rejected as `no_steady_window`. The default `elapsed`
+  estimator of `two-phase` is unchanged.
+- Size LIBERO and RoboTwin probes by K with `probe_items_per_worker`, so every probed worker gets that
+  many work items. It defaults to 3 (one warm-up and two measured items) with the steady estimator and
+  to 0, the fixed probe size, otherwise. LIBERO keeps its task set and adds episodes per task, counting
+  `chunk_size` episodes per item, capped at the 50 initial states of a task. RoboTwin first adds tasks
+  from one nested order, then whole work items per task, capped at the episodes of the formal
+  generation. Either way every probe repeats the episodes of each smaller probe.
+- Compare a probe's success rate with the baseline on the episodes both ran (`record_success` in
+  `result.json`, `matched_episodes` in the probe health). Probes with identical workloads, the default,
+  compare exactly as before.
+- Record per-item completion times in `result.json` (`item_timeline`): the time the controller first sees
+  each work item completed. Partial results, which RoboTwin and RoboCasa publish per episode, do not count.
+  The controller reads completed items from the same queue scan it uses for progress.
+
 ## 0.8.0b5 (Unreleased)
 
 - Add one StarVLA demo per benchmark under `examples/starvla/<benchmark>/`: LIBERO, LIBERO-Plus, RoboTwin,

@@ -141,10 +141,24 @@ class WorkQueue:
         paths = sorted(self.completed_dir.glob("item-*.json"))
         return [WorkResult.from_dict(json.loads(path.read_text(encoding="utf-8"))) for path in paths]
 
+    def observe(self) -> tuple[list[WorkResult], set[str]]:
+        """Return the observable results and the ids of completed items, from one scan."""
+
+        completed = {path.name for path in self.completed_dir.glob("item-*.json")}
+        names = completed | {path.name for path in self.partial_dir.glob("item-*.json")}
+        results: list[WorkResult] = []
+        completed_ids: set[str] = set()
+        for name in sorted(names):
+            result = self._observable_result(name)
+            if result is None:
+                continue
+            results.append(result)
+            if name in completed:
+                completed_ids.add(result.item_id)
+        return results, completed_ids
+
     def observable_results(self) -> list[WorkResult]:
-        names = {path.name for path in self.partial_dir.glob("item-*.json")}
-        names.update(path.name for path in self.completed_dir.glob("item-*.json"))
-        return [result for name in sorted(names) if (result := self._observable_result(name))]
+        return self.observe()[0]
 
     def is_drained(self) -> bool:
         return not any(self.pending_dir.glob("*.json")) and not any(self.running_dir.glob("*.json"))

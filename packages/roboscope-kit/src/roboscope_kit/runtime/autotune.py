@@ -294,21 +294,42 @@ def select_k(
     for current in trials[1:]:
         previous_throughput = selected.clients.throughput
         gain = current.clients.throughput / max(previous_throughput, 1e-9) - 1
-        cpu_limit_reached = cpu_quota is not None and current.clients.cpu_cores > max(
-            cpu_quota - reserved_cpu_cores, 0.0
-        )
         resource_limit_reached = (
-            cpu_limit_reached
-            or current.servers.gpu_utilization > gpu_limit_ratio
-            or (
-                current.clients.throttle_time_ratio is not None
-                and current.clients.throttle_time_ratio > throttle_limit_ratio
+            resource_limit_reason(
+                current,
+                cpu_quota=cpu_quota,
+                reserved_cpu_cores=reserved_cpu_cores,
+                gpu_limit_ratio=gpu_limit_ratio,
+                throttle_limit_ratio=throttle_limit_ratio,
             )
+            is not None
         )
         if gain < minimum_gain or resource_limit_reached:
             return selected
         selected = current
     return selected
+
+
+def resource_limit_reason(
+    trial: KTrial,
+    *,
+    cpu_quota: float | None = None,
+    reserved_cpu_cores: float = 1.0,
+    gpu_limit_ratio: float = 0.95,
+    throttle_limit_ratio: float = 0.40,
+) -> str | None:
+    """Return why ``trial`` exceeded a safe CPU, GPU, or throttle limit, or ``None``."""
+
+    if cpu_quota is not None:
+        cpu_limit = max(cpu_quota - reserved_cpu_cores, 0.0)
+        if trial.clients.cpu_cores > cpu_limit:
+            return f"used {trial.clients.cpu_cores:.2f} CPU cores above {cpu_limit:.2f}"
+    if trial.servers.gpu_utilization > gpu_limit_ratio:
+        return f"GPU utilization {trial.servers.gpu_utilization:.2f} above {gpu_limit_ratio:.2f}"
+    throttle = trial.clients.throttle_time_ratio
+    if throttle is not None and throttle > throttle_limit_ratio:
+        return f"CPU throttle ratio {throttle:.2f} above {throttle_limit_ratio:.2f}"
+    return None
 
 
 def should_ramp_g(

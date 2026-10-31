@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from roboscope_kit.runtime.benchmark.autotune import probe_items_per_worker
 from roboscope_kit.runtime.benchmark.factories import (
     BenchmarkRunRequest,
     representative_indices,
@@ -23,6 +24,9 @@ LIBERO_TASK_COUNTS = {
     "libero_10": 10,
     "libero_90": 90,
 }
+
+# Every official LIBERO task ships this many initial states, one per episode.
+LIBERO_INITIAL_STATES = 50
 
 # The LIBERO Benchmark definition runs every official suite.
 LIBERO_SUITES = frozenset(LIBERO_TASK_COUNTS)
@@ -49,12 +53,20 @@ class LiberoBenchmarkFactory:
         image: BenchmarkImageManifest,
         concurrency: int,
     ) -> LiberoBenchmarkAdapter:
-        del concurrency
         task_ids = representative_indices(
             LIBERO_TASK_COUNTS[request.suite],
             int(image.defaults.get("probe_task_count", 10)),
         )
         episodes = int(image.defaults.get("probe_episodes_per_task", 1))
+        # Grow only episodes per task, in chunk_size items, until every worker gets
+        # items_per_worker items. The task set stays fixed, so each probe repeats the
+        # episodes of every smaller probe.
+        items_per_worker = probe_items_per_worker(image.defaults)
+        if items_per_worker > 0:
+            chunk_size = int(image.defaults.get("chunk_size", 1))
+            chunks_per_task = -(-items_per_worker * concurrency // len(task_ids))
+            episodes = max(episodes, chunks_per_task * chunk_size)
+        episodes = min(episodes, LIBERO_INITIAL_STATES)
         return self._create(
             request,
             image,

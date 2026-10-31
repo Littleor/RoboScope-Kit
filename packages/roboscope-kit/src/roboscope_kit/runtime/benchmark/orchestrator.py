@@ -10,7 +10,7 @@ import time
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable, Sequence  # noqa: UP035 - this alias is evaluated by Python 3.8
+from typing import Any, Callable, Iterable, Sequence  # noqa: UP035 - this alias is evaluated by Python 3.8
 
 from .adapters import BenchmarkAdapter, InferenceAdapter, WorkerContext
 from .autotune import ProbeCapacityReached, ProbeLimits, ProbeTimedOut
@@ -139,6 +139,9 @@ class ParallelBenchmarkRuntime:
         self.failure_events: list[dict[str, Any]] = []
         self.recycle_events: list[dict[str, Any]] = []
         self.initial_workers_per_gpu: dict[str, int] = {}
+        # Seconds from evaluation start at which the controller first saw each work item completed.
+        self.item_completion_s: dict[str, float] = {}
+        self.evaluation_started_s = 0.0
 
     def run(
         self,
@@ -273,7 +276,7 @@ class ParallelBenchmarkRuntime:
                 runtime_prepare_s = time.monotonic() - runtime_prepare_started
             append_event(events_path, {"type": "phase", "phase": "evaluation"})
             self.queue.start()
-            evaluation_started = time.monotonic()
+            self.evaluation_started_s = time.monotonic()
             with benchmark_phase(phase_timing_callback, "evaluation_s"):
                 results = self._monitor(
                     total_records,
@@ -281,7 +284,7 @@ class ParallelBenchmarkRuntime:
                     events_path,
                     probe_deadline,
                 )
-                evaluation_s = time.monotonic() - evaluation_started
+                evaluation_s = time.monotonic() - self.evaluation_started_s
             surviving_workers_per_gpu = self._workers_per_gpu()
             self.queue.request_stop()
             self._wait_workers_exit()
@@ -304,6 +307,10 @@ class ParallelBenchmarkRuntime:
         standard["elapsed_s"] = elapsed_s
         standard["steps_per_s"] = standard["total_steps"] / max(elapsed_s, 1e-9)
         standard["episodes_per_s"] = standard["episodes"] / max(elapsed_s, 1e-9)
+        steady = steady_throughput(results, self.item_completion_s)
+        if steady is not None:
+            standard["steady_steps_per_s"] = steady["steps_per_s"]
+            standard["steady_window"] = steady
         output = {
             "sdk_version": 1,
             "runtime": asdict(self.config),
@@ -312,6 +319,13 @@ class ParallelBenchmarkRuntime:
                 "policy_load_s": policy_load_s,
                 "runtime_prepare_s": runtime_prepare_s,
                 "evaluation_s": evaluation_s,
+            },
+            "item_timeline": {
+                "completion_s": dict(self.item_completion_s),
+                "worker_id": {result.item_id: result.worker_id for result in results},
+            },
+            "record_success": {
+                record.record_id: record.success for result in results for record in result.records
             },
             "inference": inference_metadata,
             "policy_io": policy_io,
@@ -453,7 +467,8 @@ class ParallelBenchmarkRuntime:
         reported = -1
         while True:
             self._check_processes(events_path, total_records)
-            observable_results = self.queue.observable_results()
+            observable_results, completed_ids = self.queue.observe()
+            self._record_completions(completed_ids)
             record_count = sum(len(result.records) for result in observable_results)
             if record_count != reported:
                 progress = aggregate_standard_results(observable_results, total_records)
@@ -463,9 +478,18 @@ class ParallelBenchmarkRuntime:
                     progress_callback(progress, observable_results)
                 reported = record_count
             if record_count == total_records and self.queue.is_drained():
-                return self.queue.completed_results()
+                results = self.queue.completed_results()
+                self._record_completions(result.item_id for result in results)
+                return results
             self._raise_probe_timeout(probe_deadline, total_records, events_path)
             time.sleep(self.config.poll_interval_s)
+
+    def _record_completions(self, item_ids: Iterable[str]) -> None:
+        """Note when each work item first appears completed; partial results do not count."""
+
+        seen_s = time.monotonic() - self.evaluation_started_s
+        for item_id in item_ids:
+            self.item_completion_s.setdefault(item_id, seen_s)
 
     def _check_processes(self, events_path: Path, total_records: int) -> None:
         self.server_pool.check()
@@ -837,6 +861,58 @@ class ParallelBenchmarkRuntime:
         for state_path in self.state_dir.glob("worker-*.json"):
             state_path.unlink()
 
+
+
+def steady_throughput(
+    results: Sequence[WorkResult],
+    completion_s: dict[str, float],
+) -> dict[str, Any] | None:
+    """Steady-state steps/s of K concurrently busy workers, or ``None`` without a window.
+
+    Workers run items back to back, so an item spans from its worker's previous
+    completion (or evaluation start) to its own completion. Each worker's first
+    item carries environment creation and Policy warm-up and is dropped. The window
+    ends when the first worker finishes its last item, after which fewer than K
+    workers compete for CPU and inference, so later items are dropped too. A
+    worker's rate is the steps of its remaining items over their spans; the
+    throughput is K times the mean rate of the workers that have such items.
+    Completion times are rounded up to the controller poll interval.
+    """
+
+    by_worker: dict[int, list[tuple[float, int]]] = {}
+    for result in results:
+        done_s = completion_s.get(result.item_id)
+        if done_s is None:
+            return None
+        steps = sum(record.steps for record in result.records)
+        by_worker.setdefault(result.worker_id, []).append((done_s, steps))
+    if not by_worker:
+        return None
+    for items in by_worker.values():
+        items.sort()
+    window_end_s = min(items[-1][0] for items in by_worker.values())
+    window_start_s = max(items[0][0] for items in by_worker.values())
+    rates: list[float] = []
+    measured_items = 0
+    for items in by_worker.values():
+        warm_s = items[0][0]
+        counted = [(done_s, steps) for done_s, steps in items[1:] if done_s <= window_end_s]
+        if not counted:
+            continue
+        span_s = counted[-1][0] - warm_s
+        if span_s <= 0:
+            continue
+        rates.append(sum(steps for _, steps in counted) / span_s)
+        measured_items += len(counted)
+    if not rates:
+        return None
+    return {
+        "steps_per_s": len(by_worker) * sum(rates) / len(rates),
+        "workers": len(by_worker),
+        "measured_workers": len(rates),
+        "measured_items": measured_items,
+        "window_s": max(0.0, window_end_s - window_start_s),
+    }
 
 
 def append_event(path: Path, payload: dict[str, Any]) -> None:

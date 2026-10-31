@@ -54,4 +54,17 @@ def representative_indices(total: int, count: int) -> tuple[int, ...]:
     return tuple(index * total // selected_count for index in range(selected_count))
 
 
-__all__ = ["BenchmarkFactory", "BenchmarkRunRequest", "representative_indices"]
+def nested_task_order(total: int) -> tuple[int, ...]:
+    """Task indices whose every prefix spans the workload and contains each shorter prefix.
+
+    A probe that needs more tasks takes a longer prefix, so it repeats every
+    episode of a smaller probe and the correctness check compares the same episodes.
+    """
+
+    order: dict[int, None] = {}
+    for count in range(1, total + 1):
+        order.update(dict.fromkeys(representative_indices(total, count)))
+    return tuple(order)
+
+
+__all__ = ["BenchmarkFactory", "BenchmarkRunRequest", "nested_task_order", "representative_indices"]

@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import os
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,7 @@ from .autotune import (
     ProbeLimits,
     ProbeProgressFn,
     autotune_phase,
+    autotune_strategies,
     resolve_bounds,
     resolve_limits,
     run_autotune,
@@ -82,6 +84,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--image-manifest", type=Path, default=BENCHMARK_IMAGE_MANIFEST_PATH)
     parser.add_argument("--evaluation-config", type=Path)
     parser.add_argument(
+        "--autotune-strategy",
+        help=f"K/g autotune strategy, one of {', '.join(autotune_strategies())}; overrides the "
+        "manifest's autotune_strategy",
+    )
+    parser.add_argument(
         "--legacy-contract-root",
         type=Path,
         default=(
@@ -102,7 +109,14 @@ def main(argv: list[str] | None = None) -> int:
     timing_recorder = None
     try:
         benchmark = BenchmarkName(args.benchmark)
+        if args.autotune_strategy not in (None, *autotune_strategies()):
+            raise ValueError(f"--autotune-strategy must be one of {autotune_strategies()}")
         manifest = load_benchmark_image_manifest(args.image_manifest)
+        if args.autotune_strategy is not None:
+            manifest = replace(
+                manifest,
+                defaults={**manifest.defaults, "autotune_strategy": args.autotune_strategy},
+            )
         factory = benchmark_factory(benchmark)
         if args.self_test:
             manifest.validate_request(benchmark, None)
