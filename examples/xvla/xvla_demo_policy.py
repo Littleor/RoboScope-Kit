@@ -1,9 +1,9 @@
-"""X-VLA Policy adapter for RoboScope's custom-image validation demo.
+"""X-VLA Policy example for RoboScope Kit.
 
 Runs the released X-VLA-0.9B checkpoints (https://github.com/2toINF/X-VLA)
-inside the RoboScope SDK Policy process.  The model is baked into the image
-(weights + code under ``/opt/roboscope/xvla``); the platform-side model
-artifact is therefore a placeholder and its content is ignored.
+inside the RoboScope Kit Policy process.  The weights and code live under
+``/opt/roboscope/xvla``; the platform-side model artifact is therefore a
+placeholder and its content is ignored.
 
 Benchmark-to-checkpoint mapping and the observation/action adapters follow the
 X-VLA evaluation clients verbatim:

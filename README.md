@@ -7,7 +7,7 @@ This repository is the single source of truth for RoboScope simulation evaluatio
 
 - the `roboscope-kit` Python package, with the public `Policy` API and the platform benchmark runtime;
 - the launchers and runtimes for the shared benchmark environments;
-- engineering demos that validate the custom-image path.
+- example Policies for StarVLA and X-VLA.
 
 Robot control, policy training, dataset collection, and generic LeRobot simulator code do not belong here.
 
@@ -34,7 +34,7 @@ is defined in the [LIBERO Evaluation Protocol](packages/roboscope-kit/LIBERO_EVA
 | `benchmarks/starvla_platform_runtime/` | Image-local Control Runtime installer, the per-benchmark `benchmark-image.json` manifests, and the thin launchers for CALVIN, LIBERO, LIBERO-Plus, MetaWorld, RoboCasa, and RoboTwin |
 | `benchmarks/robotwin_official/` | RoboTwin launch and seed-cache tooling |
 | `examples/starvla/` | The StarVLA `Policy` behind the StarVLA results in the RoboScope Kit technical report |
-| `examples/custom_image_validation/` | Engineering demos for the custom-image path; they are not part of the product support matrix |
+| `examples/xvla/` | An X-VLA `Policy` example: a stateful Policy serving several benchmarks |
 | `tests/async_inference/` | Autotune and LIBERO controller regressions |
 | `ci/` | Build, compatibility, and PyPI release scripts used by GitHub Actions |
 

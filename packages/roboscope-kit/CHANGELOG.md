@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0b4 (Unreleased)
+
+- Retire the custom-image and image-baking paths. Move the X-VLA example from
+  `examples/custom_image_validation/xvla/` to `examples/xvla/` and drop its baking script. Remove the LIBERO
+  base-image bundle scripts (`build_official_image_bundle.sh`, `install_official_image_bundle.sh`,
+  `prepare_official_image_for_bake.sh`, `verify_official_image.sh`) and the related documentation.
+
 ## 0.8.0b3 (Unreleased)
 
 - Add the StarVLA Policy as an example under `examples/starvla/`, restored from the removed

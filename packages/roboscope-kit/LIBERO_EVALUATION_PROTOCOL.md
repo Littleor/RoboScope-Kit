@@ -35,7 +35,7 @@ libero_10
 libero_90
 ```
 
-The command starts the user's SDK `Policy` from the custom image. Runtime selectors, simulator commands, evaluator
+The command starts the user's SDK `Policy`. Runtime selectors, simulator commands, evaluator
 commands, sockets, ports, K, and g are platform internals and are not part of the user contract.
 
 ### Checkpoint source

@@ -138,9 +138,8 @@ OSS credential envs are unchanged from legacy:
 - Checkpoint: `BENCHMARK_CKPT_ENDPOINT`, `BENCHMARK_CKPT_ACCESS_KEY_ID`, `BENCHMARK_CKPT_ACCESS_KEY_SECRET`, optional `BENCHMARK_CKPT_SECURITY_TOKEN`
 - StarVLA metadata: `BENCHMARK_BASE_*` plus `BENCHMARK_BASE_OSS_URI` (for example `oss://<bucket>/benchmark/basemodel`); weight files are excluded
 
-For a custom image, bake the complete checkpoint directory into
-`/root/roboscope-checkpoint` and pass that absolute path to the entrypoint. This
-skips only the user-checkpoint OSS transfer; StarVLA metadata assets still use
+To skip the user-checkpoint OSS transfer, place the complete checkpoint directory
+at `/root/roboscope-checkpoint` and pass that absolute path to the entrypoint; StarVLA metadata assets still use
 OSS and continue to exclude model weights.
 
 ## Protocol note (scoring vs throughput)

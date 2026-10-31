@@ -87,7 +87,7 @@ wrapper and replaces the selected runtime root with its local-runtime symbolic
 link. The original expanded root is retained under that benchmark's
 `.roboscope-compaction/expanded/root` until acceptance. The wrapper keeps the live manifest, SDK
 version, launcher, and benchmark preparation semantics byte-for-byte intact.
-This avoids requiring existing images to change their baked
+This avoids requiring existing images to change their
 manifest reference for the inode compaction rollout.
 
 ```bash
