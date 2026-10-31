@@ -6,8 +6,7 @@ This repository owns the `roboscope-kit` Python package (import name `roboscope_
 adapters and launchers, the shared benchmark runtimes, and their documentation. Do not put robot control,
 training, dataset collection, or generic LeRobot engine code here.
 
-Image baking is out of scope. A change is complete when it is committed, carries the required version
-bump, and is merged; it never requires building, baking, or rolling out an image.
+A change is complete when it is committed, carries the required version bump, and is merged.
 
 ## Where things live
 
