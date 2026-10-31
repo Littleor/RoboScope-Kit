@@ -1,0 +1,30 @@
+# LIBERO-Plus demo: zero-shot evaluation of a LIBERO-trained checkpoint, as in StarVLA's LIBERO-Plus protocol.
+benchmark: libero_plus
+suites: [libero_spatial, libero_object, libero_goal, libero_10]
+checkpoint:
+  repo: StarVLA/Qwen3-VL-OFT-LIBERO-4in1
+  revision: 39177146f142f8805d86fcc29d2a17c2228e6073
+starvla_revision: 985c2238627481f25476fbee478083812dd82a21
+policy: starvla_policy.py
+# Merged into the checkpoint's config.yaml.
+config:
+  framework:
+    action_model:
+      action_horizon: 8
+  inference:
+    dtype: bfloat16
+    unnorm_key: franka
+    inputs:
+      images: [images.primary, images.wrist]
+      language: language.instruction
+    kwargs:
+      do_sample: false
+      use_ddim: true
+      num_ddim_steps: 10
+    action_transforms:
+      # StarVLA open_gripper (1 = open) -> LIBERO gripper command (-1 = open).
+      - operation: threshold
+        index: 6
+        threshold: 0.5
+        below: 1.0
+        above: -1.0

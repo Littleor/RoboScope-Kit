@@ -1,0 +1,8 @@
+{
+  "schema_version": 2,
+  "command": [
+    "/root/miniconda3/envs/starVLA/bin/python",
+    "/opt/roboscope/starvla/starvla_libero_policy.py"
+  ],
+  "cwd": "/root/starVLA"
+}

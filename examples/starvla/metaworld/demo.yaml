@@ -1,0 +1,24 @@
+# MetaWorld MT50 demo. StarVLA publishes no MetaWorld checkpoint; this one is published by MINT-SJTU.
+benchmark: metaworld
+suites: [mt50]
+checkpoint:
+  repo: MINT-SJTU/starvla_metaworld_qwenpiv3_baseline_finetune
+  revision: 7eb8070484f2193725765e3c4c35ab9988342b8b
+starvla_revision: 985c2238627481f25476fbee478083812dd82a21
+policy: starvla_policy.py
+# Merged into the checkpoint's config.yaml.
+config:
+  framework:
+    qwenvl:
+      # The published config points at a training-host cache; use the snapshot-relative base model.
+      base_vlm: ./playground/Pretrained_models/Qwen2.5-VL-3B-Instruct
+  inference:
+    dtype: bfloat16
+    unnorm_key: new_embodiment
+    inputs:
+      images: [images.primary]
+      language: language.instruction
+    kwargs:
+      do_sample: false
+      use_ddim: true
+      num_ddim_steps: 10

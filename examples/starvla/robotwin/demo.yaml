@@ -1,0 +1,24 @@
+# RoboTwin demo: the configuration behind the RoboTwin results in the RoboScope Kit technical report.
+benchmark: robotwin
+suites: [demo_clean, demo_randomized]
+checkpoint:
+  repo: StarVLA/Qwen3-VL-OFT-Robotwin2
+  revision: e9cdfc38a0db968bf3a865bcb542d3d455952226
+starvla_revision: 7e4a47360093d79dc42b883885c04fbe790c5b60
+policy: starvla_policy.py
+# Merged into the checkpoint's config.yaml.
+config:
+  framework:
+    action_model:
+      action_horizon: 16
+  inference:
+    dtype: bfloat16
+    unnorm_key: new_embodiment
+    inputs:
+      images: [images.head, images.left_wrist, images.right_wrist]
+      language: language.instruction
+      state: state.joints
+    kwargs:
+      do_sample: false
+      use_ddim: true
+      num_ddim_steps: 10

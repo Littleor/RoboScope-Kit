@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0b5 (Unreleased)
+
+- Add one StarVLA demo per benchmark under `examples/starvla/<benchmark>/`: LIBERO, LIBERO-Plus, RoboTwin,
+  RoboCasa, CALVIN, and MetaWorld. Each `demo.yaml` pins a published checkpoint, the StarVLA revision, and
+  the inference configuration; `prepare_snapshot.py` builds the run snapshot from it.
+- Add `starvla_libero_policy.py`, the LIBERO Policy behind the technical report's LIBERO-Long results. It
+  follows the StarVLA `eaa51c4` LIBERO client.
+
 ## 0.8.0b4 (Unreleased)
 
 - Retire the custom-image and image-baking paths. Move the X-VLA example from

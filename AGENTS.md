@@ -16,7 +16,7 @@ A change is complete when it is committed, carries the required version bump, an
 | `benchmarks/libero_official/` | The LIBERO entrypoint (`startbenchmark.sh`), runner, and hermetic self-test |
 | `benchmarks/starvla_platform_runtime/` | The Control Runtime installer, the per-benchmark `benchmark-image.json` manifests, and the thin launchers for shared benchmark environments |
 | `benchmarks/robotwin_official/` | RoboTwin launch and seed-cache tooling |
-| `examples/starvla/` | The StarVLA `Policy` example behind the StarVLA results in the RoboScope Kit technical report |
+| `examples/starvla/` | The StarVLA `Policy` and one demo per benchmark, including the configurations behind the RoboScope Kit technical report |
 | `examples/xvla/` | The X-VLA `Policy` example: a stateful Policy serving several benchmarks |
 | `tests/async_inference/` | Autotune and LIBERO controller regressions |
 | `ci/` and `.github/workflows/` | Build, compatibility, and PyPI release automation |

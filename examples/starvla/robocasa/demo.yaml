@@ -1,0 +1,23 @@
+# RoboCasa GR-1 tabletop demo. The checkpoint was trained without state, so no state is sent.
+benchmark: robocasa
+suites: [tabletop]
+checkpoint:
+  repo: StarVLA/Qwen3-VL-OFT-Robocasa
+  revision: 30ec4b5c5c8ffbb3ad651b2ab53b30714c8c2fd4
+starvla_revision: 985c2238627481f25476fbee478083812dd82a21
+policy: starvla_policy.py
+# Merged into the checkpoint's config.yaml.
+config:
+  framework:
+    action_model:
+      action_horizon: 16
+  inference:
+    dtype: bfloat16
+    unnorm_key: gr1
+    inputs:
+      images: [images.primary]
+      language: language.instruction
+    kwargs:
+      do_sample: false
+      use_ddim: true
+      num_ddim_steps: 10

@@ -1,0 +1,27 @@
+# LIBERO demo: the configuration behind the LIBERO-Long results in the RoboScope Kit technical report.
+benchmark: libero
+suites: [libero_spatial, libero_object, libero_goal, libero_10]
+checkpoint:
+  repo: StarVLA/Qwen2.5-VL-OFT-LIBERO-4in1
+  revision: a60fff4173dc3732796df370a15a9a2db7bd7e5e
+starvla_revision: 7e4a47360093d79dc42b883885c04fbe790c5b60
+policy: starvla_libero_policy.py
+# Merged into the checkpoint's config.yaml.
+config:
+  inference:
+    dtype: bfloat16
+    unnorm_key: franka
+    inputs:
+      images: [images.primary, images.wrist]
+      language: language.instruction
+    kwargs:
+      do_sample: false
+      use_ddim: true
+      num_ddim_steps: 10
+    action_transforms:
+      # StarVLA open_gripper (1 = open) -> LIBERO gripper command (-1 = open).
+      - operation: threshold
+        index: 6
+        threshold: 0.5
+        below: 1.0
+        above: -1.0
