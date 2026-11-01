@@ -109,12 +109,10 @@ Each candidate is limited to 15 minutes and the whole search to 30 minutes, afte
 pair is used. Progress is written to `<output-dir>/autotune/selection.json` as candidates start,
 advance, and stop. Tuning episodes never count toward the score.
 
-The default search is `diagonal`, described below. The CALVIN, LIBERO-Plus, MetaWorld, and RoboCasa
-manifests set `autotune_strategy: two-phase`, because their probes have a fixed size and do not give every
-Worker the three work items a steady-state measurement needs. `two-phase` ramps `K` on one replica per GPU
-and then ramps replicas when GPU utilization shows inference is the bottleneck. `--autotune-strategy
-<name>` selects a search for one evaluation, and `autotune_strategy: <name>` in a benchmark manifest
-selects it for every evaluation; the flag wins.
+The default search is `diagonal`, described below, on every benchmark. `two-phase`, which ramps `K` on one
+replica per GPU and then ramps replicas when GPU utilization shows inference is the bottleneck, remains
+available. `--autotune-strategy <name>` selects a search for one evaluation, and `autotune_strategy: <name>`
+in a benchmark manifest selects it for every evaluation; the flag wins.
 
 `diagonal` doubles `K` on one replica per GPU until a doubling raises throughput by less than 25% (a step
 the CPU cap shortens needs the same share of linear scaling); the accepted `K` per replica is how many
@@ -122,7 +120,10 @@ Workers one replica keeps busy. It then adds one replica per GPU at a time with 
 keeping each step that raises throughput by at least 3% and skipping a step whose busiest GPU,
 extrapolated from the measured replica footprint and the marginal memory per Worker, would not fit. It
 compares steady-state throughput: each probe gives every Worker three work items, drops each Worker's first
-item, and stops measuring when the first Worker runs out of work. Probes it measures but does not keep are
+item, and stops measuring when the first Worker runs out of work. A probe grows with `K` by adding episodes,
+sequences, or tasks to a nested set, so it repeats every episode of a smaller probe. Where the catalog runs
+out (RoboCasa's 24 tasks, MetaWorld's 50), larger `K` cannot be measured and the search keeps the last
+accepted configuration. Probes it measures but does not keep are
 marked `rejected` in `selection.json`.
 
 To measure or reproduce one configuration, add `--concurrency K --replicas G`, for example

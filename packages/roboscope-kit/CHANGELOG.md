@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0b10 (Unreleased)
+
+- Use the diagonal search on every benchmark. CALVIN, LIBERO-Plus, MetaWorld, and RoboCasa probes now grow
+  with K, as LIBERO and RoboTwin probes do, so every probed worker gets `probe_items_per_worker` work items
+  and the steady-state estimator has a window. CALVIN takes a longer prefix of the evaluation sequences
+  (at most 1,000); LIBERO-Plus, MetaWorld, and RoboCasa take a longer prefix of one nested task order
+  (`nested_task_prefix`), so each probe repeats the episodes of every smaller probe. With three items per
+  worker, RoboCasa's 24 tasks cover up to K=8 and MetaWorld's 50 tasks up to K=16. The four manifests no
+  longer pin `autotune_strategy: two-phase`. With `two-phase`, the probes keep their fixed size.
+
 ## 0.8.0b9 (Unreleased)
 
 - Make `diagonal` the default autotune strategy. On LIBERO-Long with one RTX 4090 it selected K12/g3 in

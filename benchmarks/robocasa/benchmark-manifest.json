@@ -13,8 +13,7 @@
     "max_episode_steps": 720,
     "render_backend": "egl",
     "client_cpu_threads": 1,
-    "ready_timeout_s": 300,
-    "autotune_strategy": "two-phase"
+    "ready_timeout_s": 300
   },
   "benchmark_protocols": {}
 }

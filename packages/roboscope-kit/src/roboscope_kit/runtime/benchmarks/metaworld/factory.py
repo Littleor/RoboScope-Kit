@@ -10,7 +10,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from roboscope_kit.runtime.benchmark.factories import BenchmarkRunRequest
+from roboscope_kit.runtime.benchmark.autotune import probe_items_per_worker
+from roboscope_kit.runtime.benchmark.factories import BenchmarkRunRequest, nested_task_prefix
 from roboscope_kit.runtime.benchmark.manifest import BenchmarkManifest
 
 from .adapter import (
@@ -47,9 +48,17 @@ class MetaworldBenchmarkFactory:
         manifest: BenchmarkManifest,
         concurrency: int,
     ) -> MetaworldBenchmarkAdapter:
-        del concurrency
         episodes = int(manifest.defaults.get("probe_episodes", 1))
-        return self._create(request, manifest, (QUICK_TEST_TASK,), episodes)
+        # A MetaWorld work item is one task, so every worker needs items_per_worker
+        # tasks. Tasks are a prefix of one nested order, so each probe repeats the
+        # tasks of every smaller probe.
+        items_per_worker = probe_items_per_worker(manifest.defaults)
+        if items_per_worker > 0:
+            indices = nested_task_prefix(len(MT50_TASKS), items_per_worker * concurrency)
+            tasks = tuple(MT50_TASKS[index] for index in indices)
+        else:
+            tasks = (QUICK_TEST_TASK,)
+        return self._create(request, manifest, tasks, episodes)
 
     def self_test(self, manifest: BenchmarkManifest, output_dir: Path) -> dict[str, Any]:
         python = manifest.runtime_path("python")

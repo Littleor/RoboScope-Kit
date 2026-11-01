@@ -67,4 +67,28 @@ def nested_task_order(total: int) -> tuple[int, ...]:
     return tuple(order)
 
 
-__all__ = ["BenchmarkFactory", "BenchmarkRunRequest", "nested_task_order", "representative_indices"]
+def nested_task_prefix(total: int, count: int) -> tuple[int, ...]:
+    """The first ``count`` indices of :func:`nested_task_order`, in ascending order.
+
+    Builds only as much of the order as the prefix needs, so a probe over a large
+    task catalog does not pay for the whole order.
+    """
+
+    if total < 1 or count < 1:
+        raise ValueError("probe workload size must be positive")
+    wanted = min(total, count)
+    order: dict[int, None] = {}
+    size = 1
+    while len(order) < wanted:
+        order.update(dict.fromkeys(representative_indices(total, size)))
+        size += 1
+    return tuple(sorted(list(order)[:wanted]))
+
+
+__all__ = [
+    "BenchmarkFactory",
+    "BenchmarkRunRequest",
+    "nested_task_order",
+    "nested_task_prefix",
+    "representative_indices",
+]

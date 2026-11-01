@@ -8,10 +8,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from roboscope_kit.runtime.benchmark.autotune import probe_items_per_worker
 from roboscope_kit.runtime.benchmark.factories import BenchmarkRunRequest
 from roboscope_kit.runtime.benchmark.manifest import BenchmarkManifest
 
-from .adapter import CALVIN_OFFICIAL_SUITES, CalvinBenchmarkAdapter, CalvinRuntimeConfig
+from .adapter import (
+    CALVIN_OFFICIAL_SUITES,
+    OFFICIAL_EVAL_SEQUENCE_COUNT,
+    CalvinBenchmarkAdapter,
+    CalvinRuntimeConfig,
+)
 
 
 class CalvinBenchmarkFactory:
@@ -34,8 +40,14 @@ class CalvinBenchmarkFactory:
         manifest: BenchmarkManifest,
         concurrency: int,
     ) -> CalvinBenchmarkAdapter:
-        del concurrency
         sequences = int(manifest.defaults.get("probe_sequence_count", 10))
+        # Give every worker items_per_worker items. The probe takes a prefix of the
+        # evaluation sequences, so each probe repeats the sequences of every smaller one.
+        items_per_worker = probe_items_per_worker(manifest.defaults)
+        if items_per_worker > 0:
+            chunk_size = int(manifest.defaults.get("chunk_size", 1))
+            sequences = max(sequences, items_per_worker * concurrency * chunk_size)
+            sequences = min(sequences, OFFICIAL_EVAL_SEQUENCE_COUNT)
         return self._create(request, manifest, sequences)
 
     def self_test(self, manifest: BenchmarkManifest, output_dir: Path) -> dict[str, Any]:

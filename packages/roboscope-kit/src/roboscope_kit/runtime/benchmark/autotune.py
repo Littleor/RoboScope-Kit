@@ -40,8 +40,7 @@ DEFAULT_CANDIDATE_TIMEOUT_S = 15 * 60.0
 DEFAULT_TOTAL_BUDGET_S = 30 * 60.0
 DEFAULT_MAXIMUM_SUCCESS_RATE_DROP = 0.15
 # Strategies register under the name ``autotune_strategy`` selects; see
-# :func:`register_strategy`. ``diagonal`` is the default search; benchmarks whose
-# probes are not sized by K pin ``two-phase`` in their manifest.
+# :func:`register_strategy`. ``diagonal`` is the default search.
 DEFAULT_AUTOTUNE_STRATEGY = "diagonal"
 DEFAULT_WORKER_KNEE_GAIN = 0.25
 DEFAULT_REPLICA_MINIMUM_GAIN = 0.03

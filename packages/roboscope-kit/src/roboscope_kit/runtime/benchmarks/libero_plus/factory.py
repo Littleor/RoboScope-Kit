@@ -8,8 +8,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from roboscope_kit.runtime.benchmark.autotune import probe_items_per_worker
 from roboscope_kit.runtime.benchmark.factories import (
     BenchmarkRunRequest,
+    nested_task_prefix,
     representative_indices,
 )
 from roboscope_kit.runtime.benchmark.manifest import BenchmarkManifest
@@ -50,12 +52,20 @@ class LiberoPlusBenchmarkFactory:
         manifest: BenchmarkManifest,
         concurrency: int,
     ) -> LiberoPlusBenchmarkAdapter:
-        del concurrency
-        task_ids = representative_indices(
-            LIBERO_PLUS_TASK_COUNTS[request.suite],
-            int(manifest.defaults.get("probe_task_count", 10)),
-        )
+        total = LIBERO_PLUS_TASK_COUNTS[request.suite]
+        task_count = int(manifest.defaults.get("probe_task_count", 10))
         episodes = int(manifest.defaults.get("probe_episodes_per_task", 1))
+        # Each LIBERO+ task is one perturbed variant, so the probe grows by tasks: a
+        # prefix of one nested order that gives every worker items_per_worker items
+        # and repeats the tasks of every smaller probe.
+        items_per_worker = probe_items_per_worker(manifest.defaults)
+        if items_per_worker > 0:
+            chunk_size = int(manifest.defaults.get("chunk_size", 1))
+            items_per_task = -(-episodes // chunk_size)
+            needed_tasks = -(-items_per_worker * concurrency // items_per_task)
+            task_ids = nested_task_prefix(total, max(task_count, needed_tasks))
+        else:
+            task_ids = representative_indices(total, task_count)
         return self._create(
             request,
             manifest,

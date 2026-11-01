@@ -8,8 +8,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from roboscope_kit.runtime.benchmark.autotune import probe_items_per_worker
 from roboscope_kit.runtime.benchmark.factories import (
     BenchmarkRunRequest,
+    nested_task_prefix,
     representative_indices,
 )
 from roboscope_kit.runtime.benchmark.manifest import BenchmarkManifest
@@ -44,11 +46,18 @@ class RoboCasaBenchmarkFactory:
         manifest: BenchmarkManifest,
         concurrency: int,
     ) -> RoboCasaBenchmarkAdapter:
-        del concurrency
-        indices = representative_indices(
-            len(ROBOCASA_TABLETOP_TASKS),
-            int(manifest.defaults.get("probe_task_count", 10)),
-        )
+        task_count = int(manifest.defaults.get("probe_task_count", 10))
+        # A RoboCasa work item is one task, so every worker needs items_per_worker
+        # tasks: a prefix of one nested order that repeats the tasks of every smaller
+        # probe. With three items per worker, the 24 tasks cover at most eight workers.
+        items_per_worker = probe_items_per_worker(manifest.defaults)
+        if items_per_worker > 0:
+            indices = nested_task_prefix(
+                len(ROBOCASA_TABLETOP_TASKS),
+                max(task_count, items_per_worker * concurrency),
+            )
+        else:
+            indices = representative_indices(len(ROBOCASA_TABLETOP_TASKS), task_count)
         tasks = tuple(ROBOCASA_TABLETOP_TASKS[index] for index in indices)
         episodes = int(manifest.defaults.get("probe_episodes_per_task", 1))
         return self._create(request, manifest, tasks, episodes)

@@ -870,6 +870,22 @@ def test_libero_plus_quick_test_and_probe() -> None:
     )
     assert len(probe.task_ids) == 10
     assert sum(item.expected_results for item in probe.work_items()) == 10
+    larger = factory.create_probe(
+        _request(BenchmarkName.LIBERO_PLUS, "libero_goal"),
+        _libero_manifest(),
+        concurrency=8,
+    )
+    assert len(larger.task_ids) == 24
+    assert set(probe.task_ids) <= set(larger.task_ids)
+
+
+def test_nested_task_prefix_matches_the_nested_order() -> None:
+    from roboscope_kit.runtime.benchmark.factories import nested_task_order, nested_task_prefix
+
+    for total in (1, 7, 24, 50):
+        order = nested_task_order(total)
+        for count in range(1, total + 2):
+            assert nested_task_prefix(total, count) == tuple(sorted(order[:count]))
 
 
 def test_libero_plus_aggregate_zero_fill() -> None:
@@ -973,8 +989,30 @@ def test_calvin_factory_probe(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
         _calvin_manifest(sequences_path),
         concurrency=4,
     )
-    assert adapter.config.num_sequences == 10
-    assert len(adapter.work_items()) == 10
+    # The default diagonal search measures steady state: three items per worker.
+    assert adapter.config.num_sequences == 12
+    assert len(adapter.work_items()) == 12
+    fixed = factory.create_probe(
+        _request(BenchmarkName.CALVIN, "task_D_D"),
+        _calvin_manifest(sequences_path, autotune_strategy="two-phase"),
+        concurrency=4,
+    )
+    assert fixed.config.num_sequences == 10
+
+
+def test_calvin_probe_grows_with_concurrency_and_stays_within_the_protocol(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sequences_path = _write_official_sequences(tmp_path, monkeypatch)
+    factory = CalvinBenchmarkFactory()
+    request = _request(BenchmarkName.CALVIN, "task_D_D")
+    manifest = _calvin_manifest(sequences_path)
+    assert factory.create_probe(request, manifest, concurrency=16).config.num_sequences == 48
+    assert factory.create_probe(request, manifest, concurrency=64).config.num_sequences == 192
+    capped = factory.create_probe(
+        request, _calvin_manifest(sequences_path, probe_items_per_worker=40), concurrency=64
+    )
+    assert capped.config.num_sequences == 1000
 
 
 @pytest.mark.parametrize(

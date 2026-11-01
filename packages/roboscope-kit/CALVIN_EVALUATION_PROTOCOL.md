@@ -21,8 +21,9 @@ The runtime reads the ordered sequence list from the benchmark manifest's `runti
 requires exactly 1,000 entries and the official SHA-256
 `c3689911565037d399d779c655e9e943cbd5bfbfbf44045e2b3b1daa8b1a2317`, records that digest as
 `eval_sequences_sha256` in the result metadata, and passes it to every evaluator worker. A worker exits
-with an error if the file changes before evaluation starts. Probe runs use a fixed prefix of the same
-sequence list; an official score uses all 1,000 entries.
+with an error if the file changes before evaluation starts. Probe runs use a prefix of the same
+sequence list, long enough to give every probed worker `probe_items_per_worker` work items (three with the
+default diagonal search); an official score uses all 1,000 entries.
 
 ### Environment and invocation
 
