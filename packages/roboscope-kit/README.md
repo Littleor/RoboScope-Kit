@@ -100,8 +100,8 @@ The runtime is built on three ideas:
 
 ### Automatic tuning (K/g)
 
-The runtime picks `K` and `g` for you by running real episodes with your Policy. Every candidate runs the same
-fixed, representative set of episodes. The smallest safe `K` sets a success-rate baseline; a faster
+The runtime picks `K` and `g` for you by running real episodes with your Policy. Every candidate runs episodes
+from the same representative task set. The smallest safe `K` sets a success-rate baseline; a faster
 candidate is accepted only if it keeps at least 85% of that baseline and stays within resource limits.
 Candidates that lose Workers, run out of memory, or leave episodes unfinished are rejected.
 
@@ -109,10 +109,12 @@ Each candidate is limited to 15 minutes and the whole search to 30 minutes, afte
 pair is used. Progress is written to `<output-dir>/autotune/selection.json` as candidates start,
 advance, and stop. Tuning episodes never count toward the score.
 
-The default search, `two-phase`, ramps `K` on one replica per GPU and then ramps replicas when GPU
-utilization shows inference is the bottleneck. Add `--autotune-strategy diagonal` to the command above to
-use the `diagonal` search for one evaluation; `autotune_strategy: diagonal` in a benchmark manifest selects
-it for every evaluation, and the flag wins.
+The default search is `diagonal`, described below. The CALVIN, LIBERO-Plus, MetaWorld, and RoboCasa
+manifests set `autotune_strategy: two-phase`, because their probes have a fixed size and do not give every
+Worker the three work items a steady-state measurement needs. `two-phase` ramps `K` on one replica per GPU
+and then ramps replicas when GPU utilization shows inference is the bottleneck. `--autotune-strategy
+<name>` selects a search for one evaluation, and `autotune_strategy: <name>` in a benchmark manifest
+selects it for every evaluation; the flag wins.
 
 `diagonal` doubles `K` on one replica per GPU until a doubling raises throughput by less than 25% (a step
 the CPU cap shortens needs the same share of linear scaling); the accepted `K` per replica is how many

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0b9 (Unreleased)
+
+- Make `diagonal` the default autotune strategy. On LIBERO-Long with one RTX 4090 it selected K12/g3 in
+  three of three launches, against K4/g1 or K9/g1 for `two-phase`, and evaluated 1.81x faster. The CALVIN,
+  LIBERO-Plus, MetaWorld, and RoboCasa manifests pin `autotune_strategy: two-phase`, because their probes
+  are not sized by K and so give the steady-state estimator no window at higher K. A manifest without
+  `autotune_strategy` now gets `diagonal`, the `steady` throughput estimator, and
+  `probe_items_per_worker: 3`.
+
 ## 0.8.0b8 (Unreleased)
 
 - Run the kit standalone, with no hosted platform:

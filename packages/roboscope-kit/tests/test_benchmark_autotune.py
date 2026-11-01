@@ -135,7 +135,7 @@ def test_controller_persists_each_candidate_and_falls_back_after_oom(tmp_path: P
         measure=measure,
         output_dir=tmp_path,
         bounds=_bounds(),
-        limits=AutotuneLimits(candidate_timeout_s=30.0, total_budget_s=120.0),
+        limits=AutotuneLimits(candidate_timeout_s=30.0, total_budget_s=120.0, strategy="two-phase"),
         clock=clock,
     ).run()
 
@@ -168,7 +168,7 @@ def test_controller_times_out_candidate_and_keeps_last_healthy_k(tmp_path: Path)
         measure=measure,
         output_dir=tmp_path,
         bounds=_bounds(max_workers=8),
-        limits=AutotuneLimits(candidate_timeout_s=10.0, total_budget_s=100.0),
+        limits=AutotuneLimits(candidate_timeout_s=10.0, total_budget_s=100.0, strategy="two-phase"),
         clock=clock,
     ).run()
 
@@ -191,7 +191,7 @@ def test_controller_caps_last_candidate_at_remaining_total_budget(tmp_path: Path
         measure=measure,
         output_dir=tmp_path,
         bounds=_bounds(max_workers=16),
-        limits=AutotuneLimits(candidate_timeout_s=100.0, total_budget_s=15.0),
+        limits=AutotuneLimits(candidate_timeout_s=100.0, total_budget_s=15.0, strategy="two-phase"),
         clock=clock,
     ).run()
 
@@ -215,7 +215,7 @@ def test_controller_keeps_failed_audit_when_first_candidate_is_unhealthy(tmp_pat
         measure=measure,
         output_dir=tmp_path,
         bounds=_bounds(max_workers=4),
-        limits=AutotuneLimits(candidate_timeout_s=10.0, total_budget_s=20.0),
+        limits=AutotuneLimits(candidate_timeout_s=10.0, total_budget_s=20.0, strategy="two-phase"),
     )
     with pytest.raises(ProbeCapacityReached, match="minimum concurrency failed"):
         controller.run()
