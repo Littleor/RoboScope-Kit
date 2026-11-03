@@ -4,10 +4,10 @@
 """How many records one formal run of a suite produces, for callers that must decide how to
 split it before any instance exists, for example to size a sharded run.
 
-A record is one episode (CALVIN: one sequence). The size is ``tasks * episodes_per_task`` and
-``episodes_per_task`` is the benchmark manifest's ``defaults.episodes``; the manifests are not part of
-the installed package, so it is stated here and ``test_benchmark_suite_sizes`` fails when it
-drifts from them. Suites whose size is not a fixed number (LIBERO+ samples its tasks per run) are
+A record is one episode (CALVIN: one sequence). Most sizes are ``tasks * episodes_per_task``.
+RoboDojo has different upstream episode limits by task, so its manifest sets ``defaults.episodes``
+to null and its total is stated explicitly. The manifests are not part of the installed package,
+so the totals are stated here. Suites whose size is not a fixed number (LIBERO+ samples its tasks per run) are
 deliberately absent: they are never sharded.
 """
 
@@ -19,10 +19,15 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class SuiteSize:
     tasks: int
-    episodes_per_task: int
+    episodes_per_task: int | None
+    fixed_total_records: int | None = None
 
     @property
     def total_records(self) -> int:
+        if self.fixed_total_records is not None:
+            return self.fixed_total_records
+        if self.episodes_per_task is None:
+            raise ValueError("a variable-size suite requires a fixed total")
         return self.tasks * self.episodes_per_task
 
 
@@ -39,6 +44,8 @@ SUITE_SIZES: dict[tuple[str, str], SuiteSize] = {
     ("calvin", "task_ABCD_D"): SuiteSize(tasks=1, episodes_per_task=1000),
     ("robocasa", "tabletop"): SuiteSize(tasks=24, episodes_per_task=50),
     ("metaworld", "mt50"): SuiteSize(tasks=50, episodes_per_task=50),
+    ("robodojo", "arx_x5"): SuiteSize(tasks=42, episodes_per_task=None, fixed_total_records=1800),
+    ("robodojo", "arx_x5_randomized"): SuiteSize(tasks=12, episodes_per_task=None, fixed_total_records=300),
 }
 
 

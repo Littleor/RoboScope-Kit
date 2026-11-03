@@ -1,0 +1,82 @@
+--- a/env/camera_manager/capture/render_sync.py
++++ b/env/camera_manager/capture/render_sync.py
+@@ -29,6 +29,8 @@
+ 
+ from typing import Optional
+ 
++from roboscope_physics_threads import configure, verify
++
+ _DISPATCHER_PATH = "/Render/PostProcess/SDGPipeline/PostProcessDispatcher"
+ 
+ # Kit settings that make each app update wait for its own rendered frame.
+@@ -53,6 +55,7 @@
+     Must run before ``AppLauncher(args)``; the update-order setting is read at
+     startup and cannot be changed afterwards.
+     """
++    configure(args)
+     current = getattr(args, "kit_args", None) or ""
+     missing = [
+         f"--{key}={value}"
+@@ -71,6 +74,7 @@
+         settings = carb.settings.get_settings()
+     except Exception:
+         return False
++    verify(settings)
+     order = settings.get("/app/updateOrder/checkForHydraRenderComplete")
+     try:
+         if order is None or int(order) < 1000:
+--- /dev/null
++++ b/roboscope_physics_threads.py
+@@ -0,0 +1,52 @@
++"""Opt-in PhysX CPU dispatcher limit, set before Kit startup; never tune automatically."""
++
++import os
++import shlex
++
++_KEY = "/persistent/physics/numThreads"
++_REQUESTED = os.environ.get("ROBODOJO_PHYSICS_THREADS")
++_VERIFIED = False
++
++
++def requested():
++    if _REQUESTED is None:
++        return None
++    if _REQUESTED not in {"1", "4", "8"}:
++        raise ValueError("ROBODOJO_PHYSICS_THREADS must be 1, 4 or 8")
++    return int(_REQUESTED)
++
++
++def configure(args):
++    """Append one startup override, rejecting a conflicting caller setting."""
++    count = requested()
++    if count is None:
++        return
++    current = getattr(args, "kit_args", None) or ""
++    tokens = shlex.split(current)
++    # Loading user settings remains unchanged; do not persist this experiment's override.
++    for key, value in ((_KEY, str(count)), ("/app/settings/persistent", "false")):
++        prefix = f"--{key}="
++        expected = prefix + value
++        for token in tokens:
++            if token == f"--{key}" or (token.startswith(prefix) and token != expected):
++                raise ValueError(f"Conflicting startup override for {key}")
++        if expected not in tokens:
++            current = (current + " " + expected).strip()
++    args.kit_args = current
++
++
++def verify(settings):
++    """Read back the startup setting on first camera capture; no setting writes."""
++    global _VERIFIED
++    count = requested()
++    if count is None or _VERIFIED:
++        return
++    actual = settings.get(_KEY)
++    if isinstance(actual, bool) or actual != count:
++        raise RuntimeError(f"PhysX CPU thread override did not take effect: {actual!r} != {count}")
++    if settings.get("/physics/physxDispatcher") is not True:
++        raise RuntimeError("This candidate requires the existing PhysX CPU dispatcher")
++    if settings.get("/app/settings/persistent") is not False:
++        raise RuntimeError("This experiment must not persist its thread override")
++    _VERIFIED = True
++    print(f"[roboscope_physics_threads] verified PhysX worker limit: {count}", flush=True)

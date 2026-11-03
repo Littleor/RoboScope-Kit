@@ -1,0 +1,62 @@
+--- a/env/environment/base_env.py
++++ b/env/environment/base_env.py
+@@ -1,5 +1,6 @@
+ from collections.abc import Sequence, Sequence as SequenceABC
+ from typing import Any
++import os
+ 
+ import gymnasium as gym
+ from isaaclab.envs import DirectRLEnvCfg
+@@ -160,7 +161,12 @@
+         Render the simulation. This will call the render function of the simulation backend.
+         """
+         if self.sim is not None:
+-            self.sim.sim.render()
++            if os.environ.get("ROBODOJO_UNPACED_RENDER") == "1":
++                from roboscope_unpaced_render import render_unpaced
++
++                render_unpaced(self.sim.sim)
++            else:
++                self.sim.sim.render()
+ 
+     def setup_sim_cfg(self, config):
+         """
+--- /dev/null
++++ b/roboscope_unpaced_render.py
+@@ -0,0 +1,36 @@
++"""Remove wall-clock pacing only while rendering a manually stepped simulation."""
++
++import math
++
++_REPORTED = False
++_KEY = "/app/runLoops/main/rateLimitEnabled"
++
++
++def render_unpaced(sim):
++    global _REPORTED
++    import carb.settings
++    import omni.kit.loop._loop as omni_loop
++
++    loop = omni_loop.acquire_loop_interface()
++    rendering_dt = sim.get_rendering_dt()
++    if not loop.get_manual_mode() or not math.isclose(
++        loop.get_manual_step_size(), rendering_dt, rel_tol=1e-9, abs_tol=1e-12
++    ):
++        raise RuntimeError("Unpaced rendering requires an unchanged manual rendering time step")
++    settings = carb.settings.get_settings()
++    previous = settings.get(_KEY)
++    if not isinstance(previous, bool):
++        raise RuntimeError("Unpaced rendering requires a boolean Kit rate-limit setting")
++    physics_step = sim.current_time_step_index
++    try:
++        settings.set_bool(_KEY, False)
++        sim.render()
++    finally:
++        settings.set_bool(_KEY, previous)
++    if sim.current_time_step_index != physics_step or not math.isclose(
++        sim.get_rendering_dt(), rendering_dt, rel_tol=1e-9, abs_tol=1e-12
++    ):
++        raise RuntimeError("Rendering unexpectedly changed the physics step or rendering time step")
++    if not _REPORTED:
++        print(f"[roboscope_unpaced_render] manual_dt={rendering_dt}; physics unchanged; rate limit restored")
++        _REPORTED = True

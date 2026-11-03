@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0b11 (Unreleased)
+
+- Add RoboDojo simulation support through the standard Policy and benchmark runtime. The pinned manifest
+  covers 42 base tasks and 12 randomized variants with their upstream episode limits. Policies may declare
+  per-step observation updates; asynchronous observation delivery and several upstream runtime candidates
+  remain opt-in. The runtime patches are adapted from the RoboDojo work by @QLL-CCDD.
+
 ## 0.8.0b10 (Unreleased)
 
 - Use the diagonal search on every benchmark. CALVIN, LIBERO-Plus, MetaWorld, and RoboCasa probes now grow

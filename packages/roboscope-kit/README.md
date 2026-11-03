@@ -182,6 +182,12 @@ The [X-VLA example](https://github.com/MINT-SJTU/RoboScope-Kit/tree/main/example
 Policy; the [StarVLA example](https://github.com/MINT-SJTU/RoboScope-Kit/tree/main/examples/starvla) is
 stateless.
 
+For RoboDojo, a Policy that needs observations between actions in a chunk can declare
+`step_observation_updates=("robodojo",)` in `PolicyCapabilities` and implement `observe(Observation)`.
+The observation passed to `act()` starts each chunk; `observe()` receives the intermediate steps in order.
+Updates are synchronous by default. The RoboDojo manifest can opt into an experimental bounded queue;
+updates are drained before the next `act()` and before ending the episode.
+
 ### Input preprocessing
 
 Each benchmark sends its canonical observation unchanged: no model-specific resizing, normalization, or
@@ -198,6 +204,7 @@ dependencies of the PyPI package; the benchmark manifest points the runtime at t
 | LIBERO | SDK-native adapter and persistent LIBERO worker | Pinned LIBERO environment, simulator source, dataset, and initial states |
 | LIBERO-Plus | SDK-native adapter reusing the LIBERO worker | Pinned LIBERO-Plus environment, simulator source, dataset, and initial states |
 | RoboTwin | SDK-native adapter and worker calling the pinned RoboTwin launcher | RoboTwin environment and source, deploy policy, checkpoint assets, and validated seed cache |
+| RoboDojo | SDK-native adapter and worker calling the pinned RoboDojo simulator | Isaac Sim environment, RoboDojo source and evaluation assets |
 | RoboCasa | SDK-native adapter and persistent RoboCasa worker | Pinned RoboCasa environment, simulator and task source, and dataset assets |
 | CALVIN | SDK-native adapter and persistent CALVIN worker | Pinned CALVIN environment, benchmark and config source, dataset, and evaluation-sequence list |
 | MetaWorld | SDK-native adapter and persistent MetaWorld MT50 worker | Pinned MetaWorld/MuJoCo environment, task assets, and the frozen MT50 (seed 42) train-goal artifact |

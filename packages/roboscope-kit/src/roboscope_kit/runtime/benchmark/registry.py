@@ -23,6 +23,10 @@ def benchmark_factory(name: BenchmarkName) -> BenchmarkFactory:
         from roboscope_kit.runtime.benchmarks.robotwin import RoboTwinBenchmarkFactory
 
         return RoboTwinBenchmarkFactory()
+    if name is BenchmarkName.ROBODOJO:
+        from roboscope_kit.runtime.benchmarks.robodojo import RoboDojoBenchmarkFactory
+
+        return RoboDojoBenchmarkFactory()
     if name is BenchmarkName.CALVIN:
         from roboscope_kit.runtime.benchmarks.calvin import CalvinBenchmarkFactory
 

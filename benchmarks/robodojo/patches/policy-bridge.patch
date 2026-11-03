@@ -1,0 +1,20 @@
+--- a/src/eval_client/eval_env.py
++++ b/src/eval_client/eval_env.py
+@@ -5,7 +5,7 @@
+ import json
+ import os
+ 
+-from client_server.ws.model_client import WsModelClient
++from XPolicyLab.policy.RoboScopeKit.client import WsModelClient
+ import numpy as np
+ import transforms3d as t3d
+ import websockets
+@@ -814,6 +814,8 @@
+                     "layout_id": int(self.env_seeds[env_idx]),
+                     "success": bool(self.success[env_idx]),
+                     "score": episode_score,
++                    "roboscope_steps": int(self.take_action_cnt[env_idx]),
++                    "roboscope_elapsed_s": self._roboscope_episode_elapsed_s,
+                 }
+                 video_path = os.path.join(self.save_dir, f"episode_{index:07d}.mp4")
+                 self.save_video(env_idx, video_path, tag)

@@ -129,6 +129,7 @@ class PolicyCapabilities:
     supported_action_chunk_sizes: tuple[int, ...] = (1,)
     action_representations: dict[str, str] = field(default_factory=dict)
     observation_strides: dict[str, int] = field(default_factory=dict)
+    step_observation_updates: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.supported_benchmarks:
@@ -159,6 +160,10 @@ class PolicyCapabilities:
             raise ValueError("observation_strides contains an unsupported benchmark")
         if any(stride < 1 for stride in self.observation_strides.values()):
             raise ValueError("observation strides must be positive")
+        if len(set(self.step_observation_updates)) != len(self.step_observation_updates):
+            raise ValueError("step observation update benchmarks must be unique")
+        if set(self.step_observation_updates) - set(self.supported_benchmarks):
+            raise ValueError("step observation updates contain an unsupported benchmark")
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> PolicyCapabilities:
@@ -181,6 +186,7 @@ class PolicyCapabilities:
                 str(name): int(stride)
                 for name, stride in (value.get("observation_strides") or {}).items()
             },
+            step_observation_updates=tuple(str(item) for item in value.get("step_observation_updates", ())),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -194,6 +200,7 @@ class PolicyCapabilities:
             "supported_action_chunk_sizes": list(self.supported_action_chunk_sizes),
             "action_representations": dict(self.action_representations),
             "observation_strides": dict(self.observation_strides),
+            "step_observation_updates": list(self.step_observation_updates),
         }
 
 
@@ -204,6 +211,7 @@ class PolicyExecutionContract:
     action_representation_source: str = "benchmark_default"
     observation_stride: int = 1
     observation_stride_source: str = "safe_default"
+    step_observation_updates: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -212,6 +220,7 @@ class PolicyExecutionContract:
             "action_representation_source": self.action_representation_source,
             "observation_stride": self.observation_stride,
             "observation_stride_source": self.observation_stride_source,
+            "step_observation_updates": self.step_observation_updates,
         }
 
 
@@ -230,6 +239,8 @@ def negotiate_policy_action_contract(
             f"policy action representation {action_representation!r} is unsupported by "
             f"{benchmark.name}; expected one of {supported}"
         )
+    if benchmark.name in capabilities.step_observation_updates and benchmark.name != "robodojo":
+        raise ValueError(f"step observation updates are not supported by {benchmark.name}")
     return PolicyExecutionContract(
         benchmark=benchmark.name,
         action_representation=action_representation,
@@ -238,6 +249,7 @@ def negotiate_policy_action_contract(
         observation_stride_source=(
             "policy" if benchmark.name in capabilities.observation_strides else "safe_default"
         ),
+        step_observation_updates=benchmark.name in capabilities.step_observation_updates,
     )
 
 
@@ -330,6 +342,10 @@ class Policy(ABC):
     def reset(self, context: EpisodeContext) -> None:
         """Prepare Policy state for a new episode."""
         return None
+
+    def observe(self, observation: Observation) -> None:
+        """Receive an intermediate observation when step updates are declared for a benchmark."""
+        raise NotImplementedError("Policy.observe must be implemented when step updates are declared")
 
     @abstractmethod
     def act(self, observation: Observation) -> ActionChunk:

@@ -1,0 +1,152 @@
+--- a/utils/save_file.py
++++ b/utils/save_file.py
+@@ -5,6 +5,7 @@
+ from typing import Any
+ 
+ import numpy as np
++from utils.roboscope_video_pipe import AsyncVideoPipe
+ 
+ 
+ def format_video_saved_message(
+@@ -78,6 +79,9 @@
+             ],
+             stdin=subprocess.PIPE,
+         )
++        self._roboscope_pipe = (
++            AsyncVideoPipe(self.proc) if os.environ.get("ROBODOJO_ASYNC_VIDEO") == "1" else None
++        )
+ 
+     def append(self, frame: np.ndarray) -> None:
+         if self.proc is None:
+@@ -87,16 +91,29 @@
+                 f"Frame shape {tuple(frame.shape)} does not match writer ({self.height}x{self.width}x{self.channels})."
+             )
+         frame = np.ascontiguousarray(frame, dtype=np.uint8)
+-        self.proc.stdin.write(frame.tobytes())
++        payload = frame.tobytes()
++        if self._roboscope_pipe is None:
++            self.proc.stdin.write(payload)
++        else:
++            try:
++                self._roboscope_pipe.append(payload)
++            except BaseException:
++                self.abort()
++                raise
+         self.n_frames += 1
+ 
+     def close(self, *, announce: bool = True) -> None:
+         if self.proc is None:
+             return
+         try:
++            if self._roboscope_pipe is not None:
++                self._roboscope_pipe.finish()
+             self.proc.stdin.close()
+             if self.proc.wait() != 0:
+                 raise OSError(f"ffmpeg failed while finalizing `{self.out_path}`.")
++        except BaseException:
++            self.abort()
++            raise
+         finally:
+             self.proc = None
+         if announce:
+@@ -113,6 +130,9 @@
+     def abort(self) -> None:
+         """Kill the ffmpeg process and remove the partial output file."""
+         if self.proc is not None:
++            if self._roboscope_pipe is not None:
++                self._roboscope_pipe.abort()
++                self._roboscope_pipe = None
+             try:
+                 if self.proc.stdin is not None:
+                     self.proc.stdin.close()
+--- /dev/null
++++ b/utils/roboscope_video_pipe.py
+@@ -0,0 +1,88 @@
++"""Bounded asynchronous ffmpeg input; no frame dropping or encoder changes."""
++
++import queue
++import threading
++import time
++
++
++class AsyncVideoPipe:
++    """One writer thread and at most two queued immutable frames per camera."""
++
++    def __init__(self, process, *, timeout_s=120.0):
++        self.process = process
++        self.timeout_s = timeout_s
++        self.frames = queue.Queue(maxsize=2)
++        self.aborted = threading.Event()
++        self.done = threading.Event()
++        self.error = None
++        self.closing = False
++        self.thread = threading.Thread(target=self._write, name="robodojo-video-pipe", daemon=True)
++        self.thread.start()
++
++    def _write(self):
++        try:
++            while not self.aborted.is_set():
++                try:
++                    frame = self.frames.get(timeout=0.1)
++                except queue.Empty:
++                    continue
++                if frame is None:
++                    break
++                if self.process.stdin.write(frame) != len(frame):
++                    raise OSError("ffmpeg accepted an incomplete frame")
++        except BaseException as error:
++            self.error = error
++        finally:
++            self.done.set()
++
++    def _check(self):
++        if self.error is not None:
++            raise OSError("Asynchronous ffmpeg input failed") from self.error
++        if self.aborted.is_set():
++            raise RuntimeError("Video pipe was aborted")
++
++    def _put(self, frame):
++        deadline = time.monotonic() + self.timeout_s
++        while True:
++            self._check()
++            if self.done.is_set():
++                raise RuntimeError("Video writer stopped before accepting all frames")
++            if time.monotonic() >= deadline:
++                raise TimeoutError("ffmpeg input did not make progress")
++            try:
++                self.frames.put(frame, timeout=0.1)
++                self._check()
++                return
++            except queue.Full:
++                pass
++
++    def append(self, frame):
++        if self.closing:
++            raise RuntimeError("Video pipe is closing")
++        if not isinstance(frame, bytes):
++            raise TypeError("Video pipe requires an owned immutable frame")
++        self._put(frame)
++
++    def finish(self):
++        if not self.closing:
++            self.closing = True
++            self._put(None)
++        if not self.done.wait(self.timeout_s):
++            raise TimeoutError("Timed out draining ffmpeg input")
++        self.thread.join()
++        self._check()
++
++    def abort(self):
++        self.aborted.set()
++        # Kill first: closing a pipe while another thread writes can deadlock.
++        if self.process.poll() is None:
++            self.process.kill()
++        self.process.wait(timeout=5)
++        self.thread.join(timeout=5)
++        if self.thread.is_alive():
++            raise RuntimeError("Video writer thread did not stop after encoder termination")
++        while True:
++            try:
++                self.frames.get_nowait()
++            except queue.Empty:
++                break

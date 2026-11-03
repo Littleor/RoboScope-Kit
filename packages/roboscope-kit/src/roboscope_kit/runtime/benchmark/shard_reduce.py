@@ -21,6 +21,7 @@ Rate metrics (steps/s, elapsed) are never aggregated across instances.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -42,6 +43,7 @@ _ADDITIVE_TABLES: dict[str, tuple[str, bool]] = {
     "libero_plus": ("task_id", True),
     "robotwin": ("task", False),
     "robocasa": ("task", False),
+    "robodojo": ("task", False),
 }
 _SHARD_RATE_KEYS = ("elapsed_s", "steps_per_s", "episodes_per_s", "total_steps")
 
@@ -131,15 +133,31 @@ def _sum_task_tables(
             successes = require_count(row["successes"], "task successes")
             if successes > episodes:
                 raise ValueError("task successes exceed its episodes")
-            target = merged.setdefault(row[key], {**row, "episodes": 0, "successes": 0})
+            initial = {**row, "episodes": 0, "successes": 0}
+            if "score_sum" in row:
+                initial["score_sum"] = 0.0
+            target = merged.setdefault(row[key], initial)
             target["episodes"] += row["episodes"]
             target["successes"] += row["successes"]
+            if "score_sum" in target:
+                score = row.get("score_sum")
+                if (
+                    not isinstance(score, (int, float))
+                    or not math.isfinite(score)
+                    or not 0 <= score <= episodes
+                ):
+                    raise ValueError("task score sum must be finite and within its episode count")
+                target["score_sum"] += score
+            elif "score_sum" in row:
+                raise ValueError("shards disagree on whether task scores are present")
             if not target.get("task_description") and row.get("task_description"):
                 target["task_description"] = row["task_description"]
     rows = []
     for task_key in layout:
         row = merged[task_key]
         row["success_rate"] = row["successes"] / row["episodes"] if row["episodes"] else 0.0
+        if "score_sum" in row:
+            row["mean_score"] = row["score_sum"] / row["episodes"] if row["episodes"] else 0.0
         rows.append(row)
     official: dict[str, Any] = {"tasks": rows}
     if has_runtime_metrics:

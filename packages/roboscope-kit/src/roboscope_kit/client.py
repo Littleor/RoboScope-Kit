@@ -80,6 +80,9 @@ class PolicyClient:
         result = self._request("act", {"observation": observation.to_dict()})
         return ActionChunk.from_dict(result["action_chunk"])
 
+    def observe(self, observation: Observation) -> None:
+        self._request("observe", {"observation": observation.to_dict()})
+
     def act_batch(self, observations: tuple[Observation, ...]) -> tuple[ActionChunk, ...]:
         result = self._request(
             "act_batch",

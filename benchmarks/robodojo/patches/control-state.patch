@@ -1,0 +1,85 @@
+--- a/env/robot_manager/robot_manager.py
++++ b/env/robot_manager/robot_manager.py
+@@ -1,6 +1,7 @@
+ from collections.abc import Sequence
+ from copy import deepcopy
+ from importlib import import_module
++import os
+ from typing import List, Literal
+ 
+ from isaaclab.assets.articulation import ArticulationCfg
+@@ -15,6 +16,10 @@
+ from env.planner_manager.curobo_planner import CuroboPlanner
+ from env.robot_manager.control_manager import ControlManager, MetaControl
+ from utils.ensure_usd_path import ensure_usd_path
++
++
++# Disabled unless explicitly requested for a matched runtime comparison.
++_CONTROL_STATE_REUSE = os.environ.get("ROBODOJO_CONTROL_STATE_REUSE") == "1"
+ 
+ 
+ class RobotManager:
+@@ -176,7 +181,16 @@
+         results = {}
+         key = self.robot_key[self.robot_list.index(robot)]
+         arm_indices = robot.arm_joint_indices
+-        joint_state = key.data.joint_pos.clone()
++        joint_state = key.data.joint_pos
++        if _CONTROL_STATE_REUSE and joint_state.device.type == "cpu":
++            # Independent NumPy outputs; no whole-state clone or Tensor deepcopy.
++            # Fetch fresh live state on every call, including every physics substep.
++            return {
++                env_idx: joint_state[env_idx][arm_indices].detach().numpy().copy()
++                if env_idx in env_idx_list else None
++                for env_idx in range(self.num_envs)
++            }
++        joint_state = joint_state.clone()
+         for env_idx in range(self.num_envs):
+             if env_idx in env_idx_list:
+                 joints = deepcopy(joint_state[env_idx][arm_indices])
+@@ -192,7 +206,16 @@
+         results = {}
+         key = self.robot_key[self.robot_list.index(robot)]
+         gripper_indices = robot.gripper_joint_indices
+-        joint_state = key.data.joint_pos.clone()
++        joint_state = key.data.joint_pos
++        if _CONTROL_STATE_REUSE and joint_state.device.type == "cpu":
++            # Independent NumPy outputs; no whole-state clone or Tensor deepcopy.
++            # Fetch fresh live state on every call, including every physics substep.
++            return {
++                env_idx: joint_state[env_idx][gripper_indices].detach().numpy().copy()
++                if env_idx in env_idx_list else None
++                for env_idx in range(self.num_envs)
++            }
++        joint_state = joint_state.clone()
+         for env_idx in range(self.num_envs):
+             if env_idx in env_idx_list:
+                 joints = deepcopy(joint_state[env_idx][gripper_indices])
+@@ -365,6 +388,7 @@
+             if isinstance(meta_control_list[env_idx], MetaControl):
+                 plan_num += 1
+                 plan_lst.append(env_idx)
++        expanded_actions = {}
+         for robot in self.robot_list:
+             if robot.robot_type == "arm":
+                 action_dim = len(robot.arm_joint_indices)
+@@ -375,10 +399,15 @@
+                 gripper_position = torch.zeros((plan_num, gripper_dim), device=sim.device, dtype=torch.float32)
+ 
+                 for id, env_idx in enumerate(plan_lst):
+-                    meta_control = meta_control_list[env_idx].get_action(
+-                        self,
+-                        env_idx=env_idx,
+-                    )  # get action dict
++                    # Target setters do not advance physics or change measured joints.
++                    # Cache only the pinned MetaControl implementation, within this call.
++                    meta_control = meta_control_list[env_idx]
++                    if _CONTROL_STATE_REUSE and type(meta_control) is MetaControl:
++                        if env_idx not in expanded_actions:
++                            expanded_actions[env_idx] = meta_control.get_action(self, env_idx=env_idx)
++                        meta_control = expanded_actions[env_idx]
++                    else:
++                        meta_control = meta_control.get_action(self, env_idx=env_idx)
+                     arm_position[id] = torch.tensor(
+                         meta_control[self.process_name(robot.arm_name)]["position"],
+                         device=sim.device,

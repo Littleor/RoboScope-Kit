@@ -1,0 +1,3 @@
+policy_name: RoboScopeKit
+protocol: ws
+eval_batch: false

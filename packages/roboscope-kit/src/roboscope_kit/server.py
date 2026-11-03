@@ -103,8 +103,9 @@ class PolicyServer:
             result = self._dispatch(operation, request.get("payload") or {})
             return self._success_response(request_id, result)
         except Exception as exc:
-            if operation in {"load", "reset", "act", "act_batch", "end_episode"} and not isinstance(
-                exc, ProtocolError
+            if (
+                operation in {"load", "reset", "act", "act_batch", "observe", "end_episode"}
+                and not isinstance(exc, ProtocolError)
             ):
                 self.state = PolicyState.FAILED
             return self._error_response(exc, request_id=request_id, operation=operation)
@@ -120,6 +121,8 @@ class PolicyServer:
             if not isinstance(capabilities, PolicyCapabilities):
                 raise TypeError("Policy.load() must return PolicyCapabilities")
             validate_policy_capabilities(context.benchmark, capabilities)
+            if capabilities.step_observation_updates and type(self.policy).observe is Policy.observe:
+                raise TypeError("Policy must implement observe() when it declares step observation updates")
             self.context = context
             self.capabilities = capabilities
             self.state = PolicyState.READY
@@ -139,6 +142,15 @@ class PolicyServer:
             validate_action_chunk(action, context.benchmark)
             self._validate_action_chunk_size(action, capabilities)
             return {"action_chunk": action.to_dict()}
+        if operation == "observe":
+            self._require_state(operation, PolicyState.READY)
+            context, capabilities = self._loaded_contract()
+            if context.benchmark.name not in capabilities.step_observation_updates:
+                raise ProtocolError("policy did not declare step observation updates for this benchmark")
+            observation = Observation.from_dict(payload["observation"])
+            validate_observation(observation, context.benchmark, capabilities)
+            self.policy.observe(observation)
+            return {"state": self.state.value}
         if operation == "act_batch":
             self._require_state(operation, PolicyState.READY)
             context, capabilities = self._loaded_contract()

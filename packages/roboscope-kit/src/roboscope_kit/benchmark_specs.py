@@ -18,6 +18,7 @@ class BenchmarkName(str, Enum):  # noqa: UP042 -- benchmark environments include
     ROBOTWIN = "robotwin"
     CALVIN = "calvin"
     METAWORLD = "metaworld"
+    ROBODOJO = "robodojo"
 
 
 class BenchmarkDefinition(ABC):
@@ -149,6 +150,39 @@ class RoboTwinBenchmarkDefinition(BenchmarkDefinition):
         return ActionSpec("action.robot", "Absolute dual-arm joint and gripper target.", 14)
 
 
+class RoboDojoBenchmarkDefinition(BenchmarkDefinition):
+    name = BenchmarkName.ROBODOJO
+    protocol_version = "robodojo-v1"
+    supported_action_representations = (
+        "robodojo.x5-joint-v1",
+        "robodojo.x5-ee-compact-quat-v1",
+    )
+    default_action_representation = "robodojo.x5-joint-v1"
+
+    def features(self, _suite: str) -> tuple[FeatureSpec, ...]:
+        return (
+            _feature("images.head", FeatureKind.IMAGE, "Head-camera RGB image."),
+            _feature("images.left_wrist", FeatureKind.IMAGE, "Left wrist RGB image."),
+            _feature("images.right_wrist", FeatureKind.IMAGE, "Right wrist RGB image."),
+            _feature(
+                "state.joints", FeatureKind.STATE,
+                "Left arm joints and gripper, followed by right arm joints and gripper.",
+                shape=(14,),
+            ),
+            _feature(
+                "state.ee_pose", FeatureKind.STATE,
+                "Left and right end-effector poses, each [x, y, z, qw, qx, qy, qz].",
+                shape=(14,),
+            ),
+            _feature("language.instruction", FeatureKind.LANGUAGE, "Task instruction."),
+        )
+
+    def action(self, _suite: str) -> ActionSpec:
+        return ActionSpec(
+            "action.robot", "Dual-arm X5 joint or compact end-effector targets and gripper commands.", 14
+        )
+
+
 class CalvinBenchmarkDefinition(BenchmarkDefinition):
     name = BenchmarkName.CALVIN
     protocol_version = "calvin-v1"
@@ -242,6 +276,7 @@ _DEFINITIONS: dict[BenchmarkName, BenchmarkDefinition] = {
         LiberoPlusBenchmarkDefinition(),
         RoboCasaBenchmarkDefinition(),
         RoboTwinBenchmarkDefinition(),
+        RoboDojoBenchmarkDefinition(),
         CalvinBenchmarkDefinition(),
         MetaworldBenchmarkDefinition(),
     )
