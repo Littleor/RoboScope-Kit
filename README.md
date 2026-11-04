@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://arxiv.org/abs/2611.03850">Paper</a> ·
-  <a href="https://roboscope.pages.dev/">Project page</a> ·
+  <a href="https://mint-sjtu.github.io/RoboScope-Kit/">Project page</a> ·
   <a href="packages/roboscope-kit/README.md">Package guide</a> ·
   <a href="packages/roboscope-kit/CHANGELOG.md">Changelog</a>
 </p>
