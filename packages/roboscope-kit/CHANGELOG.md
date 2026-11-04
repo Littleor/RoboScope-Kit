@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.8.0b13 (Unreleased)
+## 0.8.0b14 - 2026-11-04
+
+- Wait up to 15 minutes for the new version on the PyPI index in the post-release install check. The previous
+  3-minute wait was shorter than the index's 10-minute CDN cache, so 0.8.0b13 failed the check after publishing
+  correctly. The package is unchanged.
+
+## 0.8.0b13 - 2026-11-04
 
 - Add `examples/xpolicylab/`, a Policy that serves an XPolicyLab policy from the pinned RoboDojo checkout on
   the `robodojo` benchmark, following XPolicyLab's reference episode loop through per-step observation

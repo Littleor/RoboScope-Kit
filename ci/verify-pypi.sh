@@ -8,7 +8,9 @@ trap 'rm -rf -- "${VERIFY_ROOT}"' EXIT
 unset PYTHONPATH
 python -m venv "${VERIFY_ROOT}/env"
 
-for attempt in $(seq 1 18); do
+# PyPI's CDN can serve a cached /simple/ page for its 10-minute max-age after an upload.
+attempts=90
+for attempt in $(seq 1 "${attempts}"); do
   if "${VERIFY_ROOT}/env/bin/python" -m pip download \
     --index-url https://pypi.org/simple/ \
     --no-deps --only-binary=:all: \
@@ -16,12 +18,12 @@ for attempt in $(seq 1 18); do
     "roboscope-kit==${SDK_VERSION}"; then
     break
   fi
-  if [[ "${attempt}" -eq 18 ]]; then
+  if [[ "${attempt}" -eq "${attempts}" ]]; then
     echo "PyPI package resolution failed after ${attempt} attempts" >&2
     exit 1
   fi
   rm -rf -- "${VERIFY_ROOT}/download"
-  echo "PyPI package index is not ready; retrying in 10s (${attempt}/18)"
+  echo "PyPI package index is not ready; retrying in 10s (${attempt}/${attempts})"
   sleep 10
 done
 
