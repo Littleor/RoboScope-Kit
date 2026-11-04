@@ -40,8 +40,7 @@ Each benchmark is wrapped once in an adapter around its own evaluator, so its ru
 
 ![Overview of the RoboScope Kit evaluation architecture](docs/architecture.png)
 
-*The benchmark adapters shown are examples. The runtime optimizations shown are for RoboTwin; the example
-metrics are for 500 LIBERO-Long episodes with 12 Workers and 3 replicas on one RTX 4090. See the
+*The example metrics are for 500 LIBERO-Long episodes with 12 Workers and 3 replicas on one RTX 4090. See the
 [interactive overview](https://mint-sjtu.github.io/RoboScope-Kit/#design).*
 
 ## Results
