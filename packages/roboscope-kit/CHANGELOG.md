@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0b13 (Unreleased)
+
+- Add `examples/xpolicylab/`, a Policy that serves an XPolicyLab policy from the pinned RoboDojo checkout on
+  the `robodojo` benchmark, following XPolicyLab's reference episode loop through per-step observation
+  updates. `Simate_beta` is the validated configuration. The package runtime is unchanged.
+
 ## 0.8.0b12 - 2026-11-04
 
 - Remove the unused `calculate_k_limits`, `KLimits`, `calculate_g_limit`, and `build_adaptive_k_candidates`

@@ -37,7 +37,8 @@ intended workload.
 The simulator source, IsaacLab, CuRobo, XPolicyLab, package constraints, and the asset dataset are pinned
 by the build script. Its submodule selections keep the upstream installer's `--remote` updates at those
 tested revisions.
-Model code and checkpoints are supplied separately through the standard Kit Policy configuration.
+Model code and checkpoints are supplied separately through the standard Kit Policy configuration;
+[`examples/xpolicylab/`](../../examples/xpolicylab/README.md) serves XPolicyLab policies this way.
 The layout-sharding patch is adapted from @QLL-CCDD's RoboDojo work.
 
 The asset downloader verifies the pinned inventory and each file's hash. `HF_ENDPOINT` selects the metadata

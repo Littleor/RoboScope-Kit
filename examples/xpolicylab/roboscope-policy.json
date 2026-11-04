@@ -1,0 +1,10 @@
+{
+  "schema_version": 2,
+  "command": [
+    "/sim/robodojo/miniforge/envs/simate-beta-eval/bin/python",
+    "/path/to/RoboScope-Kit/examples/xpolicylab/xpolicylab_policy.py",
+    "--policy",
+    "Simate_beta"
+  ],
+  "cwd": "/sim/robodojo/RoboDojo"
+}
