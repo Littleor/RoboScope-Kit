@@ -23,20 +23,32 @@ Each benchmark is wrapped once in an adapter around its own evaluator, so its ru
 
 ## Highlights
 
-- **One interface:** every supported benchmark runs through the same `Policy` API and sends its canonical
+- 🚀 **Faster evaluation:** on 500 episodes with a StarVLA checkpoint, evaluation is **6.16×**
+  faster than the official StarVLA evaluator on LIBERO-Long (one RTX 4090, CUDA MPS) and **25.04×** faster on
+  RoboTwin Easy (four RTX 4090s vs. a one-GPU baseline). See [Results](#results).
+- 🧩 **One interface:** every supported benchmark runs through the same `Policy` API and sends its canonical
   observations unchanged.
-- **Measured concurrency:** simulator Workers and Policy replicas run as separate pools. Autotune sizes both
+- ⚙️ **Measured concurrency:** simulator Workers and Policy replicas run as separate pools. Autotune sizes both
   from real probe episodes, or you fix them with `--concurrency` and `--replicas`.
-- **Scale-out (Beta):** an evaluation can be sharded deterministically across GPU machines and merged
+- 🌐 **Scale-out (Beta):** an evaluation can be sharded deterministically across GPU machines and merged
   afterwards.
-- **Reproducible environments:** each benchmark's simulator is built from pinned sources by one script.
-- **Recoverable runs:** Work Items are claimed from a durable queue. A failed Worker's item returns to the
+- 📦 **Reproducible environments:** each benchmark's simulator is built from pinned sources by one script.
+- ♻️ **Recoverable runs:** Work Items are claimed from a durable queue. A failed Worker's item returns to the
   queue, and a finished item is scored exactly once.
+
+## Architecture
+
+![Overview of the RoboScope Kit evaluation architecture](docs/architecture.png)
+
+*The benchmark adapters shown are examples. The runtime optimizations shown are for RoboTwin; the example
+metrics are for 500 LIBERO-Long episodes with 12 Workers and 3 replicas on one RTX 4090. See the
+[interactive overview](https://mint-sjtu.github.io/RoboScope-Kit/#design).*
 
 ## Results
 
 From the [technical report](https://arxiv.org/abs/2611.03850), each run covering 500 episodes with a StarVLA
-checkpoint. LIBERO-Long, on one 48 GiB RTX 4090, with success rates equivalent to the official evaluation's:
+checkpoint. Evaluation time excludes initialization, concurrency search or offline tuning, and cleanup.
+LIBERO-Long, on one 48 GiB RTX 4090, with success rates equivalent to the official evaluation's:
 
 | Configuration | vs. official StarVLA | vs. RLinf | vs. vla-eval |
 | --- | ---: | ---: | ---: |
@@ -189,7 +201,7 @@ the tests but never publish. To retry a failed upload, run the `SDK compatibilit
 
 ## Citation
 
-If you use RoboScope Kit in your research, please cite:
+If you find RoboScope Kit helpful in your research, please consider citing our work:
 
 ```bibtex
 @misc{wu2026roboscopekit,
