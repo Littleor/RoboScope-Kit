@@ -1,8 +1,13 @@
 # RoboScope Kit
 
+[![MINT Lab@SJTU](https://img.shields.io/badge/MINT%20Lab%40SJTU-1565c0)](https://mint-sjtu.github.io/)
+[![arXiv](https://img.shields.io/badge/arXiv-2611.03850-b31b1b.svg)](https://arxiv.org/abs/2611.03850)
+[![PyPI](https://img.shields.io/pypi/v/roboscope-kit)](https://pypi.org/project/roboscope-kit/)
+
 `roboscope-kit` evaluates your model on standard robot simulation benchmarks. You implement one `Policy`
 class; the benchmark runtime starts your Policy, drives the simulators, tunes the evaluation's concurrency,
-and scores the results.
+and scores the results. The design and measurements are in the
+[technical report](https://arxiv.org/abs/2611.03850).
 
 ```bash
 python -m pip install roboscope-kit
@@ -224,6 +229,9 @@ The exact contracts are in the protocol documents:
 - [MetaWorld](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/METAWORLD_EVALUATION_PROTOCOL.md):
   MT50 manifest, camera setup, official training-goal evaluation, four-difficulty macro aggregation, and
   validation.
+- [RoboDojo](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/robodojo/README.md):
+  environment build, suites, observation and action layouts, step observation updates, and experimental
+  runtime switches.
 - [RoboTwin fixed inputs](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/robotwin/SEED_PROTOCOL.md):
   since 0.7.0b51, the manifest freezes RoboTwin's 50 × 100 inputs per suite under
   `robotwin2-platform-native-step-lim-v2`. The clean entries are unchanged and the randomized pool is new,
