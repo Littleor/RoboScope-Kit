@@ -1,46 +1,50 @@
-# RoboScope Kit
+<h1 align="center">RoboScope Kit</h1>
 
-[![MINT Lab@SJTU](https://img.shields.io/badge/MINT%20Lab%40SJTU-1565c0)](https://mint-sjtu.github.io/)
-[![arXiv](https://img.shields.io/badge/arXiv-2611.03850-b31b1b.svg)](https://arxiv.org/abs/2611.03850)
-[![PyPI](https://img.shields.io/pypi/v/roboscope-kit)](https://pypi.org/project/roboscope-kit/)
+<p align="center">
+  <strong>Unified interfaces for fast and scalable embodied-AI evaluation</strong>
+</p>
 
-RoboScope Kit evaluates your model on standard robot simulation benchmarks, quickly and at scale. You wrap a
-model once in a Python `Policy` class; the benchmark runtime drives the simulators, schedules the evaluation,
-and scores the results. Each benchmark is wrapped once in an adapter around its own evaluator, so its rules
-and scoring stay unchanged.
+<p align="center">
+  <a href="https://mint-sjtu.github.io/"><img alt="MINT Lab@SJTU" src="https://img.shields.io/badge/MINT%20Lab%40SJTU-1565c0"/></a>
+  <a href="https://arxiv.org/abs/2611.03850"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2611.03850-b31b1b.svg"/></a>
+  <a href="https://pypi.org/project/roboscope-kit/"><img alt="PyPI" src="https://img.shields.io/pypi/v/roboscope-kit"/></a>
+</p>
 
-[Paper](https://arxiv.org/abs/2611.03850) · [Project page](https://roboscope.pages.dev/) ·
-[Package guide](packages/roboscope-kit/README.md) · [Changelog](packages/roboscope-kit/CHANGELOG.md)
+<p align="center">
+  <a href="https://arxiv.org/abs/2611.03850">Paper</a> ·
+  <a href="https://roboscope.pages.dev/">Project page</a> ·
+  <a href="packages/roboscope-kit/README.md">Package guide</a> ·
+  <a href="packages/roboscope-kit/CHANGELOG.md">Changelog</a>
+</p>
 
-This repository contains:
+RoboScope Kit evaluates your model on standard robot simulation benchmarks. You wrap a model once in a Python
+`Policy` class; the benchmark runtime drives the simulators, schedules the evaluation, and scores the results.
+Each benchmark is wrapped once in an adapter around its own evaluator, so its rules and scoring stay unchanged.
 
-- the `roboscope-kit` Python package, with the public `Policy` API and the benchmark runtime;
-- one directory per benchmark, with its manifest and the script that builds its simulator environment;
-- example Policies for StarVLA and X-VLA.
+## Highlights
 
-## Why RoboScope Kit
-
-- **One interface.** Every supported benchmark runs through the same `Policy` API and sends its canonical
+- **One interface:** every supported benchmark runs through the same `Policy` API and sends its canonical
   observations unchanged.
-- **Measured concurrency.** Simulator Workers and Policy replicas run as separate pools. Autotune sizes both
+- **Measured concurrency:** simulator Workers and Policy replicas run as separate pools. Autotune sizes both
   from real probe episodes, or you fix them with `--concurrency` and `--replicas`.
-- **Scale-out (Beta).** An evaluation can be sharded deterministically across GPU machines and merged
+- **Scale-out (Beta):** an evaluation can be sharded deterministically across GPU machines and merged
   afterwards.
-- **Reproducible environments.** Each benchmark's simulator is built from pinned sources by one script.
-- **Recoverable runs.** Work Items are claimed from a durable queue: a failed Worker's item returns to the
+- **Reproducible environments:** each benchmark's simulator is built from pinned sources by one script.
+- **Recoverable runs:** Work Items are claimed from a durable queue. A failed Worker's item returns to the
   queue, and a finished item is scored exactly once.
 
-Results from the [technical report](https://arxiv.org/abs/2611.03850), each over 500 episodes with a StarVLA
-checkpoint:
+## Results
 
-| Benchmark | Hardware | Configuration | Speedup |
-| --- | --- | --- | --- |
-| LIBERO-Long | One 48 GiB RTX 4090 | 12 Workers, 3 replicas | 4.45× over the official StarVLA evaluation, 2.78× over RLinf, 1.52× over vla-eval |
-| LIBERO-Long | One 48 GiB RTX 4090 | 16 Workers, 4 replicas, CUDA MPS | 6.16× over the official StarVLA evaluation, 3.85× over RLinf, 2.10× over vla-eval |
-| RoboTwin Easy | Four GPUs | Chunk-boundary observation | 25.04× over one simulator and one model on one GPU (359.7 min down to 14.4 min) |
+From the [technical report](https://arxiv.org/abs/2611.03850), each run covering 500 episodes with a StarVLA
+checkpoint. LIBERO-Long, on one 48 GiB RTX 4090, with success rates equivalent to the official evaluation's:
 
-LIBERO-Long success rates are equivalent to the official evaluation's; RoboTwin Easy has identical success
-outcomes and terminal steps.
+| Configuration | vs. official StarVLA | vs. RLinf | vs. vla-eval |
+| --- | ---: | ---: | ---: |
+| 12 Workers, 3 replicas | **4.45×** | **2.78×** | **1.52×** |
+| 16 Workers, 4 replicas, CUDA MPS | **6.16×** | **3.85×** | **2.10×** |
+
+RoboTwin Easy, on four GPUs with chunk-boundary observation, takes 14.4 minutes instead of 359.7 with one
+simulator and one model on one GPU (**25.04×**), with identical success outcomes and terminal steps.
 
 ## Supported benchmarks
 
@@ -59,13 +63,17 @@ separately. Simulator builds, real episodes, and model loading need Linux x86_64
 
 ## Quick start
 
+### 1. Install
+
 Python 3.11 or newer is required.
 
 ```bash
 python -m pip install roboscope-kit
 ```
 
-Write a `Policy`. `load_model` stands for your own model code:
+### 2. Write a Policy
+
+`load_model` stands for your own model code:
 
 ```python
 import numpy as np
@@ -90,7 +98,9 @@ class UserPolicy(Policy):
 run(UserPolicy())
 ```
 
-Tell the runtime how to start it, in a `roboscope-policy.json`:
+### 3. Tell the runtime how to start it
+
+Save this as `roboscope-policy.json`:
 
 ```json
 {
@@ -100,7 +110,9 @@ Tell the runtime how to start it, in a `roboscope-policy.json`:
 }
 ```
 
-Build the simulator environment from a checkout of this repository, then evaluate:
+### 4. Build the simulator and evaluate
+
+From a checkout of this repository:
 
 ```bash
 benchmarks/libero/build-runtime.sh /sim/libero
