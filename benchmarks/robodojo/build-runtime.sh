@@ -25,13 +25,6 @@ for package in cmake build-essential ffmpeg; do
     exit 3
   }
 done
-# Upstream tries this path before the Conda hook. Avoid activating an unrelated
-# user's environment instead of the isolated one built below.
-if [[ -f "${HOME}/miniconda3/bin/activate" ]]; then
-  echo "The upstream installer would activate ${HOME}/miniconda3. Use a build account without that path." >&2
-  exit 3
-fi
-
 mkdir -p "$1"
 INSTALL_ROOT="$(cd -- "$1" && pwd -P)"
 SOURCE_ROOT="${INSTALL_ROOT}/RoboDojo"
@@ -69,6 +62,7 @@ pin_submodule third_party/IsaacLab afca7b09d60d8beb9c1cb28b43066499940b969b
 pin_submodule third_party/curobo 895c6517243f8cb091c73c018c8167192d39599a
 pin_submodule XPolicyLab c7479d6fb014b0a23dfc292ef214eb1990f27029
 
+unset CONDA_PREFIX CONDA_DEFAULT_ENV CONDA_SHLVL PYTHONPATH PYTHONHOME VIRTUAL_ENV || true
 installer="${INSTALL_ROOT}/miniforge-installer.sh"
 if [[ ! -x "${CONDA_ROOT}/bin/conda" ]]; then
   for ((attempt = 1; attempt <= 8; attempt++)); do
@@ -100,7 +94,6 @@ export CONDA_ENVS_PATH="${CONDA_ROOT}/envs" CONDA_PKGS_DIRS="${INSTALL_ROOT}/con
 export CONDA_NO_PLUGINS=true CONDA_SOLVER=classic
 export XDG_CACHE_HOME="${INSTALL_ROOT}/cache" PIP_CACHE_DIR="${INSTALL_ROOT}/cache/pip"
 export TMPDIR="${INSTALL_ROOT}/tmp" PYTHONNOUSERSITE=1
-unset CONDA_PREFIX CONDA_DEFAULT_ENV CONDA_SHLVL || true
 if [[ ! -x "${ENV_ROOT}/bin/python" ]]; then
   conda create -p "${ENV_ROOT}" 'python=3.11.18' -y
 fi
@@ -112,6 +105,8 @@ fi
 awk 'tolower($0) !~ /^starlette==/' "${BUILDER_DIR}/runtime-requirements.txt" > "${INSTALL_ROOT}/bootstrap-constraints.txt"
 export PIP_CONSTRAINT="${INSTALL_ROOT}/bootstrap-constraints.txt"
 export ACCEPT_EULA=Y
+# Upstream activates $HOME/miniconda3 before the Conda hook; use only the hook.
+sed -i 's#source "$HOME/miniconda3/bin/activate" RoboDojo 2>/dev/null || ##' "${SOURCE_ROOT}/scripts/install.sh"
 ( cd "${SOURCE_ROOT}" && bash scripts/install.sh -i )
 for spec in \
   'third_party/IsaacLab:afca7b09d60d8beb9c1cb28b43066499940b969b' \

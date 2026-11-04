@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0b15 - 2026-11-04
+
+- RoboDojo builds no longer refuse accounts with `$HOME/miniconda3`. `build-runtime.sh` removes the upstream
+  installer's activation of that path, and ignores `PYTHONPATH`, `PYTHONHOME`, and `VIRTUAL_ENV`.
+
 ## 0.8.0b14 - 2026-11-04
 
 - Wait up to 15 minutes for the new version on the PyPI index in the post-release install check. The previous

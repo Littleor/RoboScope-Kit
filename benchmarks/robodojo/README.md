@@ -4,9 +4,10 @@
 and writes `benchmark-manifest.json` under the install directory. It requires `git`, `curl`, `sha256sum`,
 the Debian system packages `cmake`, `build-essential`, and `ffmpeg`, a working CUDA build toolchain, and a
 compatible NVIDIA GPU. The builder installs an isolated Miniforge, runs RoboDojo's `scripts/install.sh -i`,
-then applies the Kit patches and checks the resulting environment. The upstream installer activates
-`$HOME/miniconda3` when present, so the isolated build requires an account without that path. The asset
-download is approximately 41 GB. Isaac Sim is licensed by NVIDIA; read its
+then applies the Kit patches and checks the resulting environment. An existing `$HOME/miniconda3` is left
+alone. The asset download is approximately 41 GB. The first simulator launch on an account also downloads
+Isaac Sim extensions from NVIDIA into `~/.local/share/ov`, and can sit silent for minutes. Isaac Sim is
+licensed by NVIDIA; read its
 [license](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html)
 and set `OMNI_KIT_ACCEPT_EULA=YES` yourself before building or running it. The build does not set
 `PRIVACY_CONSENT`.
