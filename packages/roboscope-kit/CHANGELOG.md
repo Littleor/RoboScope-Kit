@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0b12 - 2026-11-04
+
+- Remove the unused `calculate_k_limits`, `KLimits`, `calculate_g_limit`, and `build_adaptive_k_candidates`
+  from `roboscope_kit.runtime.autotune`. They were internal and no runtime path called them.
+
 ## 0.8.0b11 - 2026-11-03
 
 - Add RoboDojo simulation support through the standard Policy and benchmark runtime. The pinned manifest

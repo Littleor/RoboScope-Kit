@@ -6,13 +6,9 @@ from roboscope_kit.runtime.autotune import (
     ClientMetrics,
     GTrial,
     KTrial,
-    ProbeMetrics,
     ServerMetrics,
-    build_adaptive_k_candidates,
     build_g_candidates,
     build_k_candidates,
-    calculate_g_limit,
-    calculate_k_limits,
     select_g,
     select_k,
     should_ramp_g,
@@ -53,43 +49,6 @@ def _g_trial(g: int, throughput: float) -> GTrial:
     return GTrial(g=g, clients=k_trial.clients, servers=k_trial.servers)
 
 
-def test_calculate_k_limits_uses_smallest_bound() -> None:
-    probe = ProbeMetrics(throughput=20, cpu_cores=6, vram_bytes=1024**3, inference_wait_ratio=0.2)
-
-    limits = calculate_k_limits(
-        gpu_count=4,
-        vram_per_gpu_bytes=48 * 1024**3,
-        reserved_vram_per_gpu_bytes=2 * 1024**3,
-        server_replicas=4,
-        server_vram_bytes=9 * 1024**3,
-        cpu_quota=80,
-        reserved_cpu_cores=1,
-        probe=probe,
-        chunk_count=100,
-    )
-
-    assert limits.cpu == 13
-    assert limits.maximum == 13
-
-
-def test_calculate_k_limits_does_not_round_exact_cpu_bound_down() -> None:
-    probe = ProbeMetrics(throughput=23, cpu_cores=2.8, vram_bytes=512 * 1024**2, inference_wait_ratio=0.3)
-
-    limits = calculate_k_limits(
-        gpu_count=4,
-        vram_per_gpu_bytes=48 * 1024**3,
-        reserved_vram_per_gpu_bytes=2 * 1024**3,
-        server_replicas=4,
-        server_vram_bytes=9 * 1024**3,
-        cpu_quota=48,
-        reserved_cpu_cores=1,
-        probe=probe,
-        chunk_count=128,
-    )
-
-    assert limits.cpu == 16
-
-
 def test_build_k_candidates_reaches_high_non_power_of_two_maximum() -> None:
     assert build_k_candidates(4, 48) == (4, 8, 16, 32, 48)
 
@@ -98,20 +57,8 @@ def test_build_k_candidates_clamps_base_to_small_maximum() -> None:
     assert build_k_candidates(4, 3) == (3,)
 
 
-def test_adaptive_k_candidates_continue_beyond_soft_cpu_limit() -> None:
-    assert build_adaptive_k_candidates(4, 14) == (4, 8, 10, 12, 14)
-
-
-def test_g_candidates_use_per_gpu_vram_limit() -> None:
-    maximum = calculate_g_limit(
-        gpu_count=4,
-        vram_per_gpu_bytes=48 * 1024**3,
-        reserved_vram_per_gpu_bytes=2 * 1024**3,
-        server_vram_bytes=9 * 1024**3,
-    )
-
-    assert maximum == 20
-    assert build_g_candidates(4, maximum) == (4, 8, 16, 20)
+def test_g_candidates_reach_non_power_of_two_maximum() -> None:
+    assert build_g_candidates(4, 20) == (4, 8, 16, 20)
 
 
 def test_select_k_keeps_scaling_above_one_percent_gain() -> None:

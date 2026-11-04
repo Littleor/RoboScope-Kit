@@ -138,7 +138,6 @@ tuning, writing a Policy, CUDA MPS, and cross-instance sharding.
 | `benchmarks/<benchmark>/` | For CALVIN, LIBERO, LIBERO-Plus, MetaWorld, RoboCasa, RoboDojo, and RoboTwin: the `benchmark-manifest.json` and `build-runtime.sh`, which builds the pinned simulator environment; RoboTwin also has its launcher and seed-cache tooling |
 | `examples/starvla/` | The StarVLA `Policy` and one demo per benchmark, including the configurations behind the RoboScope Kit technical report |
 | `examples/xvla/` | An X-VLA `Policy` example: a stateful Policy serving several benchmarks |
-| `tests/async_inference/` | Autotune regressions |
 | `ci/` | Build, compatibility, and PyPI release scripts used by GitHub Actions |
 
 ## Development
@@ -148,7 +147,7 @@ Install from source and run the checks:
 ```bash
 cd packages/roboscope-kit
 python -m pip install . pytest ruff matplotlib
-PYTHONPATH=src:../.. python -m pytest tests ../../tests/async_inference -q
+PYTHONPATH=src:../.. python -m pytest tests -q
 python -m ruff check src tests ../../benchmarks/robotwin
 ```
 

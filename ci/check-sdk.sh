@@ -32,6 +32,4 @@ python -m compileall -q "$(python -c 'import roboscope_kit as s; print(s.__path_
 
 # Only the repository's benchmark assets are added; SDK imports use the wheel.
 cd "${SDK_DIR}"
-PYTHONPATH="${KIT_ROOT}" python -m pytest \
-  --confcutdir="${KIT_ROOT}/tests/async_inference" \
-  tests "${KIT_ROOT}/tests/async_inference" -q
+PYTHONPATH="${KIT_ROOT}" python -m pytest tests -q

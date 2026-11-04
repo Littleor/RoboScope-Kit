@@ -102,21 +102,6 @@ class GTrial:
     servers: ServerMetrics
 
 
-@dataclass(frozen=True)
-class KLimits:
-    """Independent upper bounds used to calculate the safe K ceiling."""
-
-    vram: int
-    cpu: int
-    queue: int
-
-    @property
-    def maximum(self) -> int:
-        """Return the smallest upper bound."""
-
-        return min(self.vram, self.cpu, self.queue)
-
-
 class ServerPool(Protocol):
     """Control-plane contract required from a policy-server pool."""
 
@@ -180,77 +165,10 @@ class ClientPool(Protocol):
         ...
 
 
-def calculate_k_limits(
-    *,
-    gpu_count: int,
-    vram_per_gpu_bytes: int,
-    reserved_vram_per_gpu_bytes: int,
-    server_replicas: int,
-    server_vram_bytes: int,
-    cpu_quota: float,
-    reserved_cpu_cores: float,
-    probe: ProbeMetrics,
-    chunk_count: int,
-) -> KLimits:
-    """Calculate the VRAM, CPU, and available-work upper bounds for K."""
-
-    available_vram = gpu_count * (vram_per_gpu_bytes - reserved_vram_per_gpu_bytes)
-    available_vram -= server_replicas * server_vram_bytes
-    k_vram = max(1, available_vram // max(probe.vram_bytes, 1))
-    available_cpu_cores = max(cpu_quota - reserved_cpu_cores, 0.0)
-    cpu_bound = available_cpu_cores / max(probe.cpu_cores, 1e-9)
-    k_cpu = max(1, math.floor(cpu_bound + 1e-9))
-    return KLimits(vram=int(k_vram), cpu=k_cpu, queue=max(1, chunk_count))
-
-
 def build_k_candidates(base: int, maximum: int, *, growth_factor: float = 2.0) -> tuple[int, ...]:
     """Build a geometric K ramp that always reaches the calculated ceiling."""
 
     return _build_candidates(base, maximum, growth_factor=growth_factor)
-
-
-def build_adaptive_k_candidates(base: int, hard_maximum: int) -> tuple[int, ...]:
-    """Build a K ramp that probes beyond the single-client CPU estimate.
-
-    VRAM and remaining work are hard limits. Probe ``base`` and ``2 * base``,
-    then continue in half-base increments so live throughput and resource
-    measurements decide where to stop. The single-client CPU estimate is
-    reported for diagnostics but never used as a hard ramp boundary.
-    """
-
-    if hard_maximum < 1:
-        raise ValueError("hard_maximum must be positive")
-    first = min(base, hard_maximum)
-    candidates = [first]
-    second = min(2 * base, hard_maximum)
-    if second > first:
-        candidates.append(second)
-    step = max(1, math.ceil(base / 2))
-    current = candidates[-1]
-    while current < hard_maximum:
-        current = min(current + step, hard_maximum)
-        candidates.append(current)
-    return tuple(candidates)
-
-
-def calculate_g_limit(
-    *,
-    gpu_count: int,
-    vram_per_gpu_bytes: int,
-    reserved_vram_per_gpu_bytes: int,
-    server_vram_bytes: int,
-) -> int:
-    """Return the maximum replica count allowed by per-GPU VRAM placement."""
-
-    if gpu_count < 1:
-        raise ValueError("gpu_count must be positive")
-    if server_vram_bytes < 1:
-        raise ValueError("server_vram_bytes must be positive")
-    available_per_gpu = max(vram_per_gpu_bytes - reserved_vram_per_gpu_bytes, 0)
-    replicas_per_gpu = available_per_gpu // server_vram_bytes
-    if replicas_per_gpu < 1:
-        raise ValueError("a policy-server replica does not fit in the available per-GPU VRAM")
-    return gpu_count * replicas_per_gpu
 
 
 def build_g_candidates(base: int, maximum: int, *, growth_factor: float = 2.0) -> tuple[int, ...]:

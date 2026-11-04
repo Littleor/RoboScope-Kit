@@ -16,7 +16,6 @@ A change is complete when it is committed, carries the required version bump, an
 | `benchmarks/<benchmark>/` | The benchmark's `benchmark-manifest.json`, the `build-runtime.sh` that builds its pinned simulator environment, and its pin files; RoboTwin also has its launcher and seed-cache tooling |
 | `examples/starvla/` | The StarVLA `Policy` and one demo per benchmark, including the configurations behind the RoboScope Kit technical report |
 | `examples/xvla/` | The X-VLA `Policy` example: a stateful Policy serving several benchmarks |
-| `tests/async_inference/` | Autotune regressions |
 | `ci/` and `.github/workflows/` | Build, compatibility, and PyPI release automation |
 
 When a path moves, update the source and every caller directly. Do not add compatibility wrappers or
@@ -94,7 +93,7 @@ Run after every change:
 ```bash
 cd packages/roboscope-kit
 python -m pip install . pytest ruff matplotlib
-PYTHONPATH=src:../.. python -m pytest tests ../../tests/async_inference -q
+PYTHONPATH=src:../.. python -m pytest tests -q
 python -m ruff check src tests ../../benchmarks/robotwin
 ```
 
