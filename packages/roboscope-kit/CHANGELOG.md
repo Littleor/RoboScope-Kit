@@ -1,13 +1,13 @@
 # Changelog
 
-## 0.8.0b11 (Unreleased)
+## 0.8.0b11 - 2026-11-03
 
 - Add RoboDojo simulation support through the standard Policy and benchmark runtime. The pinned manifest
   covers 42 base tasks and 12 randomized variants with their upstream episode limits. Policies may declare
   per-step observation updates; asynchronous observation delivery and several upstream runtime candidates
   remain opt-in. The runtime patches are adapted from the RoboDojo work by @QLL-CCDD.
 
-## 0.8.0b10 (Unreleased)
+## 0.8.0b10 - 2026-11-01
 
 - Use the diagonal search on every benchmark. CALVIN, LIBERO-Plus, MetaWorld, and RoboCasa probes now grow
   with K, as LIBERO and RoboTwin probes do, so every probed worker gets `probe_items_per_worker` work items
@@ -17,7 +17,7 @@
   worker, RoboCasa's 24 tasks cover up to K=8 and MetaWorld's 50 tasks up to K=16. The four manifests no
   longer pin `autotune_strategy: two-phase`. With `two-phase`, the probes keep their fixed size.
 
-## 0.8.0b9 (Unreleased)
+## 0.8.0b9 - 2026-11-01
 
 - Make `diagonal` the default autotune strategy. On LIBERO-Long with one RTX 4090 it selected K12/g3 in
   three of three launches, against K4/g1 or K9/g1 for `two-phase`, and evaluated 1.81x faster. The CALVIN,
@@ -26,7 +26,7 @@
   `autotune_strategy` now gets `diagonal`, the `steady` throughput estimator, and
   `probe_items_per_worker: 3`.
 
-## 0.8.0b8 (Unreleased)
+## 0.8.0b8 - 2026-10-31
 
 - Run the kit standalone, with no hosted platform:
   - The CLI takes every path as an argument: `--benchmark-manifest` (required, also for `shard_merge`),
@@ -46,14 +46,14 @@
   - Removed: the `testlog.txt` progress contract and `--legacy-contract-root`, the shared-disk Control
     Runtime installers and launchers, and the old LIBERO entrypoint `benchmarks/libero_official/`.
 
-## 0.8.0b7 (Unreleased)
+## 0.8.0b7 - 2026-10-31
 
 - Evaluate at a fixed K/g with `--concurrency K --replicas G`, which skips autotune probing and records
   `mode: fixed` in `result.json`, so one configuration can be measured or reproduced through the public
   CLI. Both flags are required together and cannot be combined with `--quick-test` or
   `--autotune-strategy`.
 
-## 0.8.0b6 (Unreleased)
+## 0.8.0b6 - 2026-10-31
 
 - Add the opt-in `diagonal` autotune strategy (`autotune_strategy: diagonal`). It ramps workers on one
   replica per GPU until doubling K gains less than `autotune_worker_knee_gain` (25%); a step the worker
@@ -94,7 +94,7 @@
   each work item completed. Partial results, which RoboTwin and RoboCasa publish per episode, do not count.
   The controller reads completed items from the same queue scan it uses for progress.
 
-## 0.8.0b5 (Unreleased)
+## 0.8.0b5 - 2026-10-31
 
 - Add one StarVLA demo per benchmark under `examples/starvla/<benchmark>/`: LIBERO, LIBERO-Plus, RoboTwin,
   RoboCasa, CALVIN, and MetaWorld. Each `demo.yaml` pins a published checkpoint, the StarVLA revision, and
@@ -102,20 +102,20 @@
 - Add `starvla_libero_policy.py`, the LIBERO Policy behind the technical report's LIBERO-Long results. It
   follows the StarVLA `eaa51c4` LIBERO client.
 
-## 0.8.0b4 (Unreleased)
+## 0.8.0b4 - 2026-10-31
 
 - Retire the custom-image and image-baking paths. Move the X-VLA example from
   `examples/custom_image_validation/xvla/` to `examples/xvla/` and drop its baking script. Remove the LIBERO
   base-image bundle scripts (`build_official_image_bundle.sh`, `install_official_image_bundle.sh`,
   `prepare_official_image_for_bake.sh`, `verify_official_image.sh`) and the related documentation.
 
-## 0.8.0b3 (Unreleased)
+## 0.8.0b3 - 2026-10-31
 
 - Add the StarVLA Policy as an example under `examples/starvla/`, restored from the removed
   `official_images/starvla/` source. It is the Policy behind the StarVLA measurements in the RoboScope Kit
   technical report.
 
-## 0.8.0b2 (Unreleased)
+## 0.8.0b2 - 2026-10-30
 
 - Remove the official StarVLA image source (`official_images/starvla/`) and its documentation. Custom
   images are the only documented evaluation path. The X-VLA custom-image demo now installs its Control
@@ -129,7 +129,7 @@
 - Move the package source from `packages/roboscope-inference-sdk/` to `packages/roboscope-kit/`; image
   Control Runtimes now live under `/opt/roboscope/control-runtime/packages/roboscope-kit/`.
 
-## 0.7.0b77 (Unreleased)
+## 0.7.0b77
 
 - Add an opt-in CUDA MPS mode for Policy replicas: `--cuda-mps` on the
   benchmark CLI and `run-benchmark.sh`, off by default. The runtime owns a
@@ -138,13 +138,13 @@
   before signalling it, and records the session in `result.json`. Autotune
   probes run under the same mode as the formal pass.
 
-## 0.7.0b76 (Unreleased)
+## 0.7.0b76
 
 - Revert the MetaWorld runtime, autotune, native-reference and MPS changes
   because they regressed the autotune algorithm. Restore the b59 runtime
   and autotune behavior.
 
-## 0.7.0b59 (Unreleased candidate)
+## 0.7.0b59
 
 - RoboTwin renders one observation per refresh. The evaluator loop now asks the
   Policy client whether an observation is due, so steps at chunk or stride
@@ -155,7 +155,7 @@
 - The StarVLA official Policy declares its action horizon as its observation
   stride, replacing the external stride-16 launcher wrapper.
 
-## 0.7.0b58 (Unreleased candidate)
+## 0.7.0b58
 
 - Move PyPI upload, artifact-hash verification and clean-install verification to
   GitHub Actions after the full compatibility gate.
@@ -309,7 +309,7 @@ recorded here. Versions follow Semantic Versioning; the compatibility rules
 and release-owner responsibilities for the current Beta series are documented
 in `README.md`.
 
-## Unreleased
+## Changes between 0.7.0b5 and 0.7.0b36
 
 - AutoDL shared runtimes: store the expanded RoboCasa, RoboTwin, and LIBERO+
   runtime roots as verified zstd level-3 tar archives, extract the selected

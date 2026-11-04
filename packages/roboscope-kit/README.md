@@ -364,8 +364,8 @@ policy.
 Read the installed version with `importlib.metadata.version("roboscope-kit")`; `roboscope_kit.__version__`
 is not public API.
 
-Releases are published automatically. To release, update the version in `pyproject.toml` and `uv.lock`, move
-the changelog's unreleased entries into a dated section that lists every user-visible API,
+Releases are published automatically. To release, update the version in `pyproject.toml` and `uv.lock`, add
+a changelog section headed `## <version> - <YYYY-MM-DD>` that lists every user-visible API,
 `Policy`-lifecycle, and wire-protocol change, and merge to `main`. GitHub Actions then builds the wheel and
 sdist, tests them on every supported Python version, uploads them with the `PYPI_API_TOKEN` repository
 secret, and checks the published hashes and a clean install. A version already on PyPI is not uploaded

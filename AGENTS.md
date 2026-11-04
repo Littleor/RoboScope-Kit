@@ -40,8 +40,9 @@ generation digests) without regenerating what depends on them.
 ## Versioning and releases
 
 Every code change bumps the `roboscope-kit` version in both `packages/roboscope-kit/pyproject.toml` and
-`packages/roboscope-kit/uv.lock`, and adds an entry to `packages/roboscope-kit/CHANGELOG.md`. A code change
-without a version bump is incomplete. Documentation-only changes do not need a bump.
+`packages/roboscope-kit/uv.lock`, and adds an entry to `packages/roboscope-kit/CHANGELOG.md`. Head the entry
+`## <version> - <YYYY-MM-DD>` with the merge date, never `Unreleased`: merging the version publishes it. A code
+change without a version bump is incomplete. Documentation-only changes do not need a bump.
 
 GitHub Actions is the only PyPI publisher. When a commit on `main` carries a version that is not on PyPI
 yet, the `SDK compatibility` workflow builds the wheel and sdist, runs the full compatibility matrix,

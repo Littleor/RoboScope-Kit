@@ -166,7 +166,7 @@ to build its test matrix and fails when it drifts from the official lifecycle.
 Releases are automatic. GitHub Actions (`.github/workflows/sdk-compatibility.yml`) is the only publisher.
 
 1. Bump the version in `packages/roboscope-kit/pyproject.toml` and `uv.lock`, and add a `CHANGELOG.md`
-   entry.
+   entry headed `## <version> - <YYYY-MM-DD>`.
 2. Merge the change to `main`.
 3. CI builds the wheel and sdist once, tests them on every supported Python version, uploads them to PyPI
    with the `PYPI_API_TOKEN` repository secret, then checks the published hashes and a clean install.
