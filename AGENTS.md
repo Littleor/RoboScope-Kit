@@ -52,6 +52,8 @@ to PyPI by hand.
 
 ## Documentation
 
+Write everything in the repository in English: code, comments, documentation, and commit messages.
+
 Keep the package README, the protocol documents, and the example READMEs consistent whenever
 user-facing evaluation behavior changes. The package README is also the PyPI project page, so link to
 other repository files with absolute GitHub URLs.
