@@ -16,6 +16,7 @@ from .adapters import BenchmarkAdapter, InferenceAdapter, WorkerContext
 from .autotune import ProbeCapacityReached, ProbeLimits, ProbeTimedOut
 from .cuda_mps import CudaMpsSession
 from .metrics import read_jsonl_since, summarize_events
+from .nsys import profiled_process
 from .processes import InferencePool, ManagedProcess, ProcessFailureKind, start_process
 from .queue import WorkQueue, atomic_json
 from .resources import GpuSampler, cpu_quota, cpu_window, gpu_window, read_cpu_stat
@@ -46,6 +47,7 @@ class RuntimeConfig:
     shard_count: int | None = None
     shard_episodes: int = DEFAULT_EPISODES_PER_SHARD
     shard_build: dict[str, str] | None = None
+    profile: bool = False
 
     def __post_init__(self) -> None:
         if not self.gpu_devices or len(self.gpu_devices) != len(set(self.gpu_devices)):
@@ -250,6 +252,7 @@ class ParallelBenchmarkRuntime:
                 "policy_io": policy_io,
                 "items": [item.to_dict() for item in items],
                 "total_records": total_records,
+                **({"profile": True} if self.config.profile else {}),
                 **({"shard": shard_metadata} if shard_metadata is not None else {}),
             },
         )
@@ -434,6 +437,9 @@ class ParallelBenchmarkRuntime:
         state_path.unlink(missing_ok=True)
         attempt = self.worker_attempts[worker_id]
         spec = self.benchmark.worker_process(context)
+        if self.config.profile:
+            report = self.config.output_dir / "profile" / f"worker-{worker_id:03d}-attempt-{attempt:03d}"
+            spec = profiled_process(spec, report)
         log_path = self.config.output_dir / "workers" / f"worker-{worker_id:03d}-attempt-{attempt:03d}.log"
         self.workers[worker_id] = start_process(spec, log_path, self.config.ready_timeout_s)
         self.worker_attempts[worker_id] += 1

@@ -41,6 +41,7 @@ from .manifest import (
     BenchmarkManifest,
     load_benchmark_manifest,
 )
+from .nsys import require_nsys
 from .orchestrator import ParallelBenchmarkRuntime, RuntimeConfig, append_event
 from .output import reserve_output_directory
 from .policy_process import PolicyProcessAdapter
@@ -87,6 +88,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--benchmark-manifest", type=Path, required=True)
     parser.add_argument("--policy-config", type=Path, help="Policy process contract (roboscope-policy.json)")
     parser.add_argument("--evaluation-config", type=Path)
+    parser.add_argument(
+        "--profile",
+        action="store_true",
+        help="capture each Worker's first episode with Nsight Systems into <output-dir>/profile/; "
+        "needs Nsight Systems (nsys on PATH) and --quick-test or --concurrency and --replicas",
+    )
     parser.add_argument(
         "--autotune-strategy",
         help=f"K/g autotune strategy, one of {', '.join(autotune_strategies())}; overrides the "
@@ -209,6 +216,10 @@ def _preflight_evaluation(
             raise ValueError("--quick-test runs at K=1/g=1 and cannot be combined with --concurrency")
         if args.autotune_strategy is not None:
             raise ValueError("--autotune-strategy selects a search and cannot be combined with a fixed K/g")
+    if args.profile:
+        if not args.quick_test and not fixed:
+            raise ValueError("--profile requires --quick-test or --concurrency and --replicas")
+        require_nsys()
     if args.shard_count is not None and args.shard_index is None:
         raise ValueError("--shard-count requires --shard-index")
     if args.shard_index is not None and args.shard_index < 0:
@@ -295,6 +306,7 @@ def _run_evaluation(
                 phase_timing_callback=phase_timing_callback,
                 shard_kwargs=shard_kwargs,
                 cuda_mps=cuda_mps,
+                profile=args.profile,
             )
         else:
             output, selected = _autotuned_run(
@@ -535,6 +547,7 @@ def run_candidate(
     phase_timing_callback: PhaseTimingCallback | None = None,
     shard_kwargs: dict[str, Any] | None = None,
     cuda_mps: CudaMpsSession | None = None,
+    profile: bool = False,
 ) -> dict[str, Any]:
     adapter = (
         factory.create_probe(request, manifest, concurrency) if probe else factory.create(request, manifest)
@@ -548,6 +561,7 @@ def run_candidate(
             concurrency=concurrency,
             base_port=int(manifest.defaults.get("base_port", 16694)),
             ready_timeout_s=float(manifest.defaults.get("ready_timeout_s", 900)),
+            profile=profile,
             **(shard_kwargs or {}),
         ),
         inference=inference,

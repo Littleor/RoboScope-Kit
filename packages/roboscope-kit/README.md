@@ -146,6 +146,23 @@ To measure or reproduce one configuration, add `--concurrency K --replicas G`, f
 `result.json` records `"autotune": {"k": K, "g": G, "mode": "fixed"}`. Both flags are required together,
 and neither can be combined with `--quick-test` or `--autotune-strategy`.
 
+### Profiling
+
+Add `--profile` to `--quick-test` or to a fixed `--concurrency K --replicas G` run to see where a Worker's
+time goes. Each Worker then runs under Nsight Systems, and its first episode is written to
+`<output-dir>/profile/worker-<id>-attempt-<n>.nsys-rep`. The report holds the CUDA kernels and API calls of the
+Worker and its child processes, with NVTX ranges for the episode and each Policy request (`policy.act`,
+`policy.observe`). Open it in Nsight Systems or summarize it with `nsys stats`.
+
+Profiling needs Nsight Systems on the machine that runs the evaluation, which the Kit does not install.
+Install its CLI from [NVIDIA](https://developer.nvidia.com/nsight-systems/get-started) so that `nsys` is on
+`PATH`; it was checked with 2026.5.1. Without `nsys`, `--profile` stops before any Worker starts.
+
+The ranges are written through Nsight Systems' own injection library, so no environment needs an extra
+package, and without `--profile` nothing is loaded. Capture starts when the Worker's `PolicyClient` resets an
+episode, so benchmarks with their own client, such as RoboTwin, record nothing yet. Tracing slows the run, so
+`manifest.json` records `"profile": true`, and such a run is not a throughput measurement.
+
 ### Progress and errors
 
 RoboTwin and RoboCasa report each finished episode as it completes, so progress moves while a long Work

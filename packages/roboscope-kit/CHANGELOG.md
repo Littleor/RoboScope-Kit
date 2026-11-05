@@ -2,6 +2,12 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b25 - 2026-11-05
+
+- Add `--profile`, which runs each Worker under Nsight Systems and captures its first episode, starting from
+  `PolicyClient`'s `episode` range, into `<output-dir>/profile/`. It needs `nsys` on `PATH` and
+  `--quick-test` or a fixed `--concurrency K --replicas G`, and `manifest.json` records `"profile": true`.
+
 ## 0.8.0b24 - 2026-11-05
 
 - `PolicyClient` marks each episode and each Policy request with NVTX ranges when the process runs under
