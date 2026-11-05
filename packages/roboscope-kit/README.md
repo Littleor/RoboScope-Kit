@@ -163,6 +163,9 @@ package, and without `--profile` nothing is loaded. Capture starts when the Work
 episode, so benchmarks with their own client, such as RoboTwin, record nothing yet. Tracing slows the run, so
 `manifest.json` records `"profile": true`, and such a run is not a throughput measurement.
 
+How to read the reports, which benchmarks are covered, and the findings so far are in the
+[profiling notes](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/docs/profiling.md).
+
 ### Progress and errors
 
 RoboTwin and RoboCasa report each finished episode as it completes, so progress moves while a long Work

@@ -55,7 +55,10 @@ to PyPI by hand.
 Write everything in the repository in English: code, comments, documentation, and commit messages.
 
 Keep the package README, the protocol documents, and the example READMEs consistent whenever
-user-facing evaluation behavior changes. The package README is also the PyPI project page, so link to
+user-facing evaluation behavior changes. After a `--profile` run, add what it found (date, machine,
+configuration, Kit version) to the benchmark's own documentation and link it from the Findings list in
+`packages/roboscope-kit/docs/profiling.md`; update that file's coverage table when a benchmark is first
+profiled. The package README is also the PyPI project page, so link to
 other repository files with absolute GitHub URLs.
 
 ## Issue and PR titles
