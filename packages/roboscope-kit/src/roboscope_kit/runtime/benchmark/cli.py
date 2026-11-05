@@ -9,6 +9,7 @@ import argparse
 import os
 import subprocess
 import sys
+from contextlib import ExitStack
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
@@ -159,26 +160,27 @@ def main(argv: list[str] | None = None) -> int:
             pass
         return _cli_error(exc)
 
-    try:
-        with reserve_output_directory(args.output_dir):
-            timing_recorder = None
-            try:
-                if args.self_test:
-                    result = factory.self_test(manifest, args.output_dir)
-                    atomic_json(args.output_dir / "self-test.json", result)
-                    return 0
-                timing_recorder = BenchmarkTimingRecorder(args.output_dir / "metrics.json")
-                return _run_evaluation(
-                    args, benchmark, manifest, factory, plan, timing_recorder.handle_phase,
-                )
-            except Exception as exc:
-                _record_error(args.output_dir, exc)
-                raise
-            finally:
-                if timing_recorder is not None:
-                    timing_recorder.close()
-    except Exception as exc:
-        return _cli_error(exc)
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(reserve_output_directory(args.output_dir))
+        except OSError as exc:
+            return _cli_error(exc)
+        timing_recorder = None
+        try:
+            if args.self_test:
+                result = factory.self_test(manifest, args.output_dir)
+                atomic_json(args.output_dir / "self-test.json", result)
+                return 0
+            timing_recorder = BenchmarkTimingRecorder(args.output_dir / "metrics.json")
+            return _run_evaluation(
+                args, benchmark, manifest, factory, plan, timing_recorder.handle_phase,
+            )
+        except Exception as exc:
+            _record_error(args.output_dir, exc)
+            raise
+        finally:
+            if timing_recorder is not None:
+                timing_recorder.close()
 
 
 def _preflight_evaluation(

@@ -133,20 +133,31 @@ def test_failed_preflight_cannot_append_to_another_run(invocation):
         assert (output / ".run.lock").exists()
 
 
-@pytest.mark.parametrize("error", [RuntimeError("failed"), KeyboardInterrupt()])
-def test_run_failure_releases_lock(invocation, monkeypatch, error):
+@pytest.mark.parametrize("error", [RuntimeError("failed"), FileExistsError("failed"), KeyboardInterrupt()])
+def test_run_failure_releases_lock(invocation, monkeypatch, capsys, error):
     args, output = invocation
+    closed = []
+    original_close = cli.BenchmarkTimingRecorder.close
+
+    def close(recorder):
+        original_close(recorder)
+        closed.append(recorder)
 
     def fail(**kwargs):
         raise error
 
+    monkeypatch.setattr(cli.BenchmarkTimingRecorder, "close", close)
     monkeypatch.setattr(cli, "run_candidate", fail)
-    if isinstance(error, KeyboardInterrupt):
-        with pytest.raises(KeyboardInterrupt):
-            cli.main(args + ["--quick-test"])
-    else:
-        assert cli.main(args + ["--quick-test"]) == 1
-        assert json.loads((output / "errors.jsonl").read_text())["message"] == "failed"
+    with pytest.raises(type(error)) as raised:
+        cli.main(args + ["--quick-test"])
+    assert raised.value is error
+    assert raised.traceback[-1].name == "fail"
+    assert capsys.readouterr().err == ""
+    if isinstance(error, Exception):
+        record = json.loads((output / "errors.jsonl").read_text())
+        assert record["message"] == "failed"
+        assert record["error_type"] == type(error).__name__
+    assert len(closed) == 1
     assert not (output / ".run.lock").exists()
     assert (output / "metrics.json").exists()
     with pytest.raises(FileExistsError), reserve_output_directory(output):
