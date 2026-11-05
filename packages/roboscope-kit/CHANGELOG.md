@@ -2,6 +2,11 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b20 - 2026-11-05
+
+- Remove unreachable RoboTwin seed-cache fallbacks for manifests without a benchmark protocol.
+  The factory already requires that protocol to select the task list.
+
 ## 0.8.0b19 - 2026-11-05
 
 - Remove unused CLI progress-callback plumbing left after the old progress contract was removed.

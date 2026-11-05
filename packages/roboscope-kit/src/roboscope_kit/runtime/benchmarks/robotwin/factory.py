@@ -19,7 +19,6 @@ from roboscope_kit.runtime.benchmark.factories import (
 from roboscope_kit.runtime.benchmark.manifest import BenchmarkManifest
 
 from .adapter import ROBOTWIN_ALL_TASKS, RoboTwinBenchmarkAdapter, RoboTwinRuntimeConfig
-from .seed_cache import validate_seed_cache_dir
 from .seed_protocol import protocol_suite, validate_seed_cache_generation
 
 
@@ -57,15 +56,7 @@ class RoboTwinBenchmarkFactory:
         tasks: tuple[str, ...],
         episodes: int,
     ) -> None:
-        protocol = manifest.benchmark_protocols.get(BenchmarkName.ROBOTWIN)
-        if protocol is None:
-            validate_seed_cache_dir(
-                adapter.config.seed_cache_dir,
-                adapter.config.suite,
-                tasks,
-                episodes,
-            )
-            return
+        protocol = manifest.benchmark_protocols[BenchmarkName.ROBOTWIN]
         scanner_path = manifest.runtime_path("seed_scanner_path")
         evidence = validate_seed_cache_generation(
             generation_dir=adapter.config.seed_cache_dir,
@@ -103,9 +94,8 @@ class RoboTwinBenchmarkFactory:
                 episodes = max(episodes, items_per_task * shard)
         else:
             indices = representative_indices(len(tasks), task_count)
-        protocol = manifest.benchmark_protocols.get(BenchmarkName.ROBOTWIN)
-        if protocol is not None:
-            episodes = min(episodes, int(protocol_suite(protocol, request.suite)["episodes_per_task"]))
+        protocol = manifest.benchmark_protocols[BenchmarkName.ROBOTWIN]
+        episodes = min(episodes, int(protocol_suite(protocol, request.suite)["episodes_per_task"]))
         selected = tuple(tasks[index] for index in indices)
         adapter = self._create(
             request,
@@ -115,8 +105,6 @@ class RoboTwinBenchmarkFactory:
             protocol_run=True,
             require_exact_episodes=False,
         )
-        if protocol is None:
-            return adapter
         formal_episodes = int(protocol_suite(protocol, request.suite)["episodes_per_task"])
         self._validate_formal_generation(adapter, manifest, tasks, formal_episodes)
         return adapter
@@ -164,13 +152,9 @@ class RoboTwinBenchmarkFactory:
         # optimized skip-play_once path the only path). A quick-test is exempt: it
         # may run without a cache, falling back to the official expert play_once
         # path so a fresh manifest can still be smoke-tested before seeds are scanned.
-        protocol = manifest.benchmark_protocols.get(BenchmarkName.ROBOTWIN)
+        protocol = manifest.benchmark_protocols[BenchmarkName.ROBOTWIN]
         if not protocol_run:
             seed_cache_dir = manifest.runtime_path("seed_cache_dir", required=False)
-            protocol_id = None
-            generation_digest = None
-        elif protocol is None:
-            seed_cache_dir = manifest.runtime_path("seed_cache_dir")
             protocol_id = None
             generation_digest = None
         else:
