@@ -317,20 +317,6 @@ metrics are undefined on a subset; the merge derives the metrics only after conf
 reduction trusts the reported counts and cannot prove that each record is unique; use the record-tree merge
 when you need that guarantee.
 
-## Policy HIL model components
-
-The package provides the model side of `policy_hil_continuous`: checkpoint discovery, immutable
-verification, Pi0.5 loading, processor construction, and the pinned LeRobot RTC configuration. It is not a
-robot-control service and never owns CAN, cameras, recording, progress, or uploads.
-
-A separately packaged robot-side HIL service imports `load_pi05_runtime` and keeps the official
-`RTCInferenceEngine`, the model, processor pipelines, robot arms, and cameras in one Python process; there is
-no action-chunk wire protocol. Checkpoints and the model resources they reference must live under
-explicitly allowed roots. The caller gets a `VerifiedCheckpoint` from `CheckpointCatalog`, records its
-hashes in the collection session, and passes it to the component factory together with an explicit local
-tokenizer path, because deployed checkpoints may contain paths from the training host. It requires the
-pinned LeRobot 0.6.0 used by the validated Pi0.5 RTC deployment.
-
 ## Python support
 
 Supported versions follow the [CPython release lifecycle](https://devguide.python.org/versions/): every

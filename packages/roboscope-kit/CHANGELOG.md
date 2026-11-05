@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0b18 - 2026-11-05
+
+- Remove `roboscope_kit.runtime.hil`, the model components for the former platform's separate robot-side
+  HIL service. The simulation benchmark runtime does not use these components.
+
 ## 0.8.0b17 - 2026-11-05
 
 - Remove the hosted-platform OSS checkpoint downloader. `--checkpoint-source` now accepts only an
