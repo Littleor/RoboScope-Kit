@@ -74,7 +74,7 @@ equal hardware.
 | [RoboDojo](https://github.com/RoboDojo-Benchmark/RoboDojo) | `arx_x5`, `arx_x5_randomized` | [RoboDojo guide](benchmarks/robodojo/README.md) |
 | [RoboCasa](https://github.com/robocasa/robocasa-gr1-tabletop-tasks) | `tabletop` | [Manifest](benchmarks/robocasa/benchmark-manifest.json) |
 | [CALVIN](https://github.com/mees/calvin) | `task_D_D`, `task_ABC_D`, `task_ABCD_D` | [CALVIN protocol](packages/roboscope-kit/CALVIN_EVALUATION_PROTOCOL.md) |
-| MetaWorld | `mt50` | [MetaWorld protocol](packages/roboscope-kit/METAWORLD_EVALUATION_PROTOCOL.md) |
+| [MetaWorld](https://github.com/Farama-Foundation/Metaworld) | `mt50` | [MetaWorld protocol](packages/roboscope-kit/METAWORLD_EVALUATION_PROTOCOL.md) |
 
 The simulators, datasets, and assets are not dependencies of the PyPI package; `build-runtime.sh` builds them
 separately. Simulator builds, real episodes, and model loading need Linux x86_64, a GPU, and network access.
