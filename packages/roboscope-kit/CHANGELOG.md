@@ -1,5 +1,7 @@
 # Changelog
 
+Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
+
 ## 0.8.0b19 - 2026-11-05
 
 - Remove unused CLI progress-callback plumbing left after the old progress contract was removed.
@@ -17,8 +19,7 @@
 
 ## 0.8.0b16 - 2026-11-05
 
-- The StarVLA example passes `BENCHMARK_BASE_SECURITY_TOKEN` whenever it is set; the hosted platform's
-  placeholder value for no token is no longer recognized.
+- Fix optional security-token handling in the StarVLA example.
 
 ## 0.8.0b15 - 2026-11-04
 
@@ -70,14 +71,13 @@
 
 ## 0.8.0b8 - 2026-10-31
 
-- Run the kit standalone, with no hosted platform:
+- Run the kit standalone:
   - The CLI takes every path as an argument: `--benchmark-manifest` (required, also for `shard_merge`),
-    `--policy-config` for the Policy process contract, and `--checkpoint-dir` for an `oss://` checkpoint.
+    and `--policy-config` for the Policy process contract.
     `load_policy_runtime_config(path)` takes the path; `POLICY_CONFIG_PATH` is removed.
   - The benchmark manifest is `benchmark-manifest.json`, schema 3 (`BenchmarkManifest`,
-    `load_benchmark_manifest`, module `runtime.benchmark.manifest`). It drops `image_name`,
-    `evaluation_kit_commit` and `sdk_version`, and relative `runtime` paths resolve against the manifest's
-    directory. RoboTwin runs its launcher with the kit's own interpreter, so its `runtime.python` is gone.
+    `load_benchmark_manifest`, module `runtime.benchmark.manifest`). Relative `runtime` paths resolve against
+    the manifest's directory. RoboTwin runs its launcher with the kit's own interpreter.
   - Each benchmark lives in `benchmarks/<benchmark>/` with its manifest and a `build-runtime.sh <install-dir>`
     that builds the pinned simulator environment and copies the manifest there. LIBERO gets its first build
     script; RoboTwin's launcher and seed tools move from `benchmarks/robotwin_official/`.
@@ -85,8 +85,6 @@
     to match.
   - Simulator workers import the kit from a directory that holds only `roboscope_kit`, so a pip-installed
     kit no longer exposes its `site-packages` to the simulator's interpreter.
-  - Removed: the `testlog.txt` progress contract and `--legacy-contract-root`, the shared-disk Control
-    Runtime installers and launchers, and the old LIBERO entrypoint `benchmarks/libero_official/`.
 
 ## 0.8.0b7 - 2026-10-31
 
@@ -146,35 +144,24 @@
 
 ## 0.8.0b4 - 2026-10-31
 
-- Retire the custom-image and image-baking paths. Move the X-VLA example from
-  `examples/custom_image_validation/xvla/` to `examples/xvla/` and drop its baking script. Remove the LIBERO
-  base-image bundle scripts (`build_official_image_bundle.sh`, `install_official_image_bundle.sh`,
-  `prepare_official_image_for_bake.sh`, `verify_official_image.sh`) and the related documentation.
+- Move the X-VLA example to `examples/xvla/`.
 
 ## 0.8.0b3 - 2026-10-31
 
-- Add the StarVLA Policy as an example under `examples/starvla/`, restored from the removed
-  `official_images/starvla/` source. It is the Policy behind the StarVLA measurements in the RoboScope Kit
-  technical report.
-
-## 0.8.0b2 - 2026-10-30
-
-- Remove the official StarVLA image source (`official_images/starvla/`) and its documentation. Custom
-  images are the only documented evaluation path. The X-VLA custom-image demo now installs its Control
-  Runtime from the official base-image bundle (`benchmarks/libero_official/build_official_image_bundle.sh`).
+- Add the StarVLA Policy as an example under `examples/starvla/`. It is the Policy behind the StarVLA
+  measurements in the RoboScope Kit technical report.
 
 ## 0.8.0b1 (Beta, published 2026-10-30)
 
 - Rename the SDK to RoboScope Kit. Install it with `pip install roboscope-kit` (previously
   `roboscope-inference-sdk`) and import it as `roboscope_kit` (previously `roboscope_inference_sdk`).
   `importlib.metadata.version()` now takes `"roboscope-kit"`. No compatibility alias is provided.
-- Move the package source from `packages/roboscope-inference-sdk/` to `packages/roboscope-kit/`; image
-  Control Runtimes now live under `/opt/roboscope/control-runtime/packages/roboscope-kit/`.
+- Move the package source from `packages/roboscope-inference-sdk/` to `packages/roboscope-kit/`.
 
 ## 0.7.0b77
 
 - Add an opt-in CUDA MPS mode for Policy replicas: `--cuda-mps` on the
-  benchmark CLI and `run-benchmark.sh`, off by default. The runtime owns a
+  benchmark CLI, off by default. The runtime owns a
   private MPS control daemon for the run, attaches every replica to it,
   fails if a replica does not attach, terminates a replica's MPS clients
   before signalling it, and records the session in `result.json`. Autotune
@@ -206,13 +193,11 @@
 - Define maintained CPython support by the upstream lifecycle, currently
   Python 3.11–3.15, and align package metadata and Ruff with that baseline.
 - Use Hatchling for wheel and source-distribution builds with SPDX metadata.
-- Select the locked Control Runtime NumPy wheel by its CPython/Linux tags so
-  simplified lockfile markers do not break official image bundle builds.
 - Gate changes on installed-artifact imports, the existing regression suites,
   Python 3.11 API checks and the declared interpreter matrix in CI.
 - Retain strict zip length validation; remove the Python 3.8-only API workarounds
   from this candidate. Older pinned simulator environments require separate
-  upgrade and image validation before adopting this SDK.
+  upgrades before adopting this SDK.
 
 ## 0.7.0b50 (Beta)
 
@@ -221,10 +206,6 @@
 - Include RoboCasa kitchen/GR1 assets and RoboTwin embodiment path preparation
   in their builders; use CALVIN's validation long-finger Panda configuration.
 - Align RoboTwin Quick Test preparation with its single-task workload.
-- Include all RoboTwin preparation scripts in the shared Control Runtime so its
-  source checksum matches the committed checkout.
-- Reuse the commit-pinned image bundle for offline RoboTwin preparation runtime
-  installation instead of downloading CPython and numpy again.
 
 ## 0.7.0b49 (Beta)
 
@@ -232,8 +213,7 @@
 
 ## 0.7.0b48 (Beta)
 
-- Cross-instance sharding is an opt-in Beta. SDK publication does not enable platform sharding
-  or promote any evaluation image to the official catalog.
+- Cross-instance sharding is an opt-in Beta.
 
 - Bound automatic shard counts by work-item capacity and reject invalid partitions before autotuning.
 - Validate shard protocol identity, per-item ownership and per-shard accounting before merging.
@@ -241,16 +221,12 @@
 
 ## 0.7.0b47
 
-- A shard run records the image's SDK version and evaluation kit commit (from the image manifest)
-  in its `shard.build`, and `merge_shard_results` refuses shards that ran different builds or do
-  not record one, naming each shard's build. The merged result carries the common build.
 - New `roboscope_inference_sdk.runtime.benchmark.suite_sizes.suite_total_records(benchmark, suite)`:
   how many records one formal run of a suite produces, for callers that must split a run before any
-  instance exists (the platform sizes a sharded run from it instead of keeping its own copy).
+  instance exists.
   Covers LIBERO, RoboTwin, CALVIN, RoboCasa and MetaWorld MT50 (50 tasks x 50 episodes).
-  `test_benchmark_suite_sizes` fails when the table drifts from the image manifests or the runtimes'
-  task lists, or when an image manifest is neither sized nor declared unsized. LIBERO+ has no fixed
-  size and returns `None`.
+  `test_benchmark_suite_sizes` checks the table against the runtimes' task lists. LIBERO+ has no fixed size
+  and returns `None`.
 
 ## 0.7.0b46
 
@@ -276,26 +252,10 @@
 - New `roboscope_inference_sdk.runtime.benchmark.shard_merge` module: validates the
   shard partition (disjoint items, full coverage, terminal accounting) and merges
   shard results with count metrics only, keeping per-shard rate metrics as provenance.
-- The legacy `testlog.txt` contract now counts a shard's own partition instead of the
-  full workload. It previously reported the unsharded total, so every sharded run
-  showed the whole suite as its denominator and then failed its completeness check
-  with `legacy protocol expected N results, received N/shards`.
-
-## 0.7.0b44
-
-- Add MetaWorld MT50 support to the official StarVLA Policy image: the
-  benchmark-name image preprocessing dispatch now covers `metaworld`, and the
-  official image declares the pinned StarVLA MetaWorld reference observation
-  pipeline (corner2, 480 render, 180-degree rotation, 2/3 center crop,
-  224x224 output) as its `benchmark_config.metaworld` default.
-- Ship the pinned upstream MetaWorld data registry (`metaworld_mt50` mixture
-  and `metaworld_robot` DataConfig) into the official image so StarVLA
-  MetaWorld checkpoints resolve their dataset mixture at Policy load; the
-  image install and verify scripts cover the installed file.
 
 ## 0.7.0b43
 
-- Add the MetaWorld MT50 platform benchmark (`metaworld`, protocol
+- Add the MetaWorld MT50 benchmark (`metaworld`, protocol
   `metaworld-v1`, suite `mt50`). The SDK-native adapter reuses the pinned
   upstream `metaworld.evaluation.evaluation` loop over one frozen
   `MT50(seed=42)` training-goal artifact and scores the four-difficulty macro
@@ -310,62 +270,13 @@
   `benchmark_config` declaration; readiness/preflight returns the declaration
   without importing the Policy or loading a model.
 
-## 0.7.0b41
-
-- Restore shared-runtime archive timestamps after flushing extracted data on
-  AutoDL FS. Keep full tar comparison as the recovery acceptance gate for
-  benchmark runtimes and the shared Control Runtime.
-
-## 0.7.0b40
-
-- Shared-runtime rollout tooling: select one benchmark per operation, retain
-  the expanded runtime through end-to-end acceptance, and provide explicit
-  rollback and finalization. Preserve complete recovery archives and original
-  preparation scripts; reclaim the shared Control Runtime as a separate batch.
-- The production compaction rollout retains the existing b31 live manifests,
-  launchers and image runtime. This release changes operator tooling only.
-
-## 0.7.0b39
-
-- Revert the PI0.5 checkpoint-loading changes: restore the prior PI0.5 checkpoint loading and
-  normalizer lookup behavior. Retain the Python 3.10 timestamp import fix.
-
-## 0.7.0b38
-
-- Policy HIL: use `timezone.utc` for checkpoint timestamps so the SDK imports
-  successfully on Python 3.10.
-
-## 0.7.0b37
-
-- Policy HIL: resolve normalizer weights from the selected checkpoint's
-  declared preprocessing pipeline instead of assuming a fixed step index.
-
-## 0.7.0b36
-
-- Policy HIL: construct PI0.5 on empty parameters and assign safetensors directly
-  on the target device, avoiding random initialization and the subsequent full
-  checkpoint copy while retaining strict key and materialization checks.
-
-All notable user-visible changes to RoboScope Kit releases are
-recorded here. Versions follow Semantic Versioning; the compatibility rules
-and release-owner responsibilities for the current Beta series are documented
-in `README.md`.
-
 ## Changes between 0.7.0b5 and 0.7.0b36
 
-- AutoDL shared runtimes: store the expanded RoboCasa, RoboTwin, and LIBERO+
-  runtime roots as verified zstd level-3 tar archives, extract the selected
-  runtime onto the instance-local expanded system disk, and keep the shared
-  Control Runtime installer workspace local. RoboTwin excludes retired image
-  and result trees from its cold-start payload. This releases the shared file
-  storage from its 200,000-inode design limit while minimizing transfer time.
 - Benchmark docs: remove the retired `docs/robotwin-vectorized-runtime.md`
   archive and the redundant `docs/benchmark-results.html` mirror, and fold
   the archived report's benchmark machine specification, bit-exact fidelity
   verification, champion resource profile, and cache-grow/recycling analysis
   into `docs/benchmark-results.md`.
-- Official image bundles now install and checksum the RoboTwin native/cache
-  paired verifier alongside the exact seed scanner used by formal generation.
 - RoboTwin runtime preparation: reconstruct the protocol-pinned pristine
   checkout from committed Git objects for every run, apply the deterministic
   Python 3.8 annotation patch as a fixed derived commit, attach large simulator
@@ -377,9 +288,6 @@ in `README.md`.
   representative workload and reject candidates whose success rate falls more
   than 15% below the minimum safe-concurrency baseline. This keeps stateful
   third-party Policies at the last correctness-preserving K/g pair.
-- Official runtime ownership: move the live StarVLA LIBERO runtime under
-  `benchmarks/libero_official` and remove the obsolete benchmark-autotune
-  examples tree and retired JSON evidence.
 - Policy action contracts: every Policy declares one action representation per
   supported Benchmark. The runtime validates the identifier and requires all
   loaded replicas to resolve the same contract before evaluation starts.
@@ -397,11 +305,7 @@ in `README.md`.
 - Formal RoboTwin runs now select one immutable seed generation by digest,
   validate its full 50-task identity before workers start, and record the
   protocol and generation identities in result metadata.
-- RoboTwin cache provenance tooling now ships the exact scanner source in the
-  official bundle and provides a paired native/cache episode-state verifier.
-- Documentation and examples: classify model-specific custom-image validation
-  demos as internal engineering evidence, separate from the official image
-  catalog and product support matrix.
+- RoboTwin cache provenance tooling provides a paired native/cache episode-state verifier.
 - RoboTwin full runs: split each task into manifest-sized episode windows and
   interleave windows across tasks. Records retain their canonical per-task
   episode indices and seed-cache entries, while idle workers can take later
@@ -426,9 +330,8 @@ in `README.md`.
 - Benchmark autotune: bound every real-episode candidate to 15 minutes and the
   complete tuning phase to 30 minutes, reject OOM/Worker-failure candidates as
   soon as the runtime observes them, and atomically persist accepted, rejected,
-  timed-out, and running candidate state so the platform can audit partial
-  tuning progress. A rejected or timed-out candidate falls back to the last
-  healthy K/g selection instead of failing the formal evaluation.
+  timed-out, and running candidate state to record partial tuning progress. A rejected or timed-out
+  candidate falls back to the last healthy K/g selection instead of failing the formal evaluation.
 - RoboTwin worker/launcher: add an opt-in persistent evaluation session
   (`--eval-session`, enabled automatically for full runs with a seed cache)
   that keeps one launcher process alive across task work items. Combined with
@@ -440,14 +343,14 @@ in `README.md`.
   batch instance is only reachable through the expert `play_once` grasp
   search, which the cache replaces, so its warmup is pure per-task planner
   construction overhead; `plan_single` EE planning semantics are unchanged.
-- RoboTwin launcher: add the explicit image-owned `ROBOTWIN_ACTION_TYPE=ee`
+- RoboTwin launcher: add the explicit `ROBOTWIN_ACTION_TYPE=ee`
   path for compact dual-arm end-effector actions while keeping qpos as the
-  platform default. EE execution uses the official `take_action(...,
+  default. EE execution uses the official `take_action(...,
   action_type="ee")` and cuRobo planner even with a seed cache.
-- CALVIN worker: add the image-owned `CALVIN_ACTION_TYPE=absolute` opt-in that
+- CALVIN worker: add the `CALVIN_ACTION_TYPE=absolute` opt-in that
   reconstructs an absolute `(pos, quat_xyzw, grip)` tuple from a compact 7-dim
   action chunk, validating the quaternion xyz norm and rebuilding the
-  non-negative `w`. The platform default stays the native relative 7-dim
+  non-negative `w`. The default stays the native relative 7-dim
   action contract.
 - LIBERO runtimes: prepare LIBERO and LIBERO+ with run-local configuration and
   verify package, SDK worker, and benchmark asset paths in the actual simulator
