@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0b20 - 2026-11-05
+
+- Refuse nonempty benchmark CLI output directories before writing any artifacts, preserving previous
+  results and logs on accidental reruns. Reserve empty directories exclusively to prevent concurrent
+  CLI launches from sharing them. Use a new output directory for each evaluation or self-test.
+
 ## 0.8.0b19 - 2026-11-05
 
 - Remove unused CLI progress-callback plumbing left after the old progress contract was removed.

@@ -24,6 +24,9 @@ StarVLA checkpoints.
 
 ## Run a demo
 
+Use a new or empty `--output-dir` for every CLI invocation, including quick tests, self-tests, and
+retries. Existing run directories are rejected to preserve results and logs; runs are not resumed.
+
 The example directory, the StarVLA checkout, and every environment can live wherever you choose; the paths
 below are placeholders.
 

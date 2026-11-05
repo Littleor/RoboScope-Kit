@@ -139,6 +139,8 @@ python -m roboscope_kit.runtime.benchmark \
 
 Add `--quick-test` for a short real evaluation with one Worker and one Server. Results, progress, and logs are
 written under `--output-dir`.
+Use a new or empty output directory for every invocation, including `--self-test` and retries. The CLI
+refuses nonempty directories to preserve existing results and logs; it does not resume previous runs.
 
 The [package guide](packages/roboscope-kit/README.md) covers the rest: how evaluation works, automatic
 tuning, writing a Policy, CUDA MPS, and cross-instance sharding.

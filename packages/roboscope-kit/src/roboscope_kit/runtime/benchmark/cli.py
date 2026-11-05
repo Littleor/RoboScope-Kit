@@ -52,7 +52,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--benchmark", choices=tuple(item.value for item in BenchmarkName), required=True)
     parser.add_argument("--suite")
     parser.add_argument("--checkpoint-source", type=Path, help="absolute path to a local checkpoint")
-    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--output-dir", type=Path, required=True, help="new or empty directory for this run's artifacts"
+    )
     parser.add_argument("--episodes", type=int)
     parser.add_argument("--quick-test", action="store_true")
     parser.add_argument("--self-test", action="store_true")
@@ -101,11 +103,29 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _prepare_output_directory(output_dir: Path) -> Path:
+    """Reserve an empty output directory before any run artifacts can be overwritten."""
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    message = (
+        f"output directory is not empty or is already in use: {output_dir}. "
+        "Choose a new --output-dir; existing runs cannot be resumed or overwritten."
+    )
+    if any(output_dir.iterdir()):
+        raise FileExistsError(message)
+    errors_path = output_dir / "errors.jsonl"
+    # Exclusive creation also protects against simultaneous starts in an empty directory.
+    try:
+        errors_path.touch(exist_ok=False)
+    except FileExistsError as exc:
+        raise FileExistsError(message) from exc
+    return errors_path
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    errors_path = args.output_dir / "errors.jsonl"
-    errors_path.unlink(missing_ok=True)
+    # Reject reuse outside the error handler: logging there would modify the previous run.
+    errors_path = _prepare_output_directory(args.output_dir)
     timing_recorder = None
     try:
         benchmark = BenchmarkName(args.benchmark)

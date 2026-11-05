@@ -90,7 +90,11 @@ python -m roboscope_kit.runtime.benchmark \
 before starting the evaluation. The runtime validates the Policy process contract before every run.
 `--quick-test` runs a short real evaluation with one Worker and one Server; without it, the run is a full
 scored evaluation. `--self-test` only checks that the manifest's runtime paths exist. Results, progress,
-and logs are written under `--output-dir`.
+and logs are written under `--output-dir`. The directory must be new or empty, including for `--self-test`.
+The CLI refuses nonempty directories before modifying their contents and reserves an empty directory
+with `errors.jsonl` so concurrent launches cannot share it. Use separate directories for self-tests,
+quick tests, full evaluations, and retries after failed or interrupted runs; restarting the CLI does not
+resume a previous run.
 
 The runtime is built on three ideas:
 

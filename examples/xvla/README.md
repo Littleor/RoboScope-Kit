@@ -48,6 +48,9 @@ The runtime checks these paths before every evaluation.
 
 ## Running Evaluations
 
+Use a new or empty `--output-dir` for every CLI invocation, including quick tests, self-tests, and
+retries. Existing run directories are rejected to preserve results and logs; runs are not resumed.
+
 Run the benchmark CLI from a Python that has `roboscope-kit` installed, for example LIBERO-10:
 
 ```bash
