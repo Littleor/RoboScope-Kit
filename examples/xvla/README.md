@@ -48,6 +48,10 @@ The runtime checks these paths before every evaluation.
 
 ## Running Evaluations
 
+Use a new or empty `--output-dir` for each quick test, self-test, or evaluation. Only directories
+containing `errors.jsonl` alone can be retried in place. Existing run artifacts are preserved, not resumed.
+Keep shell and scheduler logs outside the output directory.
+
 Run the benchmark CLI from a Python that has `roboscope-kit` installed, for example LIBERO-10:
 
 ```bash

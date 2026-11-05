@@ -90,7 +90,16 @@ python -m roboscope_kit.runtime.benchmark \
 before starting the evaluation. The runtime validates the Policy process contract before every run.
 `--quick-test` runs a short real evaluation with one Worker and one Server; without it, the run is a full
 scored evaluation. `--self-test` only checks that the manifest's runtime paths exist. Results, progress,
-and logs are written under `--output-dir`.
+and logs are written under `--output-dir`. Use a new or empty directory for each evaluation or self-test.
+A directory containing only `errors.jsonl` can be retried; new errors are appended to preserve earlier
+failures. Pure preflight checks run before any evaluation artifacts are written. Once a run has produced
+other artifacts, choose a new directory: restarting the CLI does not resume it.
+
+The CLI reserves the directory with an exclusively created `.run.lock` and removes it on normal exit,
+handled failure, or interruption. A clean run does not create `errors.jsonl`. After an uncatchable kill
+or machine crash, remove a leftover lock only after confirming that its process and children have stopped;
+existing run artifacts still require a new directory. Keep shell `tee` output and scheduler logs outside
+`--output-dir`, since files created before launch also prevent reuse.
 
 The runtime is built on three ideas:
 
@@ -143,7 +152,8 @@ RoboTwin and RoboCasa report each finished episode as it completes, so progress 
 Item is still running; the official score still uses only each item's final result. Progress is written to
 `<output-dir>/progress.json` and `<output-dir>/events.jsonl`.
 
-All runtime errors are appended to `<output-dir>/errors.jsonl`: recoverable Worker failures as well as
+Output-directory rejections are printed to stderr without changing existing logs. For an available
+output directory, runtime errors are appended to `<output-dir>/errors.jsonl`: recoverable Worker failures as well as
 checkpoint, Policy Server, simulator, and configuration errors. When a RoboTwin simulator crashes with a
 normal error exit, the episodes it finished are kept and the rest of that window count as failures, so the
 evaluation continues. Out-of-memory and signal exits restart the Worker and replay its Work Item, with one
@@ -276,6 +286,9 @@ python -m roboscope_kit.runtime.benchmark \
     --shard-index I --shard-count N --output-dir /runs/shard-I
 ```
 
+Each shard needs its own output directory. Retrying a shard that already produced artifacts requires a
+new directory; merge using the new shard path. An error-only preflight failure can be retried in place.
+
 Without `--shard-count`, the count is derived from the workload (one shard per 500 episodes, adjustable with
 `--shard-episodes`), capped at the number of Work Items; an explicit count above that cap is rejected.
 Quick tests cannot be sharded. Autotune always runs the full, unsharded probe on every instance; sharding
@@ -292,6 +305,9 @@ python -m roboscope_kit.runtime.benchmark.shard_merge \
     --shard-dir /runs/shard-0 ... --shard-dir /runs/shard-N-1 \
     --output-dir /runs/merged
 ```
+
+The merge also reserves its output directory and refuses existing artifacts, including `result.json`.
+Use a new directory for each completed merge.
 
 This merge rebuilds the workload from the benchmark manifest, so it needs the same manifest and benchmark
 runtime assets (including RoboTwin's seed cache). MetaWorld runs and merges must use the same

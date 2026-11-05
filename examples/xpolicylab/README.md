@@ -33,6 +33,10 @@ others through `observe()`.
 
 ## Run Simate_beta
 
+Use a new or empty `--output-dir` for each quick test, self-test, or evaluation. Only directories
+containing `errors.jsonl` alone can be retried in place. Existing run artifacts are preserved, not resumed.
+Keep shell and scheduler logs outside the output directory.
+
 `Simate_beta` is the validated configuration: the released Simate-beta AE checkpoint
 ([`SIPAILab/sipai-robodojo-eval-ae`](https://huggingface.co/SIPAILab/sipai-robodojo-eval-ae) at `0738aab`),
 FP32, 10 flow steps, 50 predicted actions of which the first 10 are executed, and a 25-frame history sampled

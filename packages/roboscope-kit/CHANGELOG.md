@@ -2,6 +2,14 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b21 - 2026-11-05
+
+- Protect evaluation and shard-merge output directories with an exclusive, temporary run lock.
+  Preserve existing results, allow retries after preflight failures, and create error logs only on failure.
+- Preserve runtime exception tracebacks after logging failures and releasing the output reservation;
+  only preflight and reservation failures use concise CLI errors.
+- Keep simulator build self-tests repeatable and document separate output directories for completed runs.
+
 ## 0.8.0b20 - 2026-11-05
 
 - Remove unreachable RoboTwin seed-cache fallbacks for manifests without a benchmark protocol.

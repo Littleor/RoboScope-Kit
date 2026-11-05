@@ -304,6 +304,7 @@ PY
 install -m 0644 "${MANIFEST}" "${INSTALL_DIR}/benchmark-manifest.json"
 echo "Built RoboCasa runtime in ${INSTALL_DIR} from StarVLA ${STARVLA_COMMIT}"
 
+rm -rf -- "${INSTALL_DIR}/self-test"
 "${KIT_PYTHON}" -m roboscope_kit.runtime.benchmark --benchmark robocasa --self-test \
   --benchmark-manifest "${INSTALL_DIR}/benchmark-manifest.json" \
   --output-dir "${INSTALL_DIR}/self-test"

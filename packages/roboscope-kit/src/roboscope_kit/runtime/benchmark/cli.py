@@ -8,7 +8,9 @@ from __future__ import annotations
 import argparse
 import os
 import subprocess
-from dataclasses import replace
+import sys
+from contextlib import ExitStack
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +42,7 @@ from .manifest import (
     load_benchmark_manifest,
 )
 from .orchestrator import ParallelBenchmarkRuntime, RuntimeConfig, append_event
+from .output import reserve_output_directory
 from .policy_process import PolicyProcessAdapter
 from .queue import atomic_json
 from .registry import benchmark_factory
@@ -52,7 +55,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--benchmark", choices=tuple(item.value for item in BenchmarkName), required=True)
     parser.add_argument("--suite")
     parser.add_argument("--checkpoint-source", type=Path, help="absolute path to a local checkpoint")
-    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--output-dir", type=Path, required=True,
+        help="new or empty run directory; directories containing only errors.jsonl can be retried",
+    )
     parser.add_argument("--episodes", type=int)
     parser.add_argument("--quick-test", action="store_true")
     parser.add_argument("--self-test", action="store_true")
@@ -101,12 +107,34 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+@dataclass(frozen=True)
+class EvaluationPlan:
+    policy: PolicyRuntimeConfig
+    benchmark_spec: BenchmarkSpec
+    evaluation_config: dict[str, Any] | None
+    gpu_devices: tuple[str, ...]
+    shard_kwargs: dict[str, Any]
+
+
+def _record_error(output_dir: Path, exc: Exception) -> None:
+    append_event(
+        output_dir / "errors.jsonl",
+        {
+            "type": "evaluation-error",
+            "component": "runtime",
+            "error_type": type(exc).__name__,
+            "message": str(exc),
+        },
+    )
+
+
+def _cli_error(exc: Exception) -> int:
+    print(f"benchmark failed: {' '.join(str(exc).splitlines())}", file=sys.stderr)
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    errors_path = args.output_dir / "errors.jsonl"
-    errors_path.unlink(missing_ok=True)
-    timing_recorder = None
     try:
         benchmark = BenchmarkName(args.benchmark)
         if args.autotune_strategy not in (None, *autotune_strategies()):
@@ -120,40 +148,47 @@ def main(argv: list[str] | None = None) -> int:
         factory = benchmark_factory(benchmark)
         if args.self_test:
             manifest.validate_request(benchmark, None)
-            result = factory.self_test(manifest, args.output_dir)
-            atomic_json(args.output_dir / "self-test.json", result)
-            return 0
-        timing_recorder = BenchmarkTimingRecorder(args.output_dir / "metrics.json")
-        return _run_evaluation(
-            args,
-            benchmark,
-            manifest,
-            factory,
-            timing_recorder.handle_phase,
-        )
+            plan = None
+        else:
+            plan = _preflight_evaluation(args, benchmark, manifest, factory)
     except Exception as exc:
-        append_event(
-            errors_path,
-            {
-                "type": "evaluation-error",
-                "component": "runtime",
-                "error_type": type(exc).__name__,
-                "message": str(exc),
-            },
-        )
-        raise
-    finally:
-        if timing_recorder is not None:
-            timing_recorder.close()
+        # Log only if this directory is safe to reuse; never touch another run's artifacts.
+        try:
+            with reserve_output_directory(args.output_dir):
+                _record_error(args.output_dir, exc)
+        except OSError:
+            pass
+        return _cli_error(exc)
+
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(reserve_output_directory(args.output_dir))
+        except OSError as exc:
+            return _cli_error(exc)
+        timing_recorder = None
+        try:
+            if args.self_test:
+                result = factory.self_test(manifest, args.output_dir)
+                atomic_json(args.output_dir / "self-test.json", result)
+                return 0
+            timing_recorder = BenchmarkTimingRecorder(args.output_dir / "metrics.json")
+            return _run_evaluation(
+                args, benchmark, manifest, factory, plan, timing_recorder.handle_phase,
+            )
+        except Exception as exc:
+            _record_error(args.output_dir, exc)
+            raise
+        finally:
+            if timing_recorder is not None:
+                timing_recorder.close()
 
 
-def _run_evaluation(
+def _preflight_evaluation(
     args: argparse.Namespace,
     benchmark: BenchmarkName,
     manifest,
     factory: BenchmarkFactory,
-    phase_timing_callback: PhaseTimingCallback,
-) -> int:
+) -> EvaluationPlan:
     if not args.suite:
         raise ValueError("--suite is required for benchmark evaluation")
     if not args.checkpoint_source:
@@ -184,20 +219,40 @@ def _run_evaluation(
         raise ValueError("--shard-episodes must be positive")
     manifest.validate_request(benchmark, args.suite)
     factory.validate_suite(args.suite)
-    with benchmark_phase(phase_timing_callback, "checkpoint_prepare_s"):
-        checkpoint = args.checkpoint_source
-        if not checkpoint.is_absolute():
-            raise ValueError("checkpoint source must be an absolute local path")
-        if not checkpoint.exists():
-            raise FileNotFoundError(f"checkpoint path does not exist: {checkpoint}")
+    _validate_checkpoint(args.checkpoint_source)
     policy = load_policy_runtime_config(args.policy_config)
-    evaluation_config, evaluation_config_path = _resolve_evaluation_config(
-        benchmark,
-        args.evaluation_config,
-        policy,
-        args.output_dir,
-    )
+    evaluation_config = _resolve_evaluation_config(benchmark, args.evaluation_config, policy)
     benchmark_spec = _build_benchmark_spec(benchmark, args.suite, evaluation_config)
+    gpu_devices = detect_gpu_devices()
+    if not gpu_devices:
+        raise RuntimeError("benchmark runtime requires at least one visible GPU")
+    return EvaluationPlan(
+        policy, benchmark_spec, evaluation_config, gpu_devices, _shard_kwargs(args, manifest),
+    )
+
+
+def _validate_checkpoint(checkpoint: Path) -> Path:
+    if not checkpoint.is_absolute():
+        raise ValueError("checkpoint source must be an absolute local path")
+    if not checkpoint.exists():
+        raise FileNotFoundError(f"checkpoint path does not exist: {checkpoint}")
+    return checkpoint
+
+
+def _run_evaluation(
+    args: argparse.Namespace,
+    benchmark: BenchmarkName,
+    manifest: BenchmarkManifest,
+    factory: BenchmarkFactory,
+    plan: EvaluationPlan,
+    phase_timing_callback: PhaseTimingCallback,
+) -> int:
+    with benchmark_phase(phase_timing_callback, "checkpoint_prepare_s"):
+        checkpoint = _validate_checkpoint(args.checkpoint_source)
+    evaluation_config_path = None
+    if plan.evaluation_config is not None:
+        evaluation_config_path = args.output_dir / "evaluation-config.json"
+        atomic_json(evaluation_config_path, plan.evaluation_config)
     request = BenchmarkRunRequest(
         benchmark=benchmark,
         suite=args.suite,
@@ -207,10 +262,11 @@ def _run_evaluation(
         quick_test=args.quick_test,
         evaluation_config_path=evaluation_config_path,
     )
-    gpu_devices = detect_gpu_devices()
-    if not gpu_devices:
-        raise RuntimeError("benchmark runtime requires at least one visible GPU")
-    shard_kwargs = _shard_kwargs(args, manifest)
+    policy = plan.policy
+    benchmark_spec = plan.benchmark_spec
+    gpu_devices = plan.gpu_devices
+    shard_kwargs = plan.shard_kwargs
+    fixed = args.concurrency is not None
     cuda_mps: CudaMpsSession | None = None
     try:
         if args.cuda_mps:
@@ -266,9 +322,8 @@ def _resolve_evaluation_config(
     benchmark: BenchmarkName,
     path: Path | None,
     policy: PolicyRuntimeConfig,
-    output_dir: Path,
-) -> tuple[dict[str, Any] | None, Path | None]:
-    """Resolve the benchmark evaluation config once and materialize it for workers.
+) -> dict[str, Any] | None:
+    """Resolve the benchmark evaluation config without writing run artifacts.
 
     Priority is an explicit ``--evaluation-config`` file, then the Policy file's
     ``benchmark_config`` declaration, then the default. Every worker and
@@ -278,12 +333,10 @@ def _resolve_evaluation_config(
     if benchmark is not BenchmarkName.METAWORLD:
         if path is not None:
             raise ValueError("--evaluation-config is only supported for the metaworld benchmark")
-        return None, None
+        return None
     declared = policy.benchmark_config.get("metaworld")
     config = load_evaluation_config(path) if path is not None else resolve_evaluation_config(declared)
-    target = output_dir / "evaluation-config.json"
-    atomic_json(target, config)
-    return config, target
+    return config
 
 
 def _build_benchmark_spec(

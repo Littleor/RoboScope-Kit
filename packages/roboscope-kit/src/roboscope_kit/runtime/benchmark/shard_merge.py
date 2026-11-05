@@ -35,6 +35,7 @@ from roboscope_kit.benchmark_specs import BenchmarkName
 from .factories import BenchmarkRunRequest
 from .manifest import BenchmarkManifest, load_benchmark_manifest
 from .orchestrator import aggregate_standard_results
+from .output import reserve_output_directory
 from .queue import WorkQueue, atomic_json
 from .registry import benchmark_factory
 from .schema import WorkItem, WorkResult, validate_terminal_accounting
@@ -65,16 +66,16 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.episodes is not None and args.episodes < 1:
             raise ValueError("--episodes must be positive")
-        merged = merge_shards(
-            benchmark=BenchmarkName(args.benchmark),
-            suite=args.suite,
-            episodes=args.episodes,
-            manifest_path=args.benchmark_manifest,
-            shard_dirs=args.shard_dir,
-            evaluation_config_path=args.evaluation_config,
-        )
-        args.output_dir.mkdir(parents=True, exist_ok=True)
-        atomic_json(args.output_dir / "result.json", merged)
+        with reserve_output_directory(args.output_dir):
+            merged = merge_shards(
+                benchmark=BenchmarkName(args.benchmark),
+                suite=args.suite,
+                episodes=args.episodes,
+                manifest_path=args.benchmark_manifest,
+                shard_dirs=args.shard_dir,
+                evaluation_config_path=args.evaluation_config,
+            )
+            atomic_json(args.output_dir / "result.json", merged)
     except (ValueError, RuntimeError, OSError, KeyError, TypeError) as exc:
         print(f"shard merge failed: {exc}", file=sys.stderr)
         return 1
