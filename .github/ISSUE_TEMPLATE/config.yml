@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Package README and Policy API
+    url: https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/README.md
+    about: How evaluation works, writing a Policy, autotune, sharding, and supported benchmarks.
+  - name: RoboScope Kit technical report
+    url: https://arxiv.org/abs/2611.03850
+    about: Integration, autotune, and throughput measurements behind the published results.

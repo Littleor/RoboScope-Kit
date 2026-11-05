@@ -1,0 +1,71 @@
+name: Performance
+description: Evaluation throughput, startup, autotune, or resource-use problems and optimization proposals.
+title: "perf(<scope>): "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title format: `perf(<scope>): <intended outcome>`, in English, for example
+        `perf(robodojo): improve RoboDojo evaluation throughput`.
+        Formal throughput is completed episodes / formal evaluation time. Report preparation, cold start,
+        model loading, tuning, formal rollout, result writing, and end-to-end time separately, and never
+        gain speed by reducing workload, changing observations, or changing scoring.
+  - type: dropdown
+    id: benchmark
+    attributes:
+      label: Benchmark
+      options:
+        - LIBERO
+        - LIBERO-Plus
+        - RoboTwin
+        - RoboDojo
+        - RoboCasa
+        - CALVIN
+        - MetaWorld
+        - Not benchmark-specific
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current state
+      description: What is slow or wasteful today, and where in the code or pipeline it happens.
+    validations:
+      required: true
+  - type: textarea
+    id: measurements
+    attributes:
+      label: Measurements
+      description: |
+        The baseline with its configuration: hardware, checkpoint, suite, episode count, K/g (fixed with
+        `--concurrency K --replicas G`, or the autotune strategy), and the time breakdown. Include
+        episodes/s and actual steps/s, and CPU/GPU/memory use.
+      value: |
+        Configuration: <GPU>, <benchmark/suite>, <Policy/checkpoint>, K<k>/g<g>, <n> episodes, roboscope-kit <version or commit>
+
+        | Phase | Time |
+        |---|---|
+        | Preparation / cold start | |
+        | Model loading | |
+        | Autotune | |
+        | Formal evaluation | |
+        | Result writing | |
+        | End to end | |
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Possible approach
+      description: Ideas, prior attempts and their results, and any compatibility concerns (for example the Policy protocol version, since the Policy runs in the user's own interpreter).
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance
+      description: The target and how it will be verified under the same hardware budget and evaluation protocol.
+      value: |
+        - [ ] Before/after measured with the same hardware, checkpoint, precision, observations, tasks/episodes, horizon, and scoring.
+        - [ ] Target reached: 
+        - [ ] Per-episode or per-task results show no missing/duplicate episodes and no systematic regression.
+        - [ ] Code changes bump the version and add a CHANGELOG entry; simulator changes go through `build-runtime.sh`.

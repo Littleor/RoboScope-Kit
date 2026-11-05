@@ -1,0 +1,45 @@
+name: Feature request
+description: A new capability of the Policy API, runtime CLI, autotune, sharding, or an example Policy.
+title: "feat(<scope>): "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title format: `feat(<scope>): <intended outcome>`, in English. Common scopes: `sdk`, `runtime`,
+        `autotune`, `sharding`, `starvla`, `xvla`, `xpolicylab`, or a benchmark name.
+        This repository covers simulation evaluation only: robot control, training, dataset collection, and
+        generic LeRobot engine code belong elsewhere.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Policy API (load / act / reset, capabilities, action contracts)
+        - Runtime CLI and output files
+        - Autotune (K/g)
+        - Cross-instance sharding
+        - Benchmark adapter or manifest
+        - Example Policy (examples/)
+        - CI and release
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do and what stops you today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The behavior or API you want. For Policy API changes, say how a Policy running an older roboscope-kit in its own interpreter is affected.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

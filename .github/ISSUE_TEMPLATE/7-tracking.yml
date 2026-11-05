@@ -1,0 +1,31 @@
+name: Tracking issue
+description: Track a group of related issues, an experiment series, or a follow-up list (maintainers).
+title: "chore(<scope>): track "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title format: `chore(<scope>): ...`, in English; use `repo` for repository-wide work.
+        A checked item means the linked work is fully delivered, not that a PR was opened or one run succeeded.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal and scope
+      description: What is tracked, what is out of scope, and how items depend on each other.
+    validations:
+      required: true
+  - type: textarea
+    id: items
+    attributes:
+      label: Items
+      description: One checkbox per issue or task, grouped if useful, with dependencies such as `#18 → #17`.
+      value: |
+        - [ ] #
+        - [ ] #
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Conventions and notes
+      description: Shared rules for the items, such as matched comparison conditions or where results are recorded.

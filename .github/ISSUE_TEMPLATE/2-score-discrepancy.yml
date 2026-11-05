@@ -1,0 +1,83 @@
+name: Score discrepancy
+description: The evaluation completes, but its score differs from the native evaluator, a published number, or an earlier run.
+title: "fix(<benchmark>): "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title format: `fix(<benchmark>): <which score differs from what>`, in English.
+        A single run with a similar or different total score does not establish equivalence or a regression;
+        include per-task results and say what randomness the benchmark has.
+  - type: dropdown
+    id: benchmark
+    attributes:
+      label: Benchmark
+      options:
+        - LIBERO
+        - LIBERO-Plus
+        - RoboTwin
+        - RoboDojo
+        - RoboCasa
+        - CALVIN
+        - MetaWorld
+    validations:
+      required: true
+  - type: input
+    id: suite
+    attributes:
+      label: Suite and protocol
+      description: The suite and, where it applies, the frozen protocol (for example RoboTwin `clean2random` under `robotwin2-native-step-lim-v2`).
+    validations:
+      required: true
+  - type: textarea
+    id: scores
+    attributes:
+      label: Scores
+      description: The Kit score and the reference score, with where the reference comes from (native evaluator run, paper, model card, earlier Kit version). Per-task scores in a table if you have them.
+      value: |
+        | | Kit | Reference |
+        |---|---|---|
+        | Overall | | |
+        | Episodes scored | | |
+
+        Reference source:
+    validations:
+      required: true
+  - type: textarea
+    id: matched
+    attributes:
+      label: Matched conditions
+      description: |
+        What was the same on both sides and what differed: checkpoint, precision, observations/cameras and
+        resolution, action representation and chunk size, control frequency, horizon/max steps, seeds or
+        initial states, episodes per task, and the success criterion.
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands
+      description: The Kit command and the native evaluator command (or the upstream entry point and commit).
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results
+      description: Attach or link `result.json` and `metrics.json`, and say whether `errors.jsonl` has entries and whether any episodes are missing or duplicated.
+  - type: input
+    id: kit-version
+    attributes:
+      label: roboscope-kit version
+      placeholder: 0.8.0b22
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: GPU model and count, driver and CUDA versions, the K/g used (`result.json` records it), and the `build-runtime.sh` commit the simulator environment was built from.
+    validations:
+      required: true

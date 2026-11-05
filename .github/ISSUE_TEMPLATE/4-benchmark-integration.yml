@@ -1,0 +1,61 @@
+name: Benchmark integration
+description: Propose integrating a new simulation benchmark, or a new suite or protocol of an existing one.
+title: "feat(<benchmark>): integrate <Benchmark> simulation evaluation and establish a correctness baseline"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title format: `feat(<benchmark>): ...`, in English. Integration comes first and establishes a
+        correctness baseline with a real model; throughput optimization is a separate `perf(<benchmark>)` issue
+        that depends on this one. The tracking issue for benchmark work is #37.
+  - type: input
+    id: benchmark
+    attributes:
+      label: Benchmark and upstream
+      description: Name, upstream repository, and the paper or official evaluation entry point.
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Why this benchmark, and which suites or profiles the first phase covers. A self-selected subset must be named as such, not called the full official evaluation.
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Protocol and scope
+      description: |
+        What must be pinned: source/simulator/asset/model versions and digests, the task list, episodes per
+        task, seeds or initial states, cameras and observations, action representation, control frequency,
+        action chunk, max steps, termination and success rules, and the official aggregation.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and licenses
+      description: |
+        Simulator and rendering requirements (headless, GPU), Python 3.11+ compatibility, and the license
+        of the simulator, assets, and checkpoints. Assets without a confirmed redistribution license must
+        not be committed or downloaded automatically by `build-runtime.sh`.
+    validations:
+      required: true
+  - type: textarea
+    id: baseline-model
+    attributes:
+      label: Baseline model
+      description: The real checkpoint used for the correctness baseline and the native score it should reproduce.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance
+      value: |
+        - [ ] Supported scope, pinned versions, complete `benchmark-manifest.json`, protocol, and environment/license gates are defined.
+        - [ ] `benchmarks/<benchmark>/build-runtime.sh <install-dir>` builds the environment from a clean directory, and `--self-test` passes.
+        - [ ] Real-model `--quick-test` and full evaluation pass, with no missing or duplicate results.
+        - [ ] Comparison with the pinned native evaluator under the same checkpoint and inputs, with per-task metrics and explained differences.
+        - [ ] Reproducible performance baseline (time breakdown, episodes/s, steps/s), logs, results, and commands are delivered.
+        - [ ] Version bump, CHANGELOG entry, package README and protocol document are updated.

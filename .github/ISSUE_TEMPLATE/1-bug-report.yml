@@ -1,0 +1,118 @@
+name: Bug report
+description: An evaluation, build, or Policy run fails or behaves wrongly.
+title: "fix(<scope>): "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title format: `fix(<scope>): <what is wrong>`, in English. Use the benchmark as the scope
+        (`libero`, `libero-plus`, `robotwin`, `robodojo`, `robocasa`, `calvin`, `metaworld`), or a component
+        such as `sdk`, `runtime`, `autotune`, or `sharding`.
+        If the run completes but the score looks wrong, use the **Score discrepancy** template instead.
+  - type: dropdown
+    id: benchmark
+    attributes:
+      label: Benchmark
+      options:
+        - LIBERO
+        - LIBERO-Plus
+        - RoboTwin
+        - RoboDojo
+        - RoboCasa
+        - CALVIN
+        - MetaWorld
+        - Not benchmark-specific
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Where it fails
+      options:
+        - "build-runtime.sh (simulator environment build)"
+        - "--self-test"
+        - "--quick-test"
+        - Autotune (K/g search)
+        - Full evaluation
+        - Cross-instance sharding / shard_merge
+        - Policy API (load / act / reset)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command, including `--suite`, `--concurrency`/`--replicas` or `--autotune-strategy`, and any environment variables you set.
+      render: bash
+      placeholder: |
+        python -m roboscope_kit.runtime.benchmark \
+            --benchmark libero --suite libero_10 --checkpoint-source /models/my-checkpoint \
+            --benchmark-manifest /sim/libero/benchmark-manifest.json \
+            --policy-config /path/to/roboscope-policy.json \
+            --output-dir /runs/libero_10
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: Errors and logs
+      description: |
+        The relevant part of `<output-dir>/errors.jsonl`, the traceback or stderr, and the component log
+        that shows the failure (Worker, Policy Server, or simulator). For a build failure, the end of the
+        `build-runtime.sh` output.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: output-dir
+    attributes:
+      label: Output directory state
+      description: "`ls -la <output-dir>` and, if present, `progress.json` and `autotune/selection.json`."
+      render: text
+  - type: input
+    id: kit-version
+    attributes:
+      label: roboscope-kit version
+      description: "`python -c 'import roboscope_kit, importlib.metadata as m; print(m.version(\"roboscope-kit\"))'`, or the commit if installed from source."
+      placeholder: 0.8.0b22
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Python version of the runtime and of the Policy interpreter (3.11+ is supported), OS, GPU model and
+        count, driver and CUDA versions, CPU cores and RAM, whether CUDA MPS is on, and whether the simulator
+        environment was built with the committed `build-runtime.sh` from a clean directory.
+      placeholder: |
+        - Runtime Python: 3.11.9 / Policy Python: 3.11.9
+        - OS: Ubuntu 22.04
+        - GPU: 2x RTX 4090, driver 550.54, CUDA 12.4
+        - CPU / RAM: 32 cores / 128 GB
+        - CUDA MPS: off
+        - Runtime built with: benchmarks/libero/build-runtime.sh at <commit>, clean directory
+    validations:
+      required: true
+  - type: textarea
+    id: policy
+    attributes:
+      label: Policy
+      description: The model or Policy example (for example `examples/starvla`, `examples/xvla`), checkpoint, and your `--policy-config` JSON.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: "`--self-test --benchmark-manifest <install-dir>/benchmark-manifest.json` passes for this environment (or the failure is in the build itself)."
+        - label: I used a new or empty `--output-dir` for this run.
+        - label: I searched existing issues for this failure.
