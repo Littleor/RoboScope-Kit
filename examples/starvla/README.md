@@ -37,8 +37,9 @@ below are placeholders.
 2. Build the benchmark's simulator environment with
    [`benchmarks/<benchmark>/build-runtime.sh <install-dir>`](https://github.com/MINT-SJTU/RoboScope-Kit/tree/main/benchmarks);
    it copies the benchmark manifest to `<install-dir>/benchmark-manifest.json`.
-3. Build the run snapshot. `prepare_snapshot.py` downloads the checkpoint at the pinned revision and merges
-   the demo's `config` section into `config.yaml`:
+3. Build the run snapshot. `prepare_snapshot.py` downloads the checkpoint at the pinned revision, merges
+   the demo's `config` section into `config.yaml`, and downloads the Qwen base model's configuration and
+   tokenizer (no weights) from Hugging Face into the path `config.yaml` names:
 
    ```bash
    /path/to/envs/starVLA/bin/python /path/to/RoboScope-Kit/examples/starvla/prepare_snapshot.py \
@@ -65,11 +66,9 @@ below are placeholders.
    instead of letting Autotune choose. Results, progress, and logs are written under `--output-dir`.
 
 The Policy files import each other, so keep them together in this directory. They import StarVLA from the
-Policy's working directory (the contract's `cwd`); set `STARVLA_ROOT` to use another checkout. When a run
-snapshot lacks the Qwen base-model metadata its `config.yaml` names, `starvla_base_assets.py` downloads it with
-`ossutil` from `BENCHMARK_BASE_OSS_URI` (with `BENCHMARK_BASE_ENDPOINT`, `BENCHMARK_BASE_ACCESS_KEY_ID`, and
-`BENCHMARK_BASE_ACCESS_KEY_SECRET`) into `ROBOSCOPE_STARVLA_BASE_CACHE`, by default
-`~/.cache/roboscope-kit/starvla-base-models`.
+Policy's working directory (the contract's `cwd`); set `STARVLA_ROOT` to use another checkout. The Policy
+loads offline and stops if the snapshot lacks its base-model metadata; for a snapshot you exported yourself,
+fetch it with `python starvla_base_assets.py <run-snapshot>`.
 
 ## Files
 
@@ -78,7 +77,7 @@ snapshot lacks the Qwen base-model metadata its `config.yaml` names, `starvla_ba
 | `starvla_policy.py` | The `Policy`: loads one StarVLA run snapshot, preprocesses observations, returns action chunks |
 | `starvla_libero_policy.py` | The LIBERO `Policy` of the technical report: follows the StarVLA `eaa51c4` LIBERO client |
 | `starvla_full_checkpoint.py` | Builds the StarVLA framework from `config.yaml` and strictly loads one full checkpoint |
-| `starvla_base_assets.py` | Fetches the Qwen base-model metadata the framework needs to build |
+| `starvla_base_assets.py` | Fetches the Qwen base-model metadata the framework needs to build, from Hugging Face |
 | `prepare_snapshot.py` | Builds a demo's run snapshot from its `demo.yaml` |
 | `export_starvla_eval_run.py` | Exports your own training run as a self-contained snapshot with relative resource paths |
 | `roboscope-policy.json` | Policy process contract, passed to the runtime with `--policy-config` |

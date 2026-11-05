@@ -2,6 +2,13 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b23 - 2026-11-05
+
+- The StarVLA example's `prepare_snapshot.py` now also downloads the Qwen base model's configuration and
+  tokenizer from Hugging Face at a pinned revision, so a prepared snapshot is complete. The Policy no longer
+  downloads it from OSS at load time: the `BENCHMARK_BASE_*` variables, `ROBOSCOPE_STARVLA_BASE_CACHE`, and
+  `ossutil` are gone from the example, and a snapshot without the metadata stops with the command to fetch it.
+
 ## 0.8.0b22 - 2026-11-05
 
 - Rebuild RoboTwin's seed-generation identities without the former platform's protocol name or scanner

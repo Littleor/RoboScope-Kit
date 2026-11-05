@@ -1,4 +1,5 @@
-"""Download one demo's StarVLA checkpoint and merge the demo configuration into its config.yaml."""
+"""Download one demo's StarVLA checkpoint, merge the demo configuration into its config.yaml, and fetch
+the base-model metadata that config names."""
 
 from __future__ import annotations
 
@@ -8,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from starvla_base_assets import download_starvla_base_model
 
 DEMO_ROOT = Path(__file__).resolve().parent
 
@@ -43,6 +45,7 @@ def prepare(benchmark: str, output: Path) -> Path:
     config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     config = merge(config, demo["config"])
     config_path.write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+    download_starvla_base_model(output)
     return output
 
 
