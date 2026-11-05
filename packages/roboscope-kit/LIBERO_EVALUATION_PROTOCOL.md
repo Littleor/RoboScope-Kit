@@ -97,7 +97,8 @@ ports, K, and g are runtime internals and are not part of the user contract.
 The user entrypoint installs `roboscope-kit`, implements `Policy`, and ends with:
 
 ```python
-run(UserPolicy())
+if __name__ == "__main__":
+    run(UserPolicy())
 ```
 
 The runtime reads the Policy process contract from `--policy-config`:

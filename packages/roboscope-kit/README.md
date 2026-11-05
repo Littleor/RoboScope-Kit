@@ -41,7 +41,8 @@ class UserPolicy(Policy):
         return ActionChunk(np.asarray(self.model.predict(observation.features), dtype=np.float32))
 
 
-run(UserPolicy())
+if __name__ == "__main__":
+    run(UserPolicy())
 ```
 
 The runtime starts this script once per inference replica. It passes the staged checkpoint and the
