@@ -5,7 +5,7 @@
 
 LIBERO+ runs on the same simulator build as LIBERO, so evaluator processes are
 launched from the shared ``runtime.benchmarks.libero.worker`` module; this
-adapter owns the LIBERO+ product protocol: suite allow-list, episode counts,
+adapter owns the LIBERO+ protocol: suite allow-list, episode counts,
 and scoring metadata are fixed by the LIBERO+ Benchmark definition.
 """
 

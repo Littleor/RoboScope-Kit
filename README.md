@@ -139,8 +139,9 @@ python -m roboscope_kit.runtime.benchmark \
 
 Add `--quick-test` for a short real evaluation with one Worker and one Server. Results, progress, and logs are
 written under `--output-dir`.
-Use a new or empty output directory for every invocation, including `--self-test` and retries. The CLI
-refuses nonempty directories to preserve existing results and logs; it does not resume previous runs.
+Use a new or empty output directory for each run, including `--self-test`. Only a directory containing
+`errors.jsonl` alone can be retried in place; existing run artifacts are never resumed or overwritten.
+Keep shell and scheduler logs outside the output directory.
 
 The [package guide](packages/roboscope-kit/README.md) covers the rest: how evaluation works, automatic
 tuning, writing a Policy, CUDA MPS, and cross-instance sharding.
@@ -171,8 +172,9 @@ To build a benchmark's simulator environment and check it against the kit:
 
 ```bash
 benchmarks/libero/build-runtime.sh /sim/libero
+SELF_TEST_OUTPUT=$(mktemp -d "${TMPDIR:-/tmp}/libero-self-test.XXXXXX")
 python -m roboscope_kit.runtime.benchmark --benchmark libero --self-test \
-    --benchmark-manifest /sim/libero/benchmark-manifest.json --output-dir /tmp/libero-self-test
+    --benchmark-manifest /sim/libero/benchmark-manifest.json --output-dir "$SELF_TEST_OUTPUT"
 ```
 
 To reproduce the CI compatibility check on the built wheel and sdist, run these with the interpreter you

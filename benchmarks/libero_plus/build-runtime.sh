@@ -197,6 +197,7 @@ print("LIBERO+ config and kit worker imports passed")
 PY
 
 install -m 0644 "${MANIFEST}" "${INSTALL_DIR}/benchmark-manifest.json"
+rm -rf -- "${INSTALL_DIR}/self-test"
 "${KIT_PYTHON}" -m roboscope_kit.runtime.benchmark --benchmark libero_plus --self-test \
   --benchmark-manifest "${INSTALL_DIR}/benchmark-manifest.json" \
   --output-dir "${INSTALL_DIR}/self-test"

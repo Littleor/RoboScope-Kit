@@ -518,6 +518,7 @@ echo "Built RoboTwin runtime in ${INSTALL_DIR}"
 echo "RoboTwin base commit ${BASE_COMMIT} -> runtime commit ${RUNTIME_COMMIT}"
 echo "cuRobo at ${ACTUAL_CUROBO_COMMIT} installed at RoboTwin/envs/curobo"
 
+rm -rf -- "${INSTALL_DIR}/self-test"
 "${KIT_PYTHON}" -m roboscope_kit.runtime.benchmark --benchmark robotwin --self-test \
   --benchmark-manifest "${INSTALL_DIR}/benchmark-manifest.json" \
   --output-dir "${INSTALL_DIR}/self-test"

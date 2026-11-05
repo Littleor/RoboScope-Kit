@@ -33,8 +33,9 @@ others through `observe()`.
 
 ## Run Simate_beta
 
-Use a new or empty `--output-dir` for every CLI invocation, including quick tests, self-tests, and
-retries. Existing run directories are rejected to preserve results and logs; runs are not resumed.
+Use a new or empty `--output-dir` for each quick test, self-test, or evaluation. Only directories
+containing `errors.jsonl` alone can be retried in place. Existing run artifacts are preserved, not resumed.
+Keep shell and scheduler logs outside the output directory.
 
 `Simate_beta` is the validated configuration: the released Simate-beta AE checkpoint
 ([`SIPAILab/sipai-robodojo-eval-ae`](https://huggingface.co/SIPAILab/sipai-robodojo-eval-ae) at `0738aab`),

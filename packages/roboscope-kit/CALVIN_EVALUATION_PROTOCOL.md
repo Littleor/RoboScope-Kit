@@ -68,6 +68,10 @@ python -m roboscope_kit.runtime.benchmark \
 `--self-test` with the same manifest checks that every runtime path exists. Results, progress, and logs
 are written under `--output-dir`.
 
+Use a new or empty output directory for each evaluation or self-test. A directory containing only
+`errors.jsonl` can be retried, preserving earlier errors; other run artifacts require a new directory.
+Keep shell and scheduler logs outside the output directory.
+
 ## 2. User policy lifecycle
 
 The user entrypoint implements `Policy` from `roboscope_kit` and calls `run(policy)`. The runtime

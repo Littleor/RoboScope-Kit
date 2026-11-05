@@ -700,7 +700,7 @@ def test_robotwin_generation_requires_pinned_clean_runtime(tmp_path: Path) -> No
 def _robotwin_adapter_for_generation(
     robotwin_root: Path,
     seed_cache_dir: Path,
-    generation_digest: str | None,
+    generation_digest: str,
 ) -> RoboTwinBenchmarkAdapter:
     return RoboTwinBenchmarkAdapter(
         RoboTwinRuntimeConfig(
@@ -715,13 +715,13 @@ def _robotwin_adapter_for_generation(
             episodes_per_task=2,
             episode_shard_size=1,
             seed_cache_dir=seed_cache_dir,
-            protocol_id="fixture-v1" if generation_digest else None,
+            protocol_id="fixture-v1",
             seed_generation_digest=generation_digest,
         )
     )
 
 
-def test_robotwin_formal_gate_supports_legacy_and_validates_v2_generation(
+def test_robotwin_formal_gate_validates_v2_generation(
     tmp_path: Path,
 ) -> None:
     from roboscope_kit.runtime.benchmarks.robotwin.seed_protocol import (
@@ -729,24 +729,6 @@ def test_robotwin_formal_gate_supports_legacy_and_validates_v2_generation(
     )
 
     robotwin_root, source_cache_dir, scanner, protocol = _robotwin_generation_fixture(tmp_path)
-    legacy_adapter = _robotwin_adapter_for_generation(
-        robotwin_root,
-        source_cache_dir,
-        None,
-    )
-    unprotocoled_manifest = _manifest(
-        {},
-        {},
-        (BenchmarkName.ROBOTWIN,),
-        ("demo_clean",),
-    )
-    RoboTwinBenchmarkFactory._validate_formal_generation(
-        legacy_adapter,
-        unprotocoled_manifest,
-        ("adjust_bottle",),
-        2,
-    )
-
     generation = create_seed_cache_generation(
         source_cache_dir=source_cache_dir,
         generation_root=tmp_path / "generations-v2",

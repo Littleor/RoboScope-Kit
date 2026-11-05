@@ -25,7 +25,7 @@ LIBERO_PLUS_TASK_COUNTS = {
     "libero_10": 2519,
 }
 
-# The LIBERO+ Benchmark definition excludes libero_90 per the product catalog.
+# The LIBERO+ manifest lists these suites; libero_90 is not included.
 LIBERO_PLUS_SUITES = frozenset(LIBERO_PLUS_TASK_COUNTS)
 
 

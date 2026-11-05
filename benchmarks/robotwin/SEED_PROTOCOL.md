@@ -23,8 +23,7 @@ snapshot. They reproduce v1 digest
 `247acb6197a6cd49f67511b3ba11a5e296f67ab95f6571f25cfd6d250724a3de`.
 Only the protocol identity changes their v2 generation digest.
 
-The old randomized pool could not be recovered from the original runtime storage,
-local snapshots, or OSS backups. The 2026-09-02 inventory records the original
+The old randomized pool could not be recovered. The 2026-09-02 inventory records the original
 `b447fe908298233734c580ccbe2cd84fda1d9aa90aa0cb08245561946b39145c`
 generation's paths and sizes, but not its contents. That pool became
 `d67685546747d3df6ecc13719fb24fd1fc51104e52d006a1f0ded7e34c7b0ab9`

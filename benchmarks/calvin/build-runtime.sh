@@ -326,6 +326,7 @@ if [[ -n "${KIT_PYTHON:-}" ]] || python3 -c 'import roboscope_kit' >/dev/null 2>
     echo "KIT_PYTHON=${KIT_PYTHON} cannot import roboscope_kit; install roboscope-kit into it" >&2
     exit 6
   }
+  rm -rf -- "${INSTALL_DIR}/self-test"
   "${KIT_PYTHON}" -m roboscope_kit.runtime.benchmark --benchmark calvin --self-test \
     --benchmark-manifest "${INSTALL_DIR}/benchmark-manifest.json" \
     --output-dir "${INSTALL_DIR}/self-test"

@@ -106,6 +106,7 @@ awk 'tolower($0) !~ /^starlette==/' "${BUILDER_DIR}/runtime-requirements.txt" > 
 export PIP_CONSTRAINT="${INSTALL_ROOT}/bootstrap-constraints.txt"
 export ACCEPT_EULA=Y
 # Upstream activates $HOME/miniconda3 before the Conda hook; use only the hook.
+# shellcheck disable=SC2016 # Match the literal variable in the upstream script.
 sed -i 's#source "$HOME/miniconda3/bin/activate" RoboDojo 2>/dev/null || ##' "${SOURCE_ROOT}/scripts/install.sh"
 ( cd "${SOURCE_ROOT}" && bash scripts/install.sh -i )
 for spec in \
@@ -160,6 +161,7 @@ if [[ -e "${INSTALL_ROOT}/env" && ! -L "${INSTALL_ROOT}/env" ]]; then
 fi
 ln -sfn "miniforge/envs/RoboDojo" "${INSTALL_ROOT}/env"
 install -m 0644 "${BUILDER_DIR}/benchmark-manifest.json" "${INSTALL_ROOT}/benchmark-manifest.json"
+rm -rf -- "${INSTALL_ROOT}/self-test"
 "${python}" -m roboscope_kit.runtime.benchmark --benchmark robodojo --self-test \
   --benchmark-manifest "${INSTALL_ROOT}/benchmark-manifest.json" --output-dir "${INSTALL_ROOT}/self-test"
 echo "RoboDojo runtime built at ${INSTALL_ROOT}"

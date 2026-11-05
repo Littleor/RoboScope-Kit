@@ -277,15 +277,21 @@ top-level failure is appended to `errors.jsonl` as an `evaluation-error` record 
 excerpt, even when the evaluation later succeeds. A failed worker's uncommitted work item is requeued and
 the worker restarted; a worker that fails a second time for a reason other than running out of memory
 aborts the evaluation, and the top-level error carries the excerpt of its final attempt. Each Policy replica
-and worker also keeps its own log.
+and worker also keeps its own log. Output-directory rejections are reported to stderr
+without modifying the previous run's logs.
 
 ## 9. Required validation sequence
+
+Use a new or empty output directory for each run. A directory containing only `errors.jsonl` can be
+retried; previous errors are preserved. Other run artifacts require a new directory. Keep shell and
+scheduler logs outside the output directory. The examples below allocate a fresh directory each time.
 
 ### Runtime self-test
 
 ```bash
+SELF_TEST_OUTPUT=$(mktemp -d "${TMPDIR:-/tmp}/libero-self-test.XXXXXX")
 python -m roboscope_kit.runtime.benchmark --benchmark libero --self-test \
-    --benchmark-manifest <install-dir>/benchmark-manifest.json --output-dir /runs/libero-self-test
+    --benchmark-manifest <install-dir>/benchmark-manifest.json --output-dir "$SELF_TEST_OUTPUT"
 ```
 
 This needs no checkpoint, Policy, or GPU. It checks that the manifest supports LIBERO and that its
@@ -295,9 +301,10 @@ it as its last step.
 ### User quick test
 
 ```bash
+QUICK_TEST_OUTPUT=$(mktemp -d "${TMPDIR:-/tmp}/libero-quick-test.XXXXXX")
 python -m roboscope_kit.runtime.benchmark --benchmark libero --suite <suite> --quick-test \
     --checkpoint-source <checkpoint> --benchmark-manifest <install-dir>/benchmark-manifest.json \
-    --policy-config /path/to/roboscope-policy.json --output-dir /runs/libero-quick-test
+    --policy-config /path/to/roboscope-policy.json --output-dir "$QUICK_TEST_OUTPUT"
 ```
 
 Quick test fixes task id `0`, `K=1`, `g=1`, one episode, and disables video. It verifies checkpoint access,
