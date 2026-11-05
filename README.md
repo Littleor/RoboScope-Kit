@@ -217,3 +217,11 @@ If you find RoboScope Kit helpful in your research, please consider citing our w
 ## License
 
 Copyright 2026 RoboScope Team. Licensed under the Apache License, Version 2.0. See [`LICENSE`](LICENSE).
+
+## Community
+
+Scan the QR code with WeChat to join the RoboScope Kit community.
+
+<img src="docs/community-qr.png" alt="WeChat QR code for the RoboScope Kit community" width="320">
+
+The invitation is valid before November 12, 2026.
