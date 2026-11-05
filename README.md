@@ -14,7 +14,8 @@
   <a href="https://arxiv.org/abs/2611.03850">Paper</a> ·
   <a href="https://mint-sjtu.github.io/RoboScope-Kit/">Project page</a> ·
   <a href="packages/roboscope-kit/README.md">Package guide</a> ·
-  <a href="packages/roboscope-kit/CHANGELOG.md">Changelog</a>
+  <a href="packages/roboscope-kit/CHANGELOG.md">Changelog</a> ·
+  <a href="#contributing">Contributing</a>
 </p>
 
 RoboScope Kit evaluates your model on standard robot simulation benchmarks. You wrap a model once in a Python
@@ -198,6 +199,75 @@ Releases are automatic. GitHub Actions (`.github/workflows/sdk-compatibility.yml
 A version that is already on PyPI is never uploaded again; CI only re-checks the install. Pull requests run
 the tests but never publish. To retry a failed upload, run the `SDK compatibility` workflow manually on
 `main`.
+
+## Contributing
+
+Contributions are very welcome! 🎉 Bug reports, documentation fixes, new `Policy` examples, new benchmarks, and
+performance work all help, and questions are contributions too. If you are unsure where to start, open an
+[Issue](https://github.com/MINT-SJTU/RoboScope-Kit/issues) or ask in the [community](#community).
+
+### How to contribute
+
+- **Report a bug** with the command you ran, the `roboscope-kit` version, the benchmark and suite, what you
+  expected, and the relevant logs from `--output-dir`.
+- **Contribute a new benchmark.** New benchmarks are very welcome! Add its adapter under
+  `packages/roboscope-kit/`, and its `benchmark-manifest.json` and `build-runtime.sh` under
+  `benchmarks/<benchmark>/`, following the existing benchmarks. Keep its official rules and scoring unchanged,
+  and show that results match its official evaluator.
+- **Propose larger design changes first.** For a change to the runtime's design or the public API, open an
+  Issue so we can agree on the approach before you invest the time.
+- **Open a pull request** from a branch of your fork. Keep it to one problem, describe what changed, why, and
+  how you checked it, and run the checks in [Development](#development) before you push.
+
+[`AGENTS.md`](AGENTS.md) has the full repository rules. The ones contributors most often need:
+
+- **Titles** follow `type(scope): description` ([Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)),
+  in English. The type is one of `feat`, `fix`, `perf`, `docs`, `refactor`, `test`, `build`, `ci`, or
+  `chore`; the scope is a benchmark or component, such as `robodojo`, `libero`, `sdk`, or `autotune`, or
+  `repo` for repository-wide work. For example: `perf(robodojo): improve RoboDojo evaluation throughput`.
+- **Code changes bump the version** in `pyproject.toml` and `uv.lock` and add a `CHANGELOG.md` entry, as
+  described in [Releases](#releases). Documentation-only changes need no bump.
+- **Simulator environments change only through `benchmarks/<benchmark>/build-runtime.sh`** and its pin
+  files, so a clean build reproduces them. Do not patch an installed environment by hand.
+- **Benchmark rules and scoring stay unchanged.** Keep each manifest consistent with its build script, and do
+  not change frozen protocol values (such as the RoboTwin seed protocol) without regenerating what depends on
+  them.
+- **Keep the documentation consistent** when user-facing evaluation behavior changes: this README, the
+  package README, the protocol documents, and the example READMEs.
+
+### Coding agents are welcome
+
+You may use coding agents and AI assistants (Claude Code, Codex) to write code,
+tests, or documentation; point them to [`AGENTS.md`](AGENTS.md) for the repository rules. You remain the
+author of what you submit: read and understand the whole change, run the checks yourself, be ready to explain
+it in review, and make sure every number and test result in the description comes from a run that actually
+happened.
+
+### Performance changes need experimental evidence
+
+Speed is a core promise of RoboScope Kit, and performance work is especially welcome. Because performance is
+easy to mismeasure, a `perf` pull request, or any change claiming faster or lighter evaluation, must include
+experimental evidence; a claim without measurements cannot be merged. Please provide:
+
+1. **A same-machine A/B comparison:** the baseline commit and your change, run back to back on the same
+   machine with the same benchmark, suite, checkpoint, episode count, and Worker, replica, and CUDA MPS
+   settings. Numbers from different machines or days are not comparable.
+2. **The setup and exact commands:** CPU, GPU model and count, driver and CUDA version, and the commit of
+   each side, so a reviewer can reproduce the runs.
+3. **The results:** evaluation wall-clock time (excluding initialization, concurrency search, and cleanup,
+   unless the change targets them), steps/s or episodes/s, and any resource metric you claim to improve.
+   Repeat each side when you can (three runs is a good default) and report the median and spread.
+4. **Evidence that the evaluation is unchanged:** success outcomes that match the baseline (per-episode
+   outcomes and terminal steps where the benchmark is deterministic, otherwise equivalent success rates),
+   with every episode finished exactly once and no missing or duplicate records.
+5. **The raw data:** the run summaries and logs of both sides, attached or linked.
+
+Without the hardware for a full run, open a draft pull request with what you could measure (a `--quick-test`
+run or a profile, say) and tell us; we are glad to help. Negative results are useful too: an attempt that did
+not help, with its measurements, saves others from repeating it.
+
+By contributing, you agree that your contributions are licensed under the project's
+[Apache License 2.0](LICENSE).
 
 ## Citation
 
