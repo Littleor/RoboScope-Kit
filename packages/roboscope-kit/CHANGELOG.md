@@ -2,6 +2,12 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b24 - 2026-11-05
+
+- `PolicyClient` marks each episode and each Policy request with NVTX ranges when the process runs under
+  Nsight Systems with `ROBOSCOPE_PROFILE` set. The ranges go through Nsight Systems' own injection library,
+  so no package is added to any environment; without profiling, requests run unwrapped.
+
 ## 0.8.0b23 - 2026-11-05
 
 - The StarVLA example's `prepare_snapshot.py` now also downloads the Qwen base model's configuration and
