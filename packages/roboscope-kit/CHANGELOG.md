@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0b17 - 2026-11-05
+
+- Remove the hosted-platform OSS checkpoint downloader. `--checkpoint-source` now accepts only an
+  existing absolute local path; `--checkpoint-dir` and the `BENCHMARK_CKPT_*` settings are removed.
+
 ## 0.8.0b16 - 2026-11-05
 
 - The StarVLA example passes `BENCHMARK_BASE_SECURITY_TOKEN` whenever it is set; the hosted platform's

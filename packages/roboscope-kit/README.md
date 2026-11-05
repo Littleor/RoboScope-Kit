@@ -86,8 +86,8 @@ python -m roboscope_kit.runtime.benchmark \
     --output-dir /runs/libero_10
 ```
 
-`--checkpoint-source` is an absolute path, passed to `Policy.load()` unchanged, or an `oss://` prefix, which
-is downloaded into `--checkpoint-dir`. The runtime validates the Policy process contract before every run.
+`--checkpoint-source` is an absolute local path, passed to `Policy.load()` unchanged. Prepare the checkpoint
+before starting the evaluation. The runtime validates the Policy process contract before every run.
 `--quick-test` runs a short real evaluation with one Worker and one Server; without it, the run is a full
 scored evaluation. `--self-test` only checks that the manifest's runtime paths exist. Results, progress,
 and logs are written under `--output-dir`.

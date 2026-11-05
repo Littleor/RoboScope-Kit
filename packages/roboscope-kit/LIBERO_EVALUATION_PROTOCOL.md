@@ -86,11 +86,8 @@ ports, K, and g are runtime internals and are not part of the user contract.
 
 - An absolute local file or directory is passed to `Policy.load()` unchanged as
   `context.checkpoint_path`; a missing path is rejected.
-- An `oss://...` prefix is copied recursively with `ossutil` into `--checkpoint-dir`, which is emptied first,
-  and that directory is passed to `Policy.load()`. The download reads `BENCHMARK_CKPT_ENDPOINT`,
-  `BENCHMARK_CKPT_ACCESS_KEY_ID`, `BENCHMARK_CKPT_ACCESS_KEY_SECRET`, and optionally
-  `BENCHMARK_CKPT_SECURITY_TOKEN`.
-- Relative paths and any other scheme are rejected.
+- Relative paths and remote URLs are rejected. Download or otherwise prepare the checkpoint locally before
+  running the evaluation.
 
 ## 2. User Policy process contract
 

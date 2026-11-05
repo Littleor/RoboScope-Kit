@@ -33,7 +33,6 @@ from .autotune import (
     resolve_limits,
     run_autotune,
 )
-from .checkpoint import materialize_checkpoint
 from .cuda_mps import CudaMpsSession
 from .factories import BenchmarkFactory, BenchmarkRunRequest
 from .manifest import (
@@ -52,7 +51,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--benchmark", choices=tuple(item.value for item in BenchmarkName), required=True)
     parser.add_argument("--suite")
-    parser.add_argument("--checkpoint-source")
+    parser.add_argument("--checkpoint-source", type=Path, help="absolute path to a local checkpoint")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--episodes", type=int)
     parser.add_argument("--quick-test", action="store_true")
@@ -81,11 +80,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--benchmark-manifest", type=Path, required=True)
     parser.add_argument("--policy-config", type=Path, help="Policy process contract (roboscope-policy.json)")
-    parser.add_argument(
-        "--checkpoint-dir",
-        type=Path,
-        help="directory an oss:// --checkpoint-source downloads into; replaced on every run",
-    )
     parser.add_argument("--evaluation-config", type=Path)
     parser.add_argument(
         "--autotune-strategy",
@@ -191,7 +185,11 @@ def _run_evaluation(
     manifest.validate_request(benchmark, args.suite)
     factory.validate_suite(args.suite)
     with benchmark_phase(phase_timing_callback, "checkpoint_prepare_s"):
-        checkpoint = materialize_checkpoint(args.checkpoint_source, args.checkpoint_dir)
+        checkpoint = args.checkpoint_source
+        if not checkpoint.is_absolute():
+            raise ValueError("checkpoint source must be an absolute local path")
+        if not checkpoint.exists():
+            raise FileNotFoundError(f"checkpoint path does not exist: {checkpoint}")
     policy = load_policy_runtime_config(args.policy_config)
     evaluation_config, evaluation_config_path = _resolve_evaluation_config(
         benchmark,
