@@ -307,7 +307,6 @@ def _autotuned_run(
     gpu_devices: tuple[str, ...],
     output_dir: Path,
     phase_timing_callback: PhaseTimingCallback,
-    progress_callback=None,
     shard_kwargs: dict[str, Any] | None = None,
     cuda_mps: CudaMpsSession | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -369,7 +368,6 @@ def _autotuned_run(
             output_dir=output_dir,
             probe=False,
             phase_timing_callback=phase_timing_callback,
-            progress_callback=progress_callback,
             shard_kwargs=shard_kwargs,
         )
         return final, selected
@@ -482,7 +480,6 @@ def run_candidate(
     output_dir: Path,
     probe: bool,
     phase_timing_callback: PhaseTimingCallback | None = None,
-    progress_callback=None,
     shard_kwargs: dict[str, Any] | None = None,
     cuda_mps: CudaMpsSession | None = None,
 ) -> dict[str, Any]:
@@ -503,10 +500,7 @@ def run_candidate(
         inference=inference,
         benchmark=adapter,
         cuda_mps=cuda_mps,
-    ).run(
-        progress_callback=progress_callback,
-        phase_timing_callback=phase_timing_callback,
-    )
+    ).run(phase_timing_callback=phase_timing_callback)
 
 
 def detect_gpu_devices() -> tuple[str, ...]:

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0b19 - 2026-11-05
+
+- Remove unused CLI progress-callback plumbing left after the old progress contract was removed.
+  Autotune probes continue to report progress to the tuner.
+
 ## 0.8.0b18 - 2026-11-05
 
 - Remove `roboscope_kit.runtime.hil`, the model components for the former platform's separate robot-side
