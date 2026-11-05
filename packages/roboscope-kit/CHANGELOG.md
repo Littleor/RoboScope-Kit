@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0b16 - 2026-11-05
+
+- The StarVLA example passes `BENCHMARK_BASE_SECURITY_TOKEN` whenever it is set; the hosted platform's
+  placeholder value for no token is no longer recognized.
+
 ## 0.8.0b15 - 2026-11-04
 
 - RoboDojo builds no longer refuse accounts with `$HOME/miniconda3`. `build-runtime.sh` removes the upstream

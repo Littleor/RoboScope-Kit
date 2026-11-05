@@ -140,7 +140,7 @@ def _download_base_model(
             os.environ["BENCHMARK_BASE_ACCESS_KEY_SECRET"],
         ]
         token = os.environ.get("BENCHMARK_BASE_SECURITY_TOKEN", "")
-        if token and token != "无":
+        if token:
             command.extend(["-t", token])
         for pattern in MODEL_WEIGHT_PATTERNS:
             command.extend(["--exclude", pattern])
