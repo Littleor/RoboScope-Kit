@@ -244,8 +244,8 @@ The exact contracts are in the protocol documents:
   environment build, suites, observation and action layouts, step observation updates, and experimental
   runtime switches.
 - [RoboTwin fixed inputs](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/robotwin/SEED_PROTOCOL.md):
-  since 0.7.0b51, the manifest freezes RoboTwin's 50 × 100 inputs per suite under
-  `robotwin2-platform-native-step-lim-v2`. The clean entries are unchanged and the randomized pool is new,
+  the manifest freezes RoboTwin's 50 × 100 inputs per suite under `robotwin2-native-step-lim-v2`.
+  The clean entries are unchanged and the randomized pool is new,
   so report randomized v1 and v2 scores separately.
 
 Integration, autotune, and throughput measurements are in the

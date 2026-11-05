@@ -64,7 +64,6 @@ class RoboTwinBenchmarkFactory:
             tasks=tasks,
             episodes=episodes,
             protocol=protocol,
-            evaluation_kit_commit=str(protocol["scanner_evaluation_kit_commit"]),
             robotwin_root=adapter.config.robotwin_root,
             scanner_path=scanner_path,
         )

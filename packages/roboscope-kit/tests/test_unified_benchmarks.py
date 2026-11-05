@@ -582,7 +582,6 @@ def _robotwin_generation_fixture(tmp_path: Path):
     protocol = {
         "protocol_id": "fixture-v1",
         "robotwin_runtime_commit": commit,
-        "scanner_evaluation_kit_commit": "kit-commit",
         "tasks": ["adjust_bottle"],
         "suites": {
             "demo_clean": {
@@ -614,7 +613,6 @@ def test_robotwin_generation_is_content_addressed_and_detects_tampering(tmp_path
         "suite": "demo_clean",
         "tasks": ("adjust_bottle",),
         "protocol": protocol,
-        "evaluation_kit_commit": "kit-commit",
         "robotwin_root": robotwin_root,
         "scanner_path": scanner,
     }
@@ -627,7 +625,6 @@ def test_robotwin_generation_is_content_addressed_and_detects_tampering(tmp_path
         tasks=("adjust_bottle",),
         episodes=2,
         protocol=protocol,
-        evaluation_kit_commit="kit-commit",
         robotwin_root=robotwin_root,
         scanner_path=scanner,
     )
@@ -643,7 +640,6 @@ def test_robotwin_generation_is_content_addressed_and_detects_tampering(tmp_path
             tasks=("adjust_bottle",),
             episodes=2,
             protocol=protocol,
-            evaluation_kit_commit="kit-commit",
             robotwin_root=robotwin_root,
             scanner_path=scanner,
         )
@@ -662,7 +658,6 @@ def test_robotwin_generation_requires_pinned_clean_runtime(tmp_path: Path) -> No
             suite="demo_clean",
             tasks=("other_task",),
             protocol=protocol,
-            evaluation_kit_commit="kit-commit",
             robotwin_root=robotwin_root,
             scanner_path=scanner,
         )
@@ -675,7 +670,6 @@ def test_robotwin_generation_requires_pinned_clean_runtime(tmp_path: Path) -> No
             suite="demo_clean",
             tasks=("adjust_bottle",),
             protocol=mismatched,
-            evaluation_kit_commit="kit-commit",
             robotwin_root=robotwin_root,
             scanner_path=scanner,
         )
@@ -691,7 +685,6 @@ def test_robotwin_generation_requires_pinned_clean_runtime(tmp_path: Path) -> No
             suite="demo_clean",
             tasks=("adjust_bottle",),
             protocol=protocol,
-            evaluation_kit_commit="kit-commit",
             robotwin_root=robotwin_root,
             scanner_path=scanner,
         )
@@ -735,7 +728,6 @@ def test_robotwin_formal_gate_validates_v2_generation(
         suite="demo_clean",
         tasks=("adjust_bottle",),
         protocol=protocol,
-        evaluation_kit_commit="kit-commit",
         robotwin_root=robotwin_root,
         scanner_path=scanner,
     )

@@ -14,8 +14,8 @@
     "seed_cache_archive_sha256": "61a94edca4b2d9a7a75a9888ecc5df903e6ff956b2dada303c8eb6c38f1e5b80",
     "seed_generation_root": "seed-generations",
     "seed_generations": {
-      "demo_clean": "1b4aa12bcbad2fa3e926f5109a89631ba5043e89e1cbdab488b78ef85629caca",
-      "demo_randomized": "b4b0c4c2bfe12d49c5ed9c7f8b5ec07a3cc66e1d020f08515cd5e3ba779b09c2"
+      "demo_clean": "7b6622f7e8dc2272b53ea30bb5fef9acede91a6d5270b5487c10232a4250781d",
+      "demo_randomized": "6def2325fa12b2e932aab080ac5a218a38e5857b7ebf40c50aeab8811ce35892"
     }
   },
   "defaults": {
@@ -29,10 +29,9 @@
   },
   "benchmark_protocols": {
     "robotwin": {
-      "protocol_id": "robotwin2-platform-native-step-lim-v2",
+      "protocol_id": "robotwin2-native-step-lim-v2",
       "robotwin_runtime_base_commit": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
-      "robotwin_runtime_commit": "014728c265a7f06c8b7c2ace7e94188c3253e43a",
-      "scanner_evaluation_kit_commit": "c8d681bebecf67f8f0c2e1dd0a67392f9fea4431",
+      "robotwin_runtime_commit": "0fe7d15a86ae19d9411a52520683039cfc81d9ff",
       "tasks": [
         "adjust_bottle", "beat_block_hammer", "blocks_ranking_rgb", "blocks_ranking_size",
         "click_alarmclock", "click_bell", "dump_bin_bigbin", "grab_roller", "handover_block",

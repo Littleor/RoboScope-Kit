@@ -8,7 +8,7 @@ resolution-markers = [
 
 [[package]]
 name = "roboscope-kit"
-version = "0.8.0b21"
+version = "0.8.0b22"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },

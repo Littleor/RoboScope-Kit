@@ -17,7 +17,7 @@ from typing import Any
 
 from .seed_cache import validate_seed_cache
 
-GENERATION_MANIFEST_SCHEMA_VERSION = 1
+GENERATION_MANIFEST_SCHEMA_VERSION = 2
 
 
 def sha256_file(path: Path) -> str:
@@ -113,7 +113,6 @@ def create_seed_cache_generation(
     suite: str,
     tasks: tuple[str, ...],
     protocol: dict[str, Any],
-    evaluation_kit_commit: str,
     robotwin_root: Path,
     scanner_path: Path,
 ) -> Path:
@@ -144,7 +143,6 @@ def create_seed_cache_generation(
             "schema_version": GENERATION_MANIFEST_SCHEMA_VERSION,
             "protocol_id": str(protocol["protocol_id"]),
             "suite": suite,
-            "evaluation_kit_commit": evaluation_kit_commit,
             "robotwin_runtime_commit": runtime_commit,
             "task_config_sha256": sha256_file(task_config_path),
             "scanner_sha256": sha256_file(scanner_path),
@@ -169,7 +167,6 @@ def create_seed_cache_generation(
                 tasks=tasks,
                 episodes=episodes,
                 protocol=protocol,
-                evaluation_kit_commit=evaluation_kit_commit,
                 robotwin_root=robotwin_root,
                 scanner_path=scanner_path,
             )
@@ -187,7 +184,6 @@ def validate_seed_cache_generation(
     tasks: tuple[str, ...],
     episodes: int,
     protocol: dict[str, Any],
-    evaluation_kit_commit: str,
     robotwin_root: Path,
     scanner_path: Path,
 ) -> dict[str, Any]:
@@ -212,7 +208,6 @@ def validate_seed_cache_generation(
         "schema_version": GENERATION_MANIFEST_SCHEMA_VERSION,
         "protocol_id": str(protocol["protocol_id"]),
         "suite": suite,
-        "evaluation_kit_commit": evaluation_kit_commit,
         "robotwin_runtime_commit": runtime_commit,
         "task_config_sha256": sha256_file(task_config_path),
         "scanner_sha256": sha256_file(scanner_path),
@@ -266,7 +261,6 @@ def main(argv: list[str] | None = None) -> int:
         suite=args.suite,
         tasks=protocol_tasks(protocol),
         protocol=protocol,
-        evaluation_kit_commit=str(protocol["scanner_evaluation_kit_commit"]),
         robotwin_root=args.robotwin_root,
         scanner_path=args.scanner_path,
     )
