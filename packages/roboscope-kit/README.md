@@ -239,8 +239,7 @@ The exact contracts are in the protocol documents:
   so report randomized v1 and v2 scores separately.
 
 Integration, autotune, and throughput measurements are in the
-[benchmark results report](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/docs/benchmark-results.md),
-which reports LIBERO and RoboTwin separately.
+[RoboScope Kit technical report](https://arxiv.org/abs/2611.03850).
 
 ## CUDA MPS (opt-in)
 
