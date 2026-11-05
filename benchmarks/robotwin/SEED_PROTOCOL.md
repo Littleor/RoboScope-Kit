@@ -48,7 +48,10 @@ rerunning this environment, is the source of future evaluation inputs.
 
 The protocol and generation identities changed when the runtime pin and generation
 metadata were updated; the frozen seed archive and per-task inputs did not.
-Build a new runtime with `build-runtime.sh` before using the updated manifest.
+Build a new runtime with `build-runtime.sh <new-install-dir>` before using the updated manifest.
+Use a new, empty installation directory: the script checks an existing RoboTwin
+checkout against the pinned runtime commit and does not replace a mismatched checkout.
+Pass the new installation's `benchmark-manifest.json` to the evaluation command.
 Results from the previous identity remain valid but cannot be merged as shards
 with results from the new identity.
 

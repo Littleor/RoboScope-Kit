@@ -248,6 +248,10 @@ The exact contracts are in the protocol documents:
   The clean entries are unchanged and the randomized pool is new,
   so report randomized v1 and v2 scores separately.
 
+After upgrading to 0.8.0b22 or later, build RoboTwin in a new, empty installation directory if the existing
+installation has a different runtime commit. The build script does not replace an existing mismatched
+checkout. Pass the new installation's manifest to the evaluation command.
+
 Integration, autotune, and throughput measurements are in the
 [RoboScope Kit technical report](https://arxiv.org/abs/2611.03850).
 
