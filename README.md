@@ -19,11 +19,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/libero-race.gif" width="100%" alt="LIBERO-Long, 500 episodes on one RTX 4090: RoboScope Kit finishes in 8.1 minutes, 6.16× faster than the official StarVLA evaluation"/>
-</p>
-
-<p align="center">
-  <img src="docs/robotwin-race.gif" width="534" alt="RoboTwin Easy, 500 episodes: from 359.7 minutes on one GPU to 14.4 minutes on four GPUs, 25.04× faster"/>
+  <img src="docs/speedup.gif" width="100%" alt="Evaluation time in minutes, 500 episodes: on LIBERO-Long RoboScope Kit finishes in 8.1 minutes (6.16× faster than the official StarVLA evaluation); on RoboTwin Easy it goes from 359.7 to 14.4 minutes (25.04×)"/>
 </p>
 
 RoboScope Kit evaluates your model on standard robot simulation benchmarks. You wrap a model once in a Python
@@ -47,14 +43,12 @@ Each benchmark is wrapped once in an adapter around its own evaluator, so its ru
 
 ## Architecture
 
-![Overview of the RoboScope Kit evaluation architecture](docs/overview.webp)
+![Overview of the RoboScope Kit evaluation architecture](docs/architecture.png)
 
 *The example metrics are for 500 LIBERO-Long episodes with 12 Workers and 3 replicas on one RTX 4090. See the
 [interactive overview](https://mint-sjtu.github.io/RoboScope-Kit/#design).*
 
 ## Results
-
-![Evaluation speedups on LIBERO-Long and RoboTwin Easy](docs/speedup.gif)
 
 From the [technical report](https://arxiv.org/abs/2611.03850), each run covering 500 episodes with a StarVLA
 checkpoint. Evaluation time excludes initialization, concurrency search or offline tuning, and cleanup.
