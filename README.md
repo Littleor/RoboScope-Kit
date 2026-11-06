@@ -29,9 +29,7 @@ Each benchmark is wrapped once in an adapter around its own evaluator, so its ru
 
 ## News
 
-- 🤖 **2026-11-06:** [LIBERO-Pro](packages/roboscope-kit/LIBERO_EVALUATION_PROTOCOL.md#11-libero-pro) is supported.
-- ⚡ **2026-11-06:** RoboDojo Policy requests now use MessagePack.
-- 🤖 **2026-11-06:** [robomimic](packages/roboscope-kit/ROBOMIMIC_EVALUATION_PROTOCOL.md) is supported.
+- 🤖 **2026-11-06:** [robomimic](packages/roboscope-kit/ROBOMIMIC_EVALUATION_PROTOCOL.md) and [LIBERO-Pro](packages/roboscope-kit/LIBERO_EVALUATION_PROTOCOL.md#11-libero-pro) are supported.
 - 🎉 **2026-11-05:** RoboScope Kit is released! See the [technical report](https://arxiv.org/abs/2611.03850).
 - 🤖 **2026-11-04:** [RoboDojo](benchmarks/robodojo/README.md) is supported.
 
