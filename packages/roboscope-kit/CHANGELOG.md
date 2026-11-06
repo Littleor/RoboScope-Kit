@@ -2,6 +2,16 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b27 - 2026-11-06
+
+- The Policy socket protocol gains a MessagePack encoding: arrays travel as `bin` values with their dtype
+  and shape instead of base64 inside JSON. A RoboDojo observation with three 640×480 RGB frames takes about
+  2 ms per round trip instead of 56 ms. A client offers it in `health` and uses it only when the server
+  lists it, and the server answers each frame in the encoding it arrived in, so Policies on an older
+  roboscope-kit keep working over JSON. RoboDojo Workers prefer MessagePack; the other benchmarks still
+  use JSON. `PolicyClient` takes `encoding=` (default `ROBOSCOPE_POLICY_ENCODING`, else `json`), and
+  `msgpack>=1.0.8,<2` is now a dependency.
+
 ## 0.8.0b26 - 2026-11-05
 
 - Add the `robomimic` benchmark with the `ph_low_dim` suite (protocol `robomimic-v1`): the robomimic v0.1

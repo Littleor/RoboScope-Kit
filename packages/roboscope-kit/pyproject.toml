@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "roboscope-kit"
-version = "0.8.0b26"
+version = "0.8.0b27"
 description = "RoboScope Kit: Policy inference integration for RoboScope simulation benchmarks"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,6 +27,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
+    "msgpack>=1.0.8,<2",
     "numpy>=1.24",
 ]
 

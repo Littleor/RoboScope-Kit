@@ -26,9 +26,11 @@ from roboscope_kit.policy import (
     validate_policy_capabilities,
 )
 from roboscope_kit.protocol import (
+    ENCODINGS,
     PROTOCOL_VERSION,
+    Encoding,
     ProtocolError,
-    receive_message,
+    receive_frame,
     send_message,
     validate_version,
 )
@@ -84,16 +86,18 @@ class PolicyServer:
     def _serve_connection(self, connection: socket.socket) -> None:
         while self.state is not PolicyState.CLOSED:
             request: dict[str, Any] | None = None
+            encoding: Encoding = "json"
             try:
-                request = receive_message(connection)
-                if request is None:
+                received = receive_frame(connection)
+                if received is None:
                     return
+                request, encoding = received
                 with self._request_lock:
                     response = self._handle(request)
             except Exception as exc:
                 request_id = str(request.get("request_id") or "") if request is not None else ""
                 response = self._error_response(exc, request_id=request_id)
-            send_message(connection, response)
+            send_message(connection, response, encoding)
 
     def _handle(self, request: dict[str, Any]) -> dict[str, Any]:
         request_id = str(request.get("request_id") or uuid.uuid4())
@@ -112,6 +116,9 @@ class PolicyServer:
 
     def _dispatch(self, operation: str, payload: dict[str, Any]) -> Any:
         if operation == "health":
+            # A client offering encodings learns which ones this server can receive.
+            if "encodings" in payload:
+                return {"state": self.state.value, "encodings": list(ENCODINGS)}
             return {"state": self.state.value}
         if operation == "load":
             self._require_state(operation, PolicyState.CREATED)

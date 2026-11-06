@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 import socket
 import time
 import uuid
@@ -20,12 +21,17 @@ from roboscope_kit.policy import (
     SessionContext,
 )
 from roboscope_kit.protocol import (
+    ENCODINGS,
     PROTOCOL_VERSION,
+    Encoding,
     ProtocolError,
     receive_message,
     send_message,
     validate_version,
 )
+
+# Encoding each policy socket agreed to, so per-call clients negotiate once per process.
+_NEGOTIATED_ENCODINGS: dict[str, Encoding] = {}
 
 
 class PolicyRemoteError(RuntimeError):
@@ -39,9 +45,25 @@ class PolicyRemoteError(RuntimeError):
 
 
 class PolicyClient:
-    def __init__(self, socket_path: str | Path, timeout_s: float = 30.0) -> None:
+    """Client for one policy socket.
+
+    ``encoding`` is the preferred frame encoding; when omitted it is ``ROBOSCOPE_POLICY_ENCODING`` (set by
+    the benchmark runtime for its Workers), else ``json``. A preference for ``msgpack`` is used only after
+    the server's ``health`` reply lists it; an older server keeps the connection on JSON.
+    """
+
+    def __init__(
+        self, socket_path: str | Path, timeout_s: float = 30.0, encoding: Encoding | None = None
+    ) -> None:
         self.socket_path = str(socket_path)
         self.timeout_s = timeout_s
+        preferred = encoding or os.environ.get("ROBOSCOPE_POLICY_ENCODING") or "json"
+        if preferred not in ENCODINGS:
+            raise ValueError(f"policy encoding must be one of {', '.join(ENCODINGS)}; got {preferred!r}")
+        self.preferred_encoding: Encoding = preferred  # type: ignore[assignment]
+        self._encoding: Encoding | None = (
+            "json" if preferred == "json" else _NEGOTIATED_ENCODINGS.get(self.socket_path)
+        )
         self._connection: socket.socket | None = None
         if profiling.ENABLED:
             # Only a --profile Worker pays for the NVTX ranges; otherwise requests run unwrapped.
@@ -123,7 +145,28 @@ class PolicyClient:
         with profiling.request(operation):
             return PolicyClient._request(self, operation, payload)
 
+    @property
+    def encoding(self) -> Encoding | None:
+        """The frame encoding in use, or ``None`` before a preferred non-JSON encoding is negotiated."""
+
+        return self._encoding
+
+    def _negotiate(self) -> Encoding:
+        result = self._exchange("health", {"encodings": [self.preferred_encoding]}, "json")
+        accepted = result.get("encodings") if isinstance(result, dict) else None
+        encoding: Encoding = (
+            self.preferred_encoding if isinstance(accepted, list) and self.preferred_encoding in accepted
+            else "json"
+        )
+        _NEGOTIATED_ENCODINGS[self.socket_path] = encoding
+        return encoding
+
     def _request(self, operation: str, payload: dict[str, Any]) -> Any:
+        if self._encoding is None:
+            self._encoding = self._negotiate()
+        return self._exchange(operation, payload, self._encoding)
+
+    def _exchange(self, operation: str, payload: dict[str, Any], encoding: Encoding) -> Any:
         if self._connection is None:
             self.connect()
         if self._connection is None:
@@ -137,6 +180,7 @@ class PolicyClient:
                 "operation": operation,
                 "payload": payload,
             },
+            encoding,
         )
         response = receive_message(self._connection)
         if response is None:

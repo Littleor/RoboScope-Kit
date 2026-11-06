@@ -69,6 +69,8 @@ def run_item(args: argparse.Namespace, item: WorkItem) -> WorkResult:
         "PYTHONNOUSERSITE": "1",
         "PYTHONDONTWRITEBYTECODE": "1",
         "ROBOSCOPE_INFERENCE_SOCKET": str(args.policy_socket.resolve()),
+        # Camera frames go every control step; MessagePack avoids JSON/base64 encoding them.
+        "ROBOSCOPE_POLICY_ENCODING": "msgpack",
         "ROBOSCOPE_ROBODOJO_ACTION_REPRESENTATION": args.action_representation,
         "ROBOSCOPE_ROBODOJO_STEP_UPDATES": "1" if args.step_observation_updates else "0",
         "ROBOSCOPE_ROBODOJO_OBSERVATION_QUEUE_SIZE": str(args.observation_queue_size),
