@@ -1,0 +1,41 @@
+{
+  "schema_version": 3,
+  "supported_benchmarks": ["libero_pro"],
+  "protocol_versions": {"libero_pro": "libero-pro-v1"},
+  "supported_suites": {
+    "libero_pro": [
+      "libero_goal_object",
+      "libero_goal_swap",
+      "libero_goal_lan",
+      "libero_goal_task",
+      "libero_spatial_object",
+      "libero_spatial_swap",
+      "libero_spatial_lan",
+      "libero_spatial_task",
+      "libero_10_object",
+      "libero_10_swap",
+      "libero_10_lan",
+      "libero_10_task",
+      "libero_object_object",
+      "libero_object_swap",
+      "libero_object_lan",
+      "libero_object_task"
+    ]
+  },
+  "runtime": {
+    "python": "env/bin/python",
+    "benchmark_root": "LIBERO-PRO",
+    "config_path": "config/config.yaml"
+  },
+  "defaults": {
+    "episodes": 50,
+    "chunk_size": 1,
+    "seed": 7,
+    "sample_seed": 7,
+    "settle_steps": 10,
+    "render_backend": "egl",
+    "client_cpu_threads": 1,
+    "ready_timeout_s": 300
+  },
+  "benchmark_protocols": {}
+}

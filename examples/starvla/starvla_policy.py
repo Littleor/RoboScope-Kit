@@ -341,6 +341,7 @@ def _image_preprocessor(benchmark_name: str) -> ImagePreprocessor:
         "robocasa": _resize_image_with_opencv,
         "libero_plus": _resize_image_with_opencv,
         "libero": _resize_image_with_pil,
+        "libero_pro": _resize_image_with_pil,
         "calvin": _resize_calvin_image,
         "metaworld": _resize_image_with_opencv,
     }

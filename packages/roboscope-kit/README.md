@@ -239,6 +239,7 @@ dependencies of the PyPI package; the benchmark manifest points the runtime at t
 | --- | --- | --- |
 | LIBERO | SDK-native adapter and persistent LIBERO worker | Pinned LIBERO environment, simulator source, dataset, and initial states |
 | LIBERO-Plus | SDK-native adapter reusing the LIBERO worker | Pinned LIBERO-Plus environment, simulator source, dataset, and initial states |
+| LIBERO-Pro | SDK-native adapter reusing the LIBERO worker, with the perturbed BDDL instruction and the base suite's horizon | Pinned LIBERO-Pro environment (CPython 3.11), simulator source and assets, and the released perturbed BDDL and initial-state files |
 | RoboTwin | SDK-native adapter and worker calling the pinned RoboTwin launcher | RoboTwin environment and source, deploy policy, checkpoint assets, and validated seed cache |
 | RoboDojo | SDK-native adapter and worker calling the pinned RoboDojo simulator | Isaac Sim environment, RoboDojo source and evaluation assets |
 | RoboCasa | SDK-native adapter and persistent RoboCasa worker | Pinned RoboCasa environment, simulator and task source, and dataset assets |
@@ -255,7 +256,8 @@ The exact contracts are in the protocol documents:
 
 - [LIBERO](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/LIBERO_EVALUATION_PROTOCOL.md):
   environment build, invocation, checkpoint staging, observation/action mapping, episode setup and horizons,
-  success detection, output files, errors, and the validation sequence; also LIBERO-Plus.
+  success detection, output files, errors, and the validation sequence; also LIBERO-Plus and LIBERO-Pro
+  (supported perturbation suites, instruction source, and the correctness and performance baseline).
 - [CALVIN](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/CALVIN_EVALUATION_PROTOCOL.md):
   manifest, observation/action mapping, official long-horizon evaluator, aggregation, and validation.
 - [MetaWorld](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/METAWORLD_EVALUATION_PROTOCOL.md):
@@ -371,8 +373,8 @@ supported, and loading the package source through `PYTHONPATH` does not make the
 
 Model frameworks and simulators keep their own pinned interpreters and dependencies; installing
 `roboscope-kit` does not install or upgrade them. Simulator environments still pinned to Python 3.8
-(CALVIN, RoboTwin) or 3.10 (LIBERO) must be upgraded and validated separately before they can use this
-package.
+(CALVIN, RoboTwin) or 3.10 (LIBERO, LIBERO-Plus) must be upgraded and validated separately before they can
+use this package; the LIBERO-Pro environment is CPython 3.11.18.
 
 The supported list is declared in `pyproject.toml` under `tool.roboscope.python-support`. On every change,
 CI builds one wheel and sdist, installs both on each listed version, imports every module without loading

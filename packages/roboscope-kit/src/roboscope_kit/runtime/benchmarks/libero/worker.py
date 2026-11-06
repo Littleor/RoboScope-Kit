@@ -75,14 +75,32 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--worker-id", type=int, required=True)
     parser.add_argument("--policy-socket", type=Path, required=True)
-    parser.add_argument("--suite", choices=sorted(MAX_STEPS), required=True)
+    parser.add_argument("--suite", required=True)
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        help="policy action steps per episode; required for suites outside MAX_STEPS",
+    )
+    parser.add_argument(
+        "--instruction-source",
+        choices=("task", "bddl"),
+        default="task",
+        help="task: the benchmark's Task.language; bddl: the (:language ...) of the task's BDDL file",
+    )
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--queue-dir", type=Path, required=True)
     parser.add_argument("--worker-state-dir", type=Path, required=True)
     parser.add_argument("--video-dir", type=Path)
     parser.add_argument("--poll-interval", type=float, default=0.05)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.max_steps is None:
+        if args.suite not in MAX_STEPS:
+            parser.error(f"--max-steps is required for suite {args.suite!r}")
+        args.max_steps = MAX_STEPS[args.suite]
+    if args.max_steps < 1:
+        parser.error("--max-steps must be positive")
+    return args
 
 
 def build_observation(
@@ -126,7 +144,12 @@ def _state_vector(observation: dict, name: str, expected: int) -> np.ndarray:
     return value
 
 
-def create_task_runtime(task_suite: object, task_id: int, seed: int) -> TaskRuntime:
+def create_task_runtime(
+    task_suite: object,
+    task_id: int,
+    seed: int,
+    instruction_source: str = "task",
+) -> TaskRuntime:
     from libero.libero import get_libero_path
     from libero.libero.envs import OffScreenRenderEnv
 
@@ -138,9 +161,12 @@ def create_task_runtime(task_suite: object, task_id: int, seed: int) -> TaskRunt
         camera_widths=LIBERO_ENV_RESOLUTION,
     )
     env.seed(seed)
+    # LIBERO-Pro keeps the original BDDL file names while its perturbed (:language ...) differs, so
+    # its instruction is the one the environment parsed from the BDDL file, not Task.language.
+    instruction = env.language_instruction if instruction_source == "bddl" else task.language
     return TaskRuntime(
         task_id=task_id,
-        task_description=task.language,
+        task_description=instruction,
         initial_states=task_suite.get_task_init_states(task_id),
         env=env,
     )
@@ -220,7 +246,7 @@ def run_chunk(
             runtime,
             policy,
             episode_index,
-            max_steps=MAX_STEPS[args.suite],
+            max_steps=args.max_steps,
             settle_steps=args.settle_steps,
             save_frames=args.video_dir is not None,
         )
@@ -266,7 +292,7 @@ def main() -> None:
         if runtime is None or runtime.task_id != task_id:
             if runtime is not None:
                 runtime.env.close()
-            runtime = create_task_runtime(task_suite, task_id, args.seed)
+            runtime = create_task_runtime(task_suite, task_id, args.seed, args.instruction_source)
         return run_chunk(args, item, runtime, policy)
 
     try:

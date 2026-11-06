@@ -16,6 +16,7 @@ body:
       options:
         - LIBERO
         - LIBERO-Plus
+        - LIBERO-Pro
         - RoboTwin
         - RoboDojo
         - RoboCasa

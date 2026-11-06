@@ -1,0 +1,46 @@
+# LIBERO-Pro demo: zero-shot evaluation of the LIBERO demo's checkpoint on the 16 released LIBERO-Pro
+# single-perturbation suites. starvla_policy.py preprocesses like the LIBERO client of the pinned StarVLA
+# revision (PIL bilinear resize, server-side unnormalization), which is the native evaluator it is
+# compared against.
+benchmark: libero_pro
+suites:
+  - libero_goal_object
+  - libero_goal_swap
+  - libero_goal_lan
+  - libero_goal_task
+  - libero_spatial_object
+  - libero_spatial_swap
+  - libero_spatial_lan
+  - libero_spatial_task
+  - libero_10_object
+  - libero_10_swap
+  - libero_10_lan
+  - libero_10_task
+  - libero_object_object
+  - libero_object_swap
+  - libero_object_lan
+  - libero_object_task
+checkpoint:
+  repo: StarVLA/Qwen2.5-VL-OFT-LIBERO-4in1
+  revision: a60fff4173dc3732796df370a15a9a2db7bd7e5e
+starvla_revision: 7e4a47360093d79dc42b883885c04fbe790c5b60
+policy: starvla_policy.py
+# Merged into the checkpoint's config.yaml.
+config:
+  inference:
+    dtype: bfloat16
+    unnorm_key: franka
+    inputs:
+      images: [images.primary, images.wrist]
+      language: language.instruction
+    kwargs:
+      do_sample: false
+      use_ddim: true
+      num_ddim_steps: 10
+    action_transforms:
+      # StarVLA open_gripper (1 = open) -> LIBERO gripper command (-1 = open).
+      - operation: threshold
+        index: 6
+        threshold: 0.5
+        below: 1.0
+        above: -1.0

@@ -12,6 +12,7 @@ with, the Policy file, and the configuration merged into the checkpoint's `confi
 | Demo | Checkpoint | Suites | StarVLA revision | Policy |
 | --- | --- | --- | --- | --- |
 | [`libero/`](libero/demo.yaml) | [`StarVLA/Qwen2.5-VL-OFT-LIBERO-4in1`](https://huggingface.co/StarVLA/Qwen2.5-VL-OFT-LIBERO-4in1) | `libero_spatial`, `libero_object`, `libero_goal`, `libero_10` | `7e4a473` | `starvla_libero_policy.py` |
+| [`libero_pro/`](libero_pro/demo.yaml) | [`StarVLA/Qwen2.5-VL-OFT-LIBERO-4in1`](https://huggingface.co/StarVLA/Qwen2.5-VL-OFT-LIBERO-4in1) | the 16 `libero_{goal,spatial,10,object}_{object,swap,lan,task}` suites | `7e4a473` | `starvla_policy.py` |
 | [`libero_plus/`](libero_plus/demo.yaml) | [`StarVLA/Qwen3-VL-OFT-LIBERO-4in1`](https://huggingface.co/StarVLA/Qwen3-VL-OFT-LIBERO-4in1) | `libero_spatial`, `libero_object`, `libero_goal`, `libero_10` | `985c223` | `starvla_policy.py` |
 | [`robotwin/`](robotwin/demo.yaml) | [`StarVLA/Qwen3-VL-OFT-Robotwin2`](https://huggingface.co/StarVLA/Qwen3-VL-OFT-Robotwin2) | `demo_clean`, `demo_randomized` | `7e4a473` | `starvla_policy.py` |
 | [`robocasa/`](robocasa/demo.yaml) | [`StarVLA/Qwen3-VL-OFT-Robocasa`](https://huggingface.co/StarVLA/Qwen3-VL-OFT-Robocasa) | `tabletop` | `985c223` | `starvla_policy.py` |
@@ -19,7 +20,9 @@ with, the Policy file, and the configuration merged into the checkpoint's `confi
 | [`metaworld/`](metaworld/demo.yaml) | [`MINT-SJTU/starvla_metaworld_qwenpiv3_baseline_finetune`](https://huggingface.co/MINT-SJTU/starvla_metaworld_qwenpiv3_baseline_finetune) | `mt50` | `985c223` | `starvla_policy.py` |
 
 StarVLA publishes LIBERO-trained checkpoints for LIBERO-Plus and evaluates them zero-shot; the LIBERO-Plus
-demo does the same. StarVLA publishes no CALVIN or MetaWorld checkpoint, so those demos use community
+demo does the same. The LIBERO-Pro demo evaluates the LIBERO demo's checkpoint zero-shot with
+`starvla_policy.py`, which preprocesses like the LIBERO client of StarVLA `7e4a473`, the native evaluator it
+was compared against. StarVLA publishes no CALVIN or MetaWorld checkpoint, so those demos use community
 StarVLA checkpoints.
 
 ## Run a demo
@@ -91,8 +94,8 @@ fetch it with `python starvla_base_assets.py <run-snapshot>`.
   horizon. On RoboTwin the stride lets the runtime render only at chunk boundaries.
 - `act` resizes each camera image to the 224x224 model input the same way the pinned StarVLA client of that
   benchmark does: OpenCV `INTER_AREA` for RoboTwin, RoboCasa, LIBERO-Plus, and MetaWorld; PIL bilinear for
-  LIBERO; StarVLA's resize-and-pad for CALVIN. It then unnormalizes the predicted actions with the training
-  statistics and applies the configured action transforms.
+  LIBERO and LIBERO-Pro; StarVLA's resize-and-pad for CALVIN. It then unnormalizes the predicted actions with
+  the training statistics and applies the configured action transforms.
 - `starvla_libero_policy.py` instead resizes LIBERO images with OpenCV `INTER_AREA`, clips the normalized
   actions to [-1, 1], binarizes the gripper, and then unnormalizes with the min/max statistics.
 - Neither Policy keeps per-episode state, so `reset` does nothing.

@@ -14,6 +14,7 @@ from roboscope_kit.contracts import ActionSpec, BenchmarkSpec, FeatureKind, Feat
 class BenchmarkName(str, Enum):  # noqa: UP042 -- benchmark environments include Python 3.10
     LIBERO = "libero"
     LIBERO_PLUS = "libero_plus"
+    LIBERO_PRO = "libero_pro"
     ROBOCASA = "robocasa"
     ROBOTWIN = "robotwin"
     CALVIN = "calvin"
@@ -109,6 +110,11 @@ class LiberoBenchmarkDefinition(BenchmarkDefinition):
 class LiberoPlusBenchmarkDefinition(LiberoBenchmarkDefinition):
     name = BenchmarkName.LIBERO_PLUS
     protocol_version = "libero-plus-v1"
+
+
+class LiberoProBenchmarkDefinition(LiberoBenchmarkDefinition):
+    name = BenchmarkName.LIBERO_PRO
+    protocol_version = "libero-pro-v1"
 
 
 class RoboCasaBenchmarkDefinition(BenchmarkDefinition):
@@ -323,6 +329,7 @@ _DEFINITIONS: dict[BenchmarkName, BenchmarkDefinition] = {
     for definition in (
         LiberoBenchmarkDefinition(),
         LiberoPlusBenchmarkDefinition(),
+        LiberoProBenchmarkDefinition(),
         RoboCasaBenchmarkDefinition(),
         RoboTwinBenchmarkDefinition(),
         RoboDojoBenchmarkDefinition(),

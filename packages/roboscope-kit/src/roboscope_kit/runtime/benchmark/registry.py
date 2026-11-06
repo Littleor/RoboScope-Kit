@@ -19,6 +19,10 @@ def benchmark_factory(name: BenchmarkName) -> BenchmarkFactory:
         from roboscope_kit.runtime.benchmarks.libero_plus import LiberoPlusBenchmarkFactory
 
         return LiberoPlusBenchmarkFactory()
+    if name is BenchmarkName.LIBERO_PRO:
+        from roboscope_kit.runtime.benchmarks.libero_pro import LiberoProBenchmarkFactory
+
+        return LiberoProBenchmarkFactory()
     if name is BenchmarkName.ROBOTWIN:
         from roboscope_kit.runtime.benchmarks.robotwin import RoboTwinBenchmarkFactory
 

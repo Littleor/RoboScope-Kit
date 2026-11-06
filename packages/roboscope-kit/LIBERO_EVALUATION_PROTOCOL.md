@@ -1,13 +1,13 @@
 # LIBERO Evaluation Protocol
 
-This document defines the SDK-native RoboScope LIBERO and LIBERO+ evaluation contract. The kit's benchmark
+This document defines the SDK-native RoboScope LIBERO, LIBERO+, and LIBERO-Pro evaluation contract. The kit's benchmark
 runtime owns benchmark enumeration, simulator processes, concurrency, recovery, and result aggregation.
 User inference code owns only the public `Policy` lifecycle and model-specific preprocessing and
 postprocessing.
 
 The current protocol identifiers are:
 
-- benchmark specification: `libero-v1` (LIBERO+: `libero-plus-v1`);
+- benchmark specification: `libero-v1` (LIBERO+: `libero-plus-v1`; LIBERO-Pro: `libero-pro-v1`);
 - action representation: `libero.delta-eef-v1`;
 - SDK-native evaluator transport: `roboscope-policy-v1`.
 
@@ -16,7 +16,7 @@ LIBERO+ simulator environments are CPython 3.10.20, the interpreter of their pin
 their evaluator workers import the kit in that interpreter. Python 3.10 is outside the kit's
 [supported range](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/README.md#python-support);
 the modules a LIBERO worker imports are kept importable on it, and the build scripts check that import,
-but CI does not test it.
+but CI does not test it. The LIBERO-Pro environment is CPython 3.11.18 (section 11).
 
 ## 1. Environment and invocation
 
@@ -340,7 +340,237 @@ and
 [`runtime-requirements.txt`](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/libero_plus/runtime-requirements.txt).
 The remaining steps and the manifest layout match section 1, with `benchmark_root` set to `LIBERO-plus`.
 
-## 11. Other benchmarks
+## 11. LIBERO-Pro
+
+LIBERO-Pro (`--benchmark libero_pro`, protocol `libero-pro-v1`) runs the LIBERO worker above against the
+released single-perturbation suites of [LIBERO-Pro](https://github.com/Zxy-MLlab/LIBERO-PRO). Sections 2–9
+apply, with the differences below.
+
+### Pinned inputs
+
+| Input | Pin |
+| --- | --- |
+| Source, assets, base suites | `Zxy-MLlab/LIBERO-PRO` at `eafdb809426b13153aa1e4c42d6601844217dfec` (2026-03-23, head of master); its tree carries `libero/libero/assets` and the base LIBERO BDDL and initial-state files |
+| Perturbed task files | Hugging Face dataset `zhouxueyang/LIBERO-Pro` at revision `c86fc3b8293185a6f373677018ff3e37f8391602` (CC-BY-4.0): 160 BDDL and 160 `.pruned_init` files, each checked against [`task-files.sha256`](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/libero_pro/task-files.sha256) |
+| Task registry | the source revision's `libero/libero/benchmark/__init__.py` and `libero_suite_task_map.py` (the parallel-evaluation registry upstream added on 2025-11-05) |
+| Interpreter | CPython 3.11.18 from conda-forge, [`conda-specs.txt`](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/libero_pro/conda-specs.txt) |
+| Packages | [`runtime-requirements.txt`](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/libero_pro/runtime-requirements.txt): the LIBERO lock (`robosuite==1.4.0`, `bddl==1.0.1`, `mujoco==3.2.3`, `numpy==1.24.4`, `torch==2.5.1+cpu`) with `matplotlib` 3.5.3 → 3.7.5 (+ `contourpy` 1.3.2), the only change CPython 3.11 needs, and the `exceptiongroup`/`tomli` backports dropped |
+
+Upstream documents Python 3.8.13 with torch 1.11; this runtime is the kit's minimum supported interpreter
+instead, verified by the build's import checks, the suite check below, and the evaluations in this section.
+`evaluation_config.yaml` and `perturbation.py` are not used: the released files are already the
+single-perturbation configurations they would generate.
+
+Build it with
+[`benchmarks/libero_pro/build-runtime.sh`](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/benchmarks/libero_pro/build-runtime.sh) `<install-dir>`
+(Linux x86_64, `conda` or `micromamba`, `git`, `curl`, network access, about 2 GB of disk). It fetches the
+pinned commit only, downloads the 320 task files from the pinned dataset revision into
+`LIBERO-PRO/libero/libero/{bddl_files,init_files}/<suite>/`, verifies every checksum, creates the
+environment, and then, besides the import checks of section 1, loads every supported suite from the
+LIBERO-Pro registry and checks it has 10 tasks, a BDDL file per task, and 50 initial states per task.
+`LIBERO_PRO_URL` and `LIBERO_PRO_FILES_URL` select mirrors; the commit and checksums still apply. The
+manifest layout matches section 1 with `benchmark_root` set to `LIBERO-PRO`. `--self-test` additionally
+checks that each suite has its 10 BDDL and 10 initial-state files.
+
+Evaluate one suite per run, for example with the StarVLA demo snapshot:
+
+```bash
+python -m roboscope_kit.runtime.benchmark \
+    --benchmark libero_pro --suite libero_goal_task --checkpoint-source /models/starvla-libero \
+    --benchmark-manifest <install-dir>/benchmark-manifest.json \
+    --policy-config /path/to/RoboScope-Kit/examples/starvla/roboscope-policy.json \
+    --output-dir /runs/libero_pro/libero_goal_task
+```
+
+### Supported suites
+
+Each suite is one base LIBERO suite under one perturbation dimension. Suite names are upstream's.
+
+| Dimension (upstream flag) | Suffix | What changes | Suites |
+| --- | --- | --- | --- |
+| Object (`use_object`) | `_object` | object appearance, color, and scale | `libero_goal_object`, `libero_spatial_object`, `libero_10_object`, `libero_object_object` |
+| Position (`use_swap`) | `_swap` | initial object positions (swapped regions) | `libero_goal_swap`, `libero_spatial_swap`, `libero_10_swap`, `libero_object_swap` |
+| Semantic (`use_language`) | `_lan` | paraphrased instruction | `libero_goal_lan`, `libero_spatial_lan`, `libero_10_lan`, `libero_object_lan` |
+| Task (`use_task`) | `_task` | new instruction and goal in the same scene | `libero_goal_task`, `libero_spatial_task`, `libero_10_task`, `libero_object_task` |
+
+Every suite has the 10 tasks of its base suite, in the registry's order (the base suite's task order), and
+every task ships 50 initial states, so a scored suite is 10 tasks × 50 episodes = 500 episodes, episode `e`
+using initial state `e`. The standard single-perturbation profile is all 16 suites, 8,000 episodes. Each
+suite runs at its base suite's horizon, as upstream's `TASK_MAX_STEPS` does: `libero_goal_*` 300,
+`libero_spatial_*` 220, `libero_10_*` 520, `libero_object_*` 280 policy steps. Seed (7), settle steps
+(10), observations, actions, success, and termination are those of sections 3–5.
+
+One run evaluates one suite, and its official result is that suite's per-task table. Report every suite,
+that is every (base suite, dimension) cell, on its own. A per-dimension or overall figure is a mean of
+suite success rates and must be labeled as such; never pool LIBERO-Pro suites with each other or with
+plain LIBERO into one success count, and never combine different dimensions into one score.
+`result.json` metadata records `base_suite`, `perturbation`, `dimension`, `max_steps`, and
+`instruction_source` for every run.
+
+Not supported, and rejected as suites:
+
+- **Environment** (`*_env`): no files were released. The maintainers withheld them for simulation
+  stability issues ([LIBERO-PRO#9](https://github.com/Zxy-MLlab/LIBERO-PRO/issues/9)); upstream's README
+  notes that replacing the environment can make objects on the table move, and
+  [LIBERO-PRO#24](https://github.com/Zxy-MLlab/LIBERO-PRO/issues/24) shows a misplaced initial layout.
+  Generating them locally is not frozen either (next item), so no result here covers Environment.
+- **Combined perturbations** (`*_temp`): upstream generates them at evaluation time with `perturbation.py`
+  into shared `*_temp` directories keyed by a `log.txt` of the flags, so concurrent runs overwrite each
+  other's files, and the generation seed falls back to `configs.get("seed", int)` (the `int` type), which
+  is not a reproducible seed. Upstream's rule that the Task perturbation cannot be combined with others
+  would apply to any future combined profile, which must be frozen and reported separately from this one.
+- **The 2026-07 seven-case extension** of the dataset (`bddl_files/0*_*`, 40 tasks × 7 cases): its
+  `:perturbation_config` fields need a LIBERO-Pro-aware parser and evaluation integration that the pinned
+  source revision does not contain, so the build does not download it.
+
+### Instruction source
+
+`language.instruction` is the `(:language ...)` of the task's perturbed BDDL file as the environment parsed
+it (`env.language_instruction`, lowercased and whitespace-normalized by the BDDL tokenizer), not
+`Task.language`. The released files keep the original BDDL file names, and upstream's registry derives
+`Task.language` from the file name, so `Task.language` is the unperturbed LIBERO instruction: feeding it
+would silently undo the Semantic and Task perturbations (for example, `libero_goal_task`'s
+`put_the_bowl_on_the_plate` asks for "put the wine bottle on the plate"). The maintainers prescribe
+`env.language_instruction` ([LIBERO-PRO#14](https://github.com/Zxy-MLlab/LIBERO-PRO/issues/14));
+[LIBERO-PRO#27](https://github.com/Zxy-MLlab/LIBERO-PRO/issues/27) measures how much the choice moves Task
+scores. The worker selects this source with `--instruction-source bddl`; plain LIBERO and LIBERO+ keep
+`Task.language`.
+
+This also differs from plain LIBERO where the dimension does not perturb language. The BDDL wording of
+the unperturbed base tasks is not their file-name instruction for `libero_spatial` ("pick the akita black
+bowl ..." for "pick up the black bowl ..."), `libero_object` ("pick the ..." for "pick up the ..."), and 5
+of 10 `libero_goal` tasks, so the Object and Position suites of those bases also see that wording; for
+`libero_10` the two are identical. Runners that feed `Task.language` score something else: StarVLA's
+LIBERO client does (checked at `7e4a473`), and LIBERO-PRO#27 reports the same for the openvla-oft, openpi,
+and lerobot clients. Scores produced that way, possibly including published ones, are not comparable to
+these for the Semantic and Task dimensions.
+
+Known upstream content issues that this protocol does not correct, because the released files are scored
+as released: [LIBERO-PRO#38](https://github.com/Zxy-MLlab/LIBERO-PRO/issues/38) (`libero_10_task`
+KITCHEN_SCENE8 left/right naming) and
+[LIBERO-PRO#25](https://github.com/Zxy-MLlab/LIBERO-PRO/issues/25) (`libero_object_swap` swaps the target
+with a distractor, not with the basket). The unbalanced goals of
+[LIBERO-PRO#28](https://github.com/Zxy-MLlab/LIBERO-PRO/issues/28) are not in the released files.
+
+### Correctness baseline
+
+Recorded on 2026-11-05 with this change's kit (0.8.0b29), the runtime built by this section's script, the
+[StarVLA demo](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/examples/starvla/libero_pro/demo.yaml)
+(`StarVLA/Qwen2.5-VL-OFT-LIBERO-4in1` at `a60fff4`, StarVLA `7e4a473`, bf16, `starvla_policy.py`), and one
+RTX 3080 10 GB.
+
+The native reference is StarVLA `7e4a473`'s own evaluator: `deployment/model_server/server_policy.py
+--use_bf16` serving the same checkpoint, and its LIBERO client `examples/LIBERO/eval_files/eval_libero.py`,
+run in the LIBERO-Pro interpreter with only the two changes LIBERO-Pro prescribes for such a client:
+perturbed suites take their base suite's horizon (upstream README `TASK_MAX_STEPS`) and the instruction is
+`env.language_instruction` (LIBERO-PRO#14). The harness also writes one line per episode and skips videos.
+The Kit ran the same Policy, wrapped only to log every request, at fixed K=2/g=1. Both sides used seed 7
+and initial states 0–4 of every task of `libero_goal_task`, `libero_spatial_lan`, `libero_object_swap`, and
+`libero_10_object` (one suite per dimension, 200 paired episodes):
+
+| Paired check | Equal |
+| --- | ---: |
+| success | 200 / 200 |
+| policy steps executed | 197 / 200 |
+| instruction | 200 / 200 |
+| first agent-view image (SHA-256 of the flipped 256 × 256 frame) | 194 / 200 |
+| first action chunk, bit for bit, where the first image is equal | 194 / 194 |
+| whole executed action sequence, bit for bit | 186 / 200 |
+
+Per suite, the Kit and native success counts are 4/4, 48/48, 0/0, and 23/23 of 50. What these 200
+episodes verify, and what they do not:
+
+- Instruction: identical in 200 of 200 episodes.
+- Observation and action mapping: in the 194 episodes whose first agent-view frame was identical on both
+  sides, the first 8-action chunk the environment executed was also identical bit for bit. On those starts,
+  the image flip, resizing, instruction, model input, unnormalization, gripper mapping, and chunk order give
+  the same first actions. Only the primary frame and the actions were hashed, not the wrist frame.
+- Whole episodes: the full executed action sequence was identical in 186 of 200, the policy step count in
+  197 of 200, and success in 200 of 200.
+
+The differences, and what explains them:
+
+- 6 episodes start from a different first frame. LIBERO seeds a task environment once and reuses it, and
+  the state after `reset()`, `set_init_state()`, and the settle steps still depends on the random draws of
+  that environment's earlier resets. A CPU-only check on one task (`libero_spatial_lan` task 9) showed this:
+  a fresh environment and one that had already run episode 0 reach different simulator states for episode 1,
+  and re-seeding before the episode restores the fresh state. The native client always runs a task's
+  episodes in order on one environment. With K=2 the Kit split two tasks between Workers, and the 6 episodes
+  are exactly those whose Worker environment had a different history (`libero_goal_task` task 9 episodes
+  3–4, `libero_spatial_lan` task 9 episodes 1–4). The 3 step-count differences are among them: successes
+  1–3 steps apart. This is upstream LIBERO behavior that plain LIBERO shares. The Kit keeps upstream's
+  seed-once semantics; re-seeding per episode would change outcomes relative to upstream.
+- 8 episodes start identically but diverge later in the action sequence, with the same success and step
+  count. This was not traced; it is consistent with GPU inference that is not bitwise reproducible, but that
+  was not shown.
+
+This is one run per side on 4 of the 16 suites and initial states 0–4. It supports the mappings above; it
+does not establish statistical equivalence of scores, or anything about the suites and episodes it did not
+cover.
+
+### Full evaluation
+
+All 16 suites of the standard profile, 500 episodes each (10 tasks × initial states 0–49, every episode
+exactly once), 8,000 episodes in total, with the same demo Policy and snapshot as above. 13 suites ran on
+the RTX 3080 10 GB at fixed K=2/g=1. `libero_10_swap`, `libero_10_lan`, and `libero_10_task` ran on one
+RTX 4090 48 GB at fixed K=8/g=2 with `OMP_NUM_THREADS=8`, sharing the GPU with other evaluation jobs, using
+a runtime built by the same script (identical package set). Success rates (each cell one suite; the last
+row is a mean of suite success rates):
+
+| Base suite | Object | Position | Semantic | Task |
+| --- | ---: | ---: | ---: | ---: |
+| `libero_goal` | 70.2% | 1.2% | 88.6% | 9.4% |
+| `libero_spatial` | 95.2% | 0.0% | 93.4% | 55.0% |
+| `libero_10` | 47.4% | 0.0% | 91.8% | 10.6% |
+| `libero_object` | 90.2% | 0.0% | 96.4% | 9.6% |
+| Mean of the 4 suites | 75.8% | 0.3% | 92.5% | 21.1% |
+
+| Suite | Episodes | Successes | Hardware, K/g |
+| --- | ---: | ---: | --- |
+| `libero_goal_object` | 500 | 351 | 3080, 2/1 |
+| `libero_goal_swap` | 500 | 6 | 3080, 2/1 |
+| `libero_goal_lan` | 500 | 443 | 3080, 2/1 |
+| `libero_goal_task` | 500 | 47 | 3080, 2/1 |
+| `libero_spatial_object` | 500 | 476 | 3080, 2/1 |
+| `libero_spatial_swap` | 500 | 0 | 3080, 2/1 |
+| `libero_spatial_lan` | 500 | 467 | 3080, 2/1 |
+| `libero_spatial_task` | 500 | 275 | 3080, 2/1 |
+| `libero_10_object` | 500 | 237 | 3080, 2/1 |
+| `libero_10_swap` | 500 | 0 | 4090, 8/2 |
+| `libero_10_lan` | 500 | 459 | 4090, 8/2 |
+| `libero_10_task` | 500 | 53 | 4090, 8/2 |
+| `libero_object_object` | 500 | 451 | 3080, 2/1 |
+| `libero_object_swap` | 500 | 0 | 3080, 2/1 |
+| `libero_object_lan` | 500 | 482 | 3080, 2/1 |
+| `libero_object_task` | 500 | 48 | 3080, 2/1 |
+
+### Hardware and performance baseline
+
+On this 10 GB GPU, one bf16 replica of the 3B checkpoint held 8.3–8.8 GB and one EGL Worker about 0.46 GB
+of the same GPU (measured with a single Worker). At K=2/g=1, with
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` in the Policy's environment, the peak over the 13 suites run
+on it was 9,832 MiB of the card's 10,240 MiB. In the one K=4/g=1 run, the Policy ran out of memory and the run
+aborted. K=3 was not tried: another Worker's 0.46 GB is not expected to fit. Autotune was not used, because
+its probes would try larger K. The RTX 3080 runs use fixed `--concurrency 2 --replicas 1`. A larger GPU
+raises this limit (the RTX 4090 runs below use K=8/g=2); rendering on another GPU was not tested.
+
+| `libero_goal_object`, 500 episodes, K=2/g=1 | Value |
+| --- | ---: |
+| Policy load | 16.8 s |
+| Runtime preparation | 1.6 s |
+| Evaluation | 2,380 s |
+| Episodes/s | 0.210 |
+| Steps/s (steady) | 33.9 (34.0) |
+| Inference wait / episode time | 35% |
+| GPU utilization mean / max | 31% / 75% |
+| Peak GPU memory | 9.81 GB |
+
+A Quick Test (`libero_goal_task`) takes 40.7 s end to end, of which Policy load 18.8 s and the 300-step
+episode 18.3 s. A clean build takes about 21 minutes on a slow shared link, almost all of it downloads.
+
+On the shared RTX 4090 48 GB (2 × Xeon Platinum 8470Q host, Kit and Policy pinned to cores 0–63), the three `libero_10` suites ran at K=8/g=2: `libero_10_swap` 102 steps/s (2,541 s), `libero_10_lan` 131 steps/s (1,039 s), `libero_10_task` 147 steps/s (1,717 s). Two bf16 replicas held about 8.5 GB each. The GPU was busy with other jobs at the same time (device utilization near 100%, inference wait about 70% of episode time), so these numbers are not comparable with the RTX 3080 runs; `result.json`'s GPU memory and utilization cover the whole device, other jobs included. Limit the Policy's CPU threads on many-core hosts: in two short K=6/g=2 runs on this host, the Policy without `OMP_NUM_THREADS` kept about 12 cores busy per process and the run reached about 15 steps/s; with `OMP_NUM_THREADS=8` it reached 86 steps/s. The other jobs' load was not controlled between the two runs.
+
+## 12. Other benchmarks
 
 CALVIN, MetaWorld, and robomimic have their own protocol documents. RoboTwin, RoboCasa, CALVIN, MetaWorld,
 and robomimic use the

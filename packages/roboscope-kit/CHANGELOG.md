@@ -2,6 +2,20 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b29 - 2026-11-06
+
+- Add LIBERO-Pro (`--benchmark libero_pro`, protocol `libero-pro-v1`): the 16 released single-perturbation
+  suites `libero_{goal,spatial,10,object}_{object,swap,lan,task}` (Object, Position, Semantic, Task), each 10
+  tasks × 50 initial states at its base suite's horizon. `benchmarks/libero_pro/build-runtime.sh` builds
+  LIBERO-PRO `eafdb80` on CPython 3.11.18 and places the 320 task files of the `zhouxueyang/LIBERO-Pro`
+  dataset at `c86fc3b`, each checked against `task-files.sha256`. The Policy receives the instruction of the
+  perturbed BDDL file, not the file-name-derived `Task.language`, which would undo the Semantic and Task
+  perturbations. Environment and combined perturbations have no frozen files and are not supported.
+- The shared LIBERO worker gains `--max-steps` and `--instruction-source`; LIBERO and LIBERO+ keep their
+  suite horizons and `Task.language`.
+- The StarVLA example adds a `libero_pro` demo, and `starvla_policy.py` serves LIBERO-Pro with the LIBERO
+  image preprocessing.
+
 ## 0.8.0b27 - 2026-11-06
 
 - The Policy socket protocol gains a MessagePack encoding: arrays travel as `bin` values with their dtype

@@ -41,6 +41,7 @@ from .shard_validation import (
 _ADDITIVE_TABLES: dict[str, tuple[str, bool]] = {
     "libero": ("task_id", True),
     "libero_plus": ("task_id", True),
+    "libero_pro": ("task_id", True),
     "robotwin": ("task", False),
     "robocasa": ("task", False),
     "robodojo": ("task", False),
