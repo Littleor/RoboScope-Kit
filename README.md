@@ -27,6 +27,12 @@ RoboScope Kit evaluates your model on standard robot simulation benchmarks. You 
 `Policy` class; the benchmark runtime drives the simulators, schedules the evaluation, and scores the results.
 Each benchmark is wrapped once in an adapter around its own evaluator, so its rules and scoring stay unchanged.
 
+## News
+
+- 🤖 **2026-11-06:** [robomimic](packages/roboscope-kit/ROBOMIMIC_EVALUATION_PROTOCOL.md) is supported.
+- 🤖 **2026-11-04:** [RoboDojo](benchmarks/robodojo/README.md) is supported.
+- 🎉 **2026-11-04:** RoboScope Kit is released! See the [technical report](https://arxiv.org/abs/2611.03850).
+
 ## Highlights
 
 - 🚀 **Faster evaluation:** on 500 episodes with a StarVLA checkpoint, evaluation is **6.16×**
