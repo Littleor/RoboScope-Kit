@@ -23,6 +23,7 @@ body:
         - RoboCasa
         - CALVIN
         - MetaWorld
+        - robomimic
         - Not benchmark-specific
     validations:
       required: true

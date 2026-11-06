@@ -39,6 +39,10 @@ def benchmark_factory(name: BenchmarkName) -> BenchmarkFactory:
         from roboscope_kit.runtime.benchmarks.metaworld import MetaworldBenchmarkFactory
 
         return MetaworldBenchmarkFactory()
+    if name is BenchmarkName.ROBOMIMIC:
+        from roboscope_kit.runtime.benchmarks.robomimic import RobomimicBenchmarkFactory
+
+        return RobomimicBenchmarkFactory()
     raise ValueError(f"unsupported benchmark: {name.value}")
 
 

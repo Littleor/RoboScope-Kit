@@ -7,8 +7,8 @@ body:
     attributes:
       value: |
         Title format: `fix(<scope>): <what is wrong>`, in English. Use the benchmark as the scope
-        (`libero`, `libero-plus`, `robotwin`, `robodojo`, `robocasa`, `calvin`, `metaworld`), or a component
-        such as `sdk`, `runtime`, `autotune`, or `sharding`.
+        (`libero`, `libero-plus`, `robotwin`, `robodojo`, `robocasa`, `calvin`, `metaworld`,
+        `robomimic`), or a component such as `sdk`, `runtime`, `autotune`, or `sharding`.
         If the run completes but the score looks wrong, use the **Score discrepancy** template instead.
   - type: dropdown
     id: benchmark
@@ -22,6 +22,7 @@ body:
         - RoboCasa
         - CALVIN
         - MetaWorld
+        - robomimic
         - Not benchmark-specific
     validations:
       required: true

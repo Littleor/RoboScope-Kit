@@ -17,6 +17,7 @@ A change is complete when it is committed, carries the required version bump, an
 | `examples/starvla/` | The StarVLA `Policy` and one demo per benchmark, including the configurations behind the RoboScope Kit technical report |
 | `examples/xvla/` | The X-VLA `Policy` example: a stateful Policy serving several benchmarks |
 | `examples/xpolicylab/` | An XPolicyLab `Policy` example: serves any XPolicyLab policy on RoboDojo, validated with Simate-beta |
+| `examples/robomimic/` | A robomimic model-zoo `Policy` example: per-episode RNN and RNG state, with a native comparison script |
 | `ci/` and `.github/workflows/` | Build, compatibility, and PyPI release automation |
 
 When a path moves, update the source and every caller directly. Do not add compatibility wrappers or

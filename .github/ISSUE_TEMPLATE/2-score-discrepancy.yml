@@ -21,6 +21,7 @@ body:
         - RoboCasa
         - CALVIN
         - MetaWorld
+        - robomimic
     validations:
       required: true
   - type: input

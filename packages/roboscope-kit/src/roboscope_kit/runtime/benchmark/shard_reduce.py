@@ -44,6 +44,7 @@ _ADDITIVE_TABLES: dict[str, tuple[str, bool]] = {
     "robotwin": ("task", False),
     "robocasa": ("task", False),
     "robodojo": ("task", False),
+    "robomimic": ("task", False),
 }
 _SHARD_RATE_KEYS = ("elapsed_s", "steps_per_s", "episodes_per_s", "total_steps")
 

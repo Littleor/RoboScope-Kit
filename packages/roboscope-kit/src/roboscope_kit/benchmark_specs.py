@@ -19,6 +19,7 @@ class BenchmarkName(str, Enum):  # noqa: UP042 -- benchmark environments include
     CALVIN = "calvin"
     METAWORLD = "metaworld"
     ROBODOJO = "robodojo"
+    ROBOMIMIC = "robomimic"
 
 
 class BenchmarkDefinition(ABC):
@@ -269,6 +270,54 @@ class MetaworldBenchmarkDefinition(BenchmarkDefinition):
         )
 
 
+class RobomimicBenchmarkDefinition(BenchmarkDefinition):
+    """robomimic v0.1 low-dimensional observations and OSC_POSE delta actions.
+
+    Single-arm tasks (Lift, Can, Square, Tool Hang) send the ``robot0`` features and take
+    7-dimensional actions; Transport also sends the ``robot1`` features and takes 14.
+    """
+
+    name = BenchmarkName.ROBOMIMIC
+    protocol_version = "robomimic-v1"
+    supported_action_representations = ("robomimic.osc-pose-delta-v1",)
+    default_action_representation = "robomimic.osc-pose-delta-v1"
+
+    def features(self, _suite: str) -> tuple[FeatureSpec, ...]:
+        robot_features = []
+        for index in range(2):
+            for key, size, description in (
+                ("eef_pos", 3, "end-effector position in the world frame"),
+                ("eef_quat", 4, "end-effector orientation quaternion (x, y, z, w)"),
+                ("gripper_qpos", 2, "gripper finger joint positions"),
+            ):
+                robot_features.append(
+                    _feature(
+                        f"state.robot{index}_{key}",
+                        FeatureKind.STATE,
+                        f"robosuite robot{index}_{key}: robot {index} {description}"
+                        + ("." if index == 0 else " (two-arm Transport only)."),
+                        required=index == 0,
+                        shape=(size,),
+                    )
+                )
+        return (
+            *robot_features,
+            _feature(
+                "state.object",
+                FeatureKind.STATE,
+                "robomimic `object` observation (robosuite object-state); its size depends on the task.",
+                shape=(None,),
+            ),
+        )
+
+    def action(self, _suite: str) -> ActionSpec:
+        return ActionSpec(
+            "action.robot",
+            "Per arm, robosuite OSC_POSE delta position (3), delta axis-angle rotation (3) and gripper (1) "
+            "in [-1, 1]; Transport concatenates robot0 then robot1 (14).",
+        )
+
+
 _DEFINITIONS: dict[BenchmarkName, BenchmarkDefinition] = {
     definition.name: definition
     for definition in (
@@ -279,6 +328,7 @@ _DEFINITIONS: dict[BenchmarkName, BenchmarkDefinition] = {
         RoboDojoBenchmarkDefinition(),
         CalvinBenchmarkDefinition(),
         MetaworldBenchmarkDefinition(),
+        RobomimicBenchmarkDefinition(),
     )
 }
 

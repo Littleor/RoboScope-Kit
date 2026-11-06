@@ -1,0 +1,17 @@
+{
+  "schema_version": 3,
+  "supported_benchmarks": ["robomimic"],
+  "protocol_versions": {"robomimic": "robomimic-v1"},
+  "supported_suites": {"robomimic": ["ph_low_dim"]},
+  "runtime": {
+    "python": "env/bin/python"
+  },
+  "defaults": {
+    "episodes": 50,
+    "chunk_size": 1,
+    "client_cpu_threads": 1,
+    "ready_timeout_s": 300,
+    "probe_episodes_per_task": 1
+  },
+  "benchmark_protocols": {}
+}

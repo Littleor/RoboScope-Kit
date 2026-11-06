@@ -1,0 +1,10 @@
+{
+  "schema_version": 2,
+  "command": [
+    "/usr/bin/env",
+    "PYTHONPATH=/path/to/RoboScope-Kit/packages/roboscope-kit/src",
+    "/sim/robomimic/env/bin/python",
+    "/path/to/RoboScope-Kit/examples/robomimic/robomimic_policy.py"
+  ],
+  "cwd": "/path/to/RoboScope-Kit/examples/robomimic"
+}

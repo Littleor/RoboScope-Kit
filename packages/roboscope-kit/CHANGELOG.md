@@ -2,6 +2,16 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b26 - 2026-11-05
+
+- Add the `robomimic` benchmark with the `ph_low_dim` suite (protocol `robomimic-v1`): the robomimic v0.1
+  Lift, Can, Square, Transport, and Tool Hang tasks with low-dimensional observations, 50 seeded episodes
+  per task, the checkpoints' rollout horizons, and upstream `run_trained_agent.py` rollout semantics.
+  `benchmarks/robomimic/build-runtime.sh` builds the pinned CPython 3.11 environment (robomimic v0.4.0,
+  robosuite v1.4.1, MuJoCo 2.3.7, torch 2.4.1) and verifies the frozen initial-state digests of every task.
+- Add `examples/robomimic/`, a Policy for the five robomimic v0.1 model-zoo PH low-dim BC-RNN checkpoints,
+  with a checksum-verifying downloader and a per-seed comparison against upstream `run_trained_agent.py`.
+
 ## 0.8.0b25 - 2026-11-05
 
 - Add `--profile`, which runs each Worker under Nsight Systems and captures its first episode, starting from

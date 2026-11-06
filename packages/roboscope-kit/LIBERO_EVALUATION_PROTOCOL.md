@@ -342,7 +342,8 @@ The remaining steps and the manifest layout match section 1, with `benchmark_roo
 
 ## 11. Other benchmarks
 
-CALVIN and MetaWorld have their own protocol documents. RoboTwin, RoboCasa, CALVIN, and MetaWorld use the
+CALVIN, MetaWorld, and robomimic have their own protocol documents. RoboTwin, RoboCasa, CALVIN, MetaWorld,
+and robomimic use the
 same Policy boundary, but have benchmark-specific workers, manifests, and simulator environments. See the
 README's
 [supported benchmarks](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/README.md#supported-benchmarks)
