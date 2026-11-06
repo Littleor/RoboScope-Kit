@@ -78,6 +78,13 @@ Examples:
 - `feat(robodojo): integrate RoboDojo simulation evaluation with a correctness baseline`
 - `perf(robodojo): improve RoboDojo evaluation throughput`
 
+## Pull request merges
+
+Squash and merge pull requests, using the PR title as the squash commit title. Delete the head branch after
+its PR is merged; fork contributors can delete their own branches. Before merging, check for open PRs that
+use the head branch as their base: deleting it can retarget them, so check their base and diff afterwards.
+Keep long-lived branches such as `website-dist`.
+
 ## Python compatibility
 
 `tool.roboscope.python-support` in `packages/roboscope-kit/pyproject.toml` is the source of truth for

@@ -33,6 +33,14 @@ performance work all help, and questions are contributions too. If you are unsur
 - **Keep the documentation consistent** when user-facing evaluation behavior changes: the top-level
   README, the package README, the protocol documents, and the example READMEs.
 
+## Pull request merges
+
+- Maintainers squash and merge pull requests, using the PR title as the squash commit title.
+- Delete the head branch after its PR is merged. Contributors can delete branches in their own forks;
+  automatic deletion for a fork depends on the fork's settings.
+- Before merging, check whether another open PR uses the head branch as its base. Deleting the branch can
+  retarget that PR, so check its base and diff afterwards. Keep long-lived branches such as `website-dist`.
+
 ## Coding agents are welcome
 
 You may use coding agents and AI assistants (Claude Code, Codex) to write code,
