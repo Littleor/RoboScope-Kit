@@ -2,6 +2,11 @@
 
 Platform-only release notes from earlier versions are omitted; other changes relevant to the Kit are retained.
 
+## 0.8.0b30 - 2026-11-06
+
+- Add `examples/xpolicylab/compare_native.py`, which runs a Kit RoboDojo run's tasks and layouts through the
+  upstream native entry point and compares them episode by episode.
+
 ## 0.8.0b29 - 2026-11-06
 
 - Add LIBERO-Pro (`--benchmark libero_pro`, protocol `libero-pro-v1`): the 16 released single-perturbation
