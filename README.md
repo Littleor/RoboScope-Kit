@@ -6,6 +6,7 @@
 
 <p align="center">
   <a href="https://mint-sjtu.github.io/"><img alt="MINT Lab@SJTU" src="https://img.shields.io/badge/MINT%20Lab%40SJTU-1565c0"/></a>
+  <a href="https://mint-sjtu.github.io/RoboScope-Kit/"><img alt="Project page" src="https://img.shields.io/badge/Project-Page-2ea44f"/></a>
   <a href="https://arxiv.org/abs/2611.03850"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2611.03850-b31b1b.svg"/></a>
   <a href="https://pypi.org/project/roboscope-kit/"><img alt="PyPI" src="https://img.shields.io/pypi/v/roboscope-kit"/></a>
 </p>
