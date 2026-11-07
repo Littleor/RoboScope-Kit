@@ -38,6 +38,10 @@ script copies the manifest into `<install-dir>`, where those paths resolve. Keep
 script consistent, and never change frozen protocol values (such as the RoboTwin seed protocol and
 generation digests) without regenerating what depends on them.
 
+Benchmark integrations and new suites follow `packages/roboscope-kit/BENCHMARK_ACCEPTANCE.md`.
+Inventory the complete requested upstream task scope and validate every task; label partial work as
+partial and do not claim full acceptance while tasks or native comparisons are missing.
+
 ## Versioning and releases
 
 Every code change bumps the `roboscope-kit` version in both `packages/roboscope-kit/pyproject.toml` and

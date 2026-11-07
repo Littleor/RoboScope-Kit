@@ -8,7 +8,8 @@ body:
       value: |
         Title format: `feat(<benchmark>): ...`, in English. Integration comes first and establishes a
         correctness baseline with a real model; throughput optimization is a separate `perf(<benchmark>)` issue
-        that depends on this one. The tracking issue for benchmark work is #37.
+        that depends on this one. Follow the [benchmark acceptance standard](https://github.com/MINT-SJTU/RoboScope-Kit/blob/main/packages/roboscope-kit/BENCHMARK_ACCEPTANCE.md).
+        The tracking issue for benchmark work is #37.
   - type: input
     id: benchmark
     attributes:
@@ -20,7 +21,7 @@ body:
     id: goal
     attributes:
       label: Goal
-      description: Why this benchmark, and which suites or profiles the first phase covers. A self-selected subset must be named as such, not called the full official evaluation.
+      description: Why this benchmark, and the complete upstream task scope. Name any proposed first-phase subset as partial; it does not constitute full integration acceptance.
     validations:
       required: true
   - type: textarea
@@ -53,9 +54,9 @@ body:
     attributes:
       label: Acceptance
       value: |
-        - [ ] Supported scope, pinned versions, complete `benchmark-manifest.json`, protocol, and environment/license gates are defined.
+        - [ ] All upstream evaluation tasks and variants in scope are inventoried, with pinned versions, complete `benchmark-manifest.json`, protocol, and environment/license gates.
         - [ ] `benchmarks/<benchmark>/build-runtime.sh <install-dir>` builds the environment from a clean directory, and `--self-test` passes.
-        - [ ] Real-model `--quick-test` and full evaluation pass, with no missing or duplicate results.
-        - [ ] Comparison with the pinned native evaluator under the same checkpoint and inputs, with per-task metrics and explained differences.
-        - [ ] Reproducible performance baseline (time breakdown, episodes/s, steps/s), logs, results, and commands are delivered.
-        - [ ] Version bump, CHANGELOG entry, package README and protocol document are updated.
+        - [ ] Real-policy `--quick-test` and the full evaluation cover every task and claimed profile, with no missing, duplicate, unknown or substituted records.
+        - [ ] Each task is compared with the pinned native evaluator under matched inputs, with per-task metrics, repeatability and explained differences.
+        - [ ] Exact-head CI passes; durable raw records, logs, commands, configuration and a reproducible performance baseline are linked from the PR.
+        - [ ] Version bump, CHANGELOG entry, package README and protocol document are updated for the validated scope.
